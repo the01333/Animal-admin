@@ -49,3 +49,4 @@ public interface PetService extends IService<Pet> {
     boolean updateAdoptionStatus(Long id, String adoptionStatus);
 }
 
+

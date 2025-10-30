@@ -11,3 +11,4 @@ import org.apache.ibatis.annotations.Mapper;
 public interface SystemConfigMapper extends BaseMapper<SystemConfig> {
 }
 
+

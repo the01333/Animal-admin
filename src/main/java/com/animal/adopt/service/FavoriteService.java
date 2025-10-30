@@ -42,3 +42,4 @@ public interface FavoriteService extends IService<Favorite> {
     Page<Favorite> queryUserFavorites(Page<Favorite> page, Long userId);
 }
 
+

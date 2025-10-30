@@ -62,3 +62,4 @@ public interface AdoptionApplicationService extends IService<AdoptionApplication
     boolean hasApplied(Long userId, Long petId);
 }
 
+

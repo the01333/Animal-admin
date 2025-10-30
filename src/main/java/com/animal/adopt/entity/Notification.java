@@ -45,3 +45,4 @@ public class Notification implements Serializable {
     private Integer deleted;
 }
 
+

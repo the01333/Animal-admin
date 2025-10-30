@@ -4,7 +4,7 @@
 
 这是一个基于Spring Boot 3.3.5和Java 21的宠物领养管理系统后端服务，提供完整的RESTful API接口，支持宠物信息管理、领养申请流程、用户认证授权、文章内容管理等核心功能。
 
-> **🎉 最新更新**: 已升级到 Java 21 + Spring Boot 3.3.5，支持 Spring AI 和 LangChain4j！详见 [Java 21升级说明](./JAVA21升级说明.md)
+> **🎉 最新更新**: 已升级到 Java 21 + Spring Boot 3.3.5，支持 Spring AI 和 LangChain4j！详见 [Java 21升级说明](升级JAVA21支持大模型.md)
 
 ## 技术栈
 
@@ -232,7 +232,7 @@ Content-Type: application/json
 
 - [项目文档](./项目文档.md) - 完整的项目说明文档
 - [数据库设计](./init.sql) - 数据库建表脚本
-- [Java 21升级说明](./JAVA21升级说明.md) - Java 21 升级指南
+- [Java 21升级说明](升级JAVA21支持大模型.md) - Java 21 升级指南
 - [Redis配置说明](./Redis配置说明.md) - Redis 配置详解
 
 ## 许可证
