@@ -2,7 +2,7 @@ package com.animal.adopt.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.animal.adopt.common.Result;
-import com.animal.adopt.entity.Article;
+import com.animal.adopt.entity.po.Article;
 import com.animal.adopt.service.ArticleService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +26,7 @@ public class ArticleController {
     
     /**
      * 分页查询文章列表
+     * 统一使用此接口，移除了冗余的 /list 接口
      */
     @GetMapping("/page")
     public Result<Page<Article>> queryArticlePage(

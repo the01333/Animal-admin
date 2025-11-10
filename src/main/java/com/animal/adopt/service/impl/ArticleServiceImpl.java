@@ -2,7 +2,7 @@ package com.animal.adopt.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.animal.adopt.common.ResultCode;
-import com.animal.adopt.entity.Article;
+import com.animal.adopt.entity.po.Article;
 import com.animal.adopt.exception.BusinessException;
 import com.animal.adopt.mapper.ArticleMapper;
 import com.animal.adopt.service.ArticleService;
@@ -70,7 +70,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void incrementViewCount(Long id) {
-        log.debug("增加文章浏览次数, ID: {}", id);
+        log.debug("增加文章, 次数, ID: {}", id);
         
         LambdaUpdateWrapper<Article> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(Article::getId, id)

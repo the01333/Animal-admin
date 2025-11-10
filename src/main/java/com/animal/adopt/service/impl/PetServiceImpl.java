@@ -3,12 +3,12 @@ package com.animal.adopt.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.animal.adopt.common.ResultCode;
-import com.animal.adopt.dto.PetQueryDTO;
-import com.animal.adopt.entity.Pet;
+import com.animal.adopt.entity.dto.PetQueryDTO;
+import com.animal.adopt.entity.po.Pet;
 import com.animal.adopt.exception.BusinessException;
 import com.animal.adopt.mapper.PetMapper;
 import com.animal.adopt.service.PetService;
-import com.animal.adopt.vo.PetVO;
+import com.animal.adopt.entity.vo.PetVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -28,7 +28,6 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
     public Page<PetVO> queryPetPage(Page<Pet> page, PetQueryDTO queryDTO) {
         log.info("分页查询宠物列表, 查询条件: {}", queryDTO);
         
-        // 构建查询条件
         LambdaQueryWrapper<Pet> wrapper = new LambdaQueryWrapper<>();
         
         // 宠物名称模糊查询

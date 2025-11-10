@@ -1,10 +1,10 @@
 package com.animal.adopt.service;
 
-import com.animal.adopt.dto.LoginDTO;
-import com.animal.adopt.dto.RegisterDTO;
-import com.animal.adopt.entity.User;
-import com.animal.adopt.vo.LoginVO;
-import com.animal.adopt.vo.UserVO;
+import com.animal.adopt.entity.dto.LoginDTO;
+import com.animal.adopt.entity.dto.RegisterDTO;
+import com.animal.adopt.entity.po.User;
+import com.animal.adopt.entity.vo.LoginVO;
+import com.animal.adopt.entity.vo.UserVO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

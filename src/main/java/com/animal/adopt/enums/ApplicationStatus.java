@@ -7,27 +7,35 @@ import lombok.Getter;
  */
 @Getter
 public enum ApplicationStatus {
-    
-    /** 待审核 */
+
+    /**
+     * 待审核
+     */
     PENDING("pending", "待审核"),
-    
-    /** 已通过 */
+
+    /**
+     * 已通过
+     */
     APPROVED("approved", "已通过"),
-    
-    /** 已拒绝 */
+
+    /**
+     * 已拒绝
+     */
     REJECTED("rejected", "已拒绝"),
-    
-    /** 已撤销 */
+
+    /**
+     * 已撤销
+     */
     CANCELLED("cancelled", "已撤销");
-    
+
     private final String code;
     private final String desc;
-    
+
     ApplicationStatus(String code, String desc) {
         this.code = code;
         this.desc = desc;
     }
-    
+
     /**
      * 根据code获取枚举
      */
@@ -39,14 +47,14 @@ public enum ApplicationStatus {
         }
         return null;
     }
-    
+
     /**
      * 判断是否可以修改
      */
     public boolean canModify() {
         return this == PENDING;
     }
-    
+
     /**
      * 判断是否是终态
      */

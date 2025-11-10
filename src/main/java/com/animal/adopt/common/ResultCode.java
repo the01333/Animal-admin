@@ -13,7 +13,7 @@ public enum ResultCode {
     
     /* 客户端错误 */
     BAD_REQUEST(400, "请求参数错误"),
-    UNAUTHORIZED(401, "未授权，请先登录"),
+    UNAUTHORIZED(401, "未授权, 请先登录"),
     FORBIDDEN(403, "没有权限访问"),
     NOT_FOUND(404, "资源不存在"),
     METHOD_NOT_ALLOWED(405, "请求方法不支持"),
@@ -28,7 +28,7 @@ public enum ResultCode {
     USER_DISABLED(1003, "用户已被禁用"),
     PASSWORD_ERROR(1004, "密码错误"),
     USER_NOT_LOGIN(1005, "用户未登录"),
-    TOKEN_EXPIRED(1006, "登录已过期，请重新登录"),
+    TOKEN_EXPIRED(1006, "登录已过期, 请重新登录"),
     TOKEN_INVALID(1007, "无效的令牌"),
     
     /* 宠物相关 2xxx */
@@ -39,7 +39,7 @@ public enum ResultCode {
     /* 领养申请相关 3xxx */
     ADOPTION_NOT_FOUND(3001, "领养申请不存在"),
     ADOPTION_ALREADY_EXISTS(3002, "您已申请过该宠物"),
-    ADOPTION_STATUS_ERROR(3003, "申请状态异常，无法操作"),
+    ADOPTION_STATUS_ERROR(3003, "申请状态异常, 无法操作"),
     ADOPTION_NOT_ALLOWED(3004, "您暂时无法提交领养申请"),
     
     /* 文件相关 4xxx */

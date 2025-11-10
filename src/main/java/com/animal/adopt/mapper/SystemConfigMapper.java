@@ -1,6 +1,6 @@
 package com.animal.adopt.mapper;
 
-import com.animal.adopt.entity.SystemConfig;
+import com.animal.adopt.entity.po.SystemConfig;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 

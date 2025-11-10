@@ -1,6 +1,6 @@
 package com.animal.adopt.service;
 
-import com.animal.adopt.entity.Favorite;
+import com.animal.adopt.entity.po.Favorite;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 

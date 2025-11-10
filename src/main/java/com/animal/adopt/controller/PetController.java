@@ -2,17 +2,18 @@ package com.animal.adopt.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.animal.adopt.common.Result;
-import com.animal.adopt.dto.PetQueryDTO;
-import com.animal.adopt.entity.Pet;
+import com.animal.adopt.entity.dto.PetQueryDTO;
+import com.animal.adopt.entity.po.Pet;
 import com.animal.adopt.service.PetService;
-import com.animal.adopt.vo.PetVO;
+import com.animal.adopt.entity.vo.PetVO;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
+import java.util.List;
 
 /**
  * 宠物控制器
@@ -26,17 +27,39 @@ public class PetController {
     
     private final PetService petService;
     
+    @GetMapping("/getPetCategories")
+    public Result<List<String>> getPetCategories() {
+        // TODO: 查询所有宠物分类, 这类数据不易变更, 可以先走 redis
+        
+        
+        return Result.success();
+    }
+    
     /**
      * 分页查询宠物列表
+     * 统一使用此接口，移除了冗余的 /list 接口
      */
     @GetMapping("/page")
     public Result<Page<PetVO>> queryPetPage(
             @RequestParam(defaultValue = "1") Long current,
             @RequestParam(defaultValue = "10") Long size,
-            PetQueryDTO queryDTO) {
+            @RequestBody PetQueryDTO queryDTO) {
         Page<Pet> page = new Page<>(current, size);
         Page<PetVO> result = petService.queryPetPage(page, queryDTO);
         return Result.success(result);
+    }
+    
+    /**
+     * 获取推荐宠物
+     */
+    @GetMapping("/recommended")
+    public Result<List<PetVO>> getRecommendedPets(@RequestParam(defaultValue = "6") Integer limit) {
+        Page<Pet> page = new Page<>(1, limit);
+        PetQueryDTO queryDTO = new PetQueryDTO();
+        queryDTO.setAdoptionStatus("available");
+        queryDTO.setShelfStatus(1);
+        Page<PetVO> result = petService.queryPetPage(page, queryDTO);
+        return Result.success(result.getRecords());
     }
     
     /**

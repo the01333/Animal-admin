@@ -1,8 +1,8 @@
 package com.animal.adopt.service.impl;
 
 import com.animal.adopt.common.ResultCode;
-import com.animal.adopt.entity.Favorite;
-import com.animal.adopt.entity.Pet;
+import com.animal.adopt.entity.po.Favorite;
+import com.animal.adopt.entity.po.Pet;
 import com.animal.adopt.exception.BusinessException;
 import com.animal.adopt.mapper.FavoriteMapper;
 import com.animal.adopt.service.FavoriteService;

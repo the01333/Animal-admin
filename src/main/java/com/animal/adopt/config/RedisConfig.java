@@ -24,15 +24,15 @@ public class RedisConfig {
         template.setConnectionFactory(connectionFactory);
 
         // 使用 GenericJackson2JsonRedisSerializer 替代 Jackson2JsonRedisSerializer
-        // 这是 Spring Data Redis 3.x 推荐的方式，自动处理类型信息
-        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer(createObjectMapper());
+        // 这是 Spring Data Redis 3.x 推荐的方式, 自动处理类型信息
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(createObjectMapper());
 
         StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
 
         template.setKeySerializer(stringRedisSerializer);
         template.setHashKeySerializer(stringRedisSerializer);
-        template.setValueSerializer(jsonSerializer);
-        template.setHashValueSerializer(jsonSerializer);
+        template.setValueSerializer(serializer);
+        template.setHashValueSerializer(serializer);
 
         // 开启默认序列化
         template.setEnableDefaultSerializer(true);
@@ -50,8 +50,7 @@ public class RedisConfig {
         // 设置可见性：允许访问所有字段
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
 
-        // 启用默认类型，用于序列化时保存类型信息
-        // 这样反序列化时可以还原为正确的类型
+        // 启用默认类型, 用于序列化时保存类型信息, 这样反序列化时可以还原为正确的类型
         objectMapper.activateDefaultTyping(
                 LaissezFaireSubTypeValidator.instance,
                 ObjectMapper.DefaultTyping.NON_FINAL,

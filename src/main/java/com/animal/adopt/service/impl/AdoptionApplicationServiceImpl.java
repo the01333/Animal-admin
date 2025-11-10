@@ -3,9 +3,9 @@ package com.animal.adopt.service.impl;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.animal.adopt.common.ResultCode;
-import com.animal.adopt.dto.AdoptionApplicationDTO;
-import com.animal.adopt.entity.AdoptionApplication;
-import com.animal.adopt.entity.Pet;
+import com.animal.adopt.entity.dto.AdoptionApplicationDTO;
+import com.animal.adopt.entity.po.AdoptionApplication;
+import com.animal.adopt.entity.po.Pet;
 import com.animal.adopt.enums.ApplicationStatus;
 import com.animal.adopt.exception.BusinessException;
 import com.animal.adopt.mapper.AdoptionApplicationMapper;
@@ -137,7 +137,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         
         boolean success = this.updateById(application);
         
-        // 如果审核通过，更新宠物状态为已领养
+        // 如果审核通过, 更新宠物状态为已领养
         if (success && ApplicationStatus.APPROVED.getCode().equals(status)) {
             petService.updateAdoptionStatus(application.getPetId(), "adopted");
         }

@@ -15,7 +15,7 @@ spring:
       host: localhost
       port: 6379
       password: 
-      database: 0
+      database: 3
       # 连接超时时间
       timeout: 5000ms
       # Lettuce 连接池配置
@@ -48,6 +48,21 @@ spring:
       max-file-size: 10MB
       max-request-size: 50MB
 
+  # 邮件配置
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: ${MAIL_USERNAME:your-email@qq.com}
+    password: ${MAIL_PASSWORD:your-authorization-code}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+    default-encoding: UTF-8
+
 # MyBatis-Plus 配置
 mybatis-plus:
   configuration:
@@ -65,13 +80,13 @@ mybatis-plus:
 sa-token:
   # token名称 (同时也是cookie名称)
   token-name: Authorization
-  # token有效期，单位秒，-1代表永不过期
+  # token有效期, 单位秒, -1代表永不过期
   timeout: 86400
   # token临时有效期 (指定时间内无操作就视为token过期) 单位: 秒
   active-timeout: 1800
   # 是否允许同一账号并发登录 (为true时允许一起登录, 为false时新登录挤掉旧登录)
   is-concurrent: true
-  # 在多人登录同一账号时，是否共用一个token (为true时所有登录共用一个token, 为false时每次登录新建一个token)
+  # 在多人登录同一账号时, 是否共用一个token (为true时所有登录共用一个token, 为false时每次登录新建一个token)
   is-share: false
   # token风格
   token-style: uuid
@@ -91,4 +106,39 @@ logging:
     org.springframework.web: info
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+
+# MinIO 配置
+minio:
+  endpoint: http://192.168.133.228:9000
+  access-key: 1txuyyzKi1KcTQ5xBDGu
+  secret-key: mmOVcA60qp5syJpqH8lpyn0LCymAf4nwmHMFAP4v
+  bucket-name: animal-adopt
+
+# 阿里云配置
+aliyun:
+  # OSS配置
+#  oss:
+#    endpoint: ${ALIYUN_OSS_ENDPOINT:oss-cn-hangzhou.aliyuncs.com}
+#    access-key-id: ${ALIYUN_ACCESS_KEY_ID:your-access-key-id}
+#    access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET:your-access-key-secret}
+#    bucket-name: ${ALIYUN_OSS_BUCKET:animal-adopt}
+  # 短信配置
+  sms:
+    access-key-id: ${ALIYUN_SMS_ACCESS_KEY_ID:your-access-key-id}
+    access-key-secret: ${ALIYUN_SMS_ACCESS_KEY_SECRET:your-access-key-secret}
+    sign-name: ${ALIYUN_SMS_SIGN_NAME:宠物领养系统}
+    template-code:
+      register: ${ALIYUN_SMS_TEMPLATE_REGISTER:SMS_123456}
+      login: ${ALIYUN_SMS_TEMPLATE_LOGIN:SMS_123457}
+      reset-password: ${ALIYUN_SMS_TEMPLATE_RESET:SMS_123458}
+
+# 微信配置
+wechat:
+  app-id: ${WECHAT_APP_ID:your-app-id}
+  app-secret: ${WECHAT_APP_SECRET:your-app-secret}
+
+# QQ配置
+qq:
+  app-id: ${QQ_APP_ID:your-app-id}
+  app-key: ${QQ_APP_KEY:your-app-key}
 
