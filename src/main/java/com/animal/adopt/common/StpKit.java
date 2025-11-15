@@ -49,6 +49,13 @@ public class StpKit {
     public static boolean isSuperAdmin() {
         return hasRole("super_admin");
     }
+
+    /**
+     * 判断当前用户是否为管理员（不含审核权限）
+     */
+    public static boolean isAdmin() {
+        return hasRole("admin");
+    }
     
     /**
      * 判断当前用户是否为审核员

@@ -36,6 +36,7 @@ public class SaTokenConfig implements WebMvcConfigurer {
                         "/article/list",
                         "/article/page",
                         "/article/{id}",
+                        "/ai/**",
                         "/ws/**",
                         "/error"
                 );

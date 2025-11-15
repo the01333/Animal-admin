@@ -60,5 +60,15 @@ public interface UserService extends IService<User> {
      * @return 是否成功
      */
     boolean changePassword(Long userId, String oldPassword, String newPassword);
+
+    /**
+     * 邮箱验证码登录（不存在则自动注册）
+     */
+    LoginVO loginByEmailCode(String email, String code, String purpose);
+
+    /**
+     * 手机验证码登录（不存在则自动注册）
+     */
+    LoginVO loginByPhoneCode(String phone, String code, String purpose);
 }
 

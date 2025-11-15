@@ -13,7 +13,7 @@ import java.util.Set;
 
 /**
  * 浏览次数同步定时任务
- * 每5分钟将Redis中的浏览次数增量同步到MySQL数据库
+ * 每5分钟将 redis 中的浏览次数增量同步到 MySQL 数据库
  *
  * @author Animal Adopt System
  * @date 2025-11-10

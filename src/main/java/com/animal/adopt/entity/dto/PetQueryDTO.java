@@ -1,23 +1,16 @@
 package com.animal.adopt.entity.dto;
 
+import com.animal.adopt.common.PageInfo;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 宠物查询DTO
  */
+@EqualsAndHashCode(callSuper = false)
 @Data
-public class PetQueryDTO {
-
-    /**
-     * 当前页
-     */
-    private Integer current = 1;
-
-    /**
-     * 每页大小
-     */
-    private Integer size = 10;
-
+public class PetQueryDTO extends PageInfo {
+    
     /**
      * 宠物名称
      */

@@ -27,7 +27,7 @@
         <sa-token.version>1.39.0</sa-token.version>
         <hutool.version>5.8.32</hutool.version>
         <lombok.version>1.18.34</lombok.version>
-        <spring-ai.version>1.0.0-M4</spring-ai.version>
+        <spring-ai.version>1.0.0-M6</spring-ai.version>
         <fastjson2.version>2.0.53</fastjson2.version>
         <minio.version>8.5.7</minio.version>
         <aliyun-oss.version>3.17.4</aliyun-oss.version>
@@ -91,6 +91,7 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
+            <version>${spring-ai.version}</version>
         </dependency>
 
         <!-- Hutool 工具类 -->
@@ -173,6 +174,14 @@
 
     <!-- Spring AI 里程碑版本仓库配置 -->
     <repositories>
+        <repository>
+            <id>maven-central</id>
+            <name>Maven Central</name>
+            <url>https://repo1.maven.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
         <repository>
             <id>spring-milestones</id>
             <name>Spring Milestones</name>

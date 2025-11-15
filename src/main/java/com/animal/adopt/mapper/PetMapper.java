@@ -4,7 +4,10 @@ import com.animal.adopt.entity.po.Pet;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+
+import java.util.List;
 
 /**
  * 宠物 Mapper
@@ -67,5 +70,21 @@ public interface PetMapper extends BaseMapper<Pet> {
      */
     @Update("UPDATE t_pet SET application_count = application_count + 1 WHERE id = #{petId} AND deleted = 0")
     int incrementApplicationCount(@Param("petId") Long petId);
+    
+    /**
+     * 查询所有宠物类型（去重）
+     * 
+     * @return 宠物类型列表
+     */
+    @Select("SELECT DISTINCT category FROM t_pet WHERE deleted = 0 AND category IS NOT NULL ORDER BY category")
+    List<String> selectDistinctCategories();
+    
+    /**
+     * 查询所有领养状态（去重）
+     * 
+     * @return 领养状态列表
+     */
+    @Select("SELECT DISTINCT adoption_status FROM t_pet WHERE deleted = 0 AND adoption_status IS NOT NULL ORDER BY adoption_status")
+    List<String> selectDistinctAdoptionStatuses();
 }
 

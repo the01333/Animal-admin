@@ -1,6 +1,8 @@
 package com.animal.adopt.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.annotation.SaMode;
 import com.animal.adopt.common.Result;
 import com.animal.adopt.entity.dto.AdoptionApplicationDTO;
 import com.animal.adopt.entity.po.AdoptionApplication;
@@ -53,6 +55,7 @@ public class AdoptionApplicationController {
      * 查询所有领养申请（管理员）
      */
     @GetMapping({"/all", "/list"})
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
     public Result<Page<AdoptionApplication>> queryAllApplications(
             @RequestParam(defaultValue = "1") Long current,
             @RequestParam(defaultValue = "10") Long size,
@@ -76,6 +79,7 @@ public class AdoptionApplicationController {
      * 审核领养申请
      */
     @PutMapping("/{id}/review")
+    @SaCheckRole(value = {"super_admin", "application_auditor"}, mode = SaMode.OR)
     public Result<String> reviewApplication(
             @PathVariable Long id,
             @RequestBody java.util.Map<String, String> params) {

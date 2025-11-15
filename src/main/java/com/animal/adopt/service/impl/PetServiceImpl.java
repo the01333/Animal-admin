@@ -14,6 +14,11 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
+import com.animal.adopt.service.impl.ViewCountService;
+import com.animal.adopt.service.impl.MinioUrlService;
+import org.springframework.data.redis.core.RedisTemplate;
+import com.animal.adopt.constants.RedisKeyConstant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +27,12 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetService {
+
+    private final ViewCountService viewCountService;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final MinioUrlService minioUrlService;
     
     @Override
     public Page<PetVO> queryPetPage(Page<Pet> page, PetQueryDTO queryDTO) {
@@ -81,7 +91,27 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         
         // 转换为VO
         Page<PetVO> voPage = new Page<>(petPage.getCurrent(), petPage.getSize(), petPage.getTotal());
-        voPage.setRecords(BeanUtil.copyToList(petPage.getRecords(), PetVO.class));
+        java.util.List<PetVO> vos = BeanUtil.copyToList(petPage.getRecords(), PetVO.class);
+        for (PetVO v : vos) { minioUrlService.normalizePetVO(v); }
+        // 读点赞/收藏缓存，未命中则写入
+        for (PetVO p : vos) {
+            Long pid = p.getId();
+            String likeKey = com.animal.adopt.constants.RedisKeyConstant.buildPetLikeCountKey(pid);
+            Object likeVal = redisTemplate.opsForValue().get(likeKey);
+            if (likeVal instanceof Number) {
+                p.setLikeCount(((Number) likeVal).intValue());
+            } else {
+                redisTemplate.opsForValue().set(likeKey, p.getLikeCount());
+            }
+            String favKey = com.animal.adopt.constants.RedisKeyConstant.buildPetFavoriteCountKey(pid);
+            Object favVal = redisTemplate.opsForValue().get(favKey);
+            if (favVal instanceof Number) {
+                p.setFavoriteCount(((Number) favVal).intValue());
+            } else {
+                redisTemplate.opsForValue().set(favKey, p.getFavoriteCount());
+            }
+        }
+        voPage.setRecords(vos);
         
         return voPage;
     }
@@ -95,21 +125,38 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
             throw new BusinessException(ResultCode.PET_NOT_FOUND);
         }
         
-        // 增加浏览次数
-        this.incrementViewCount(id);
-        
-        return BeanUtil.copyProperties(pet, PetVO.class);
+        // 增加浏览次数（Redis增量）
+        viewCountService.incrementPetView(id);
+        PetVO vo = BeanUtil.copyProperties(pet, PetVO.class);
+        minioUrlService.normalizePetVO(vo);
+        // 读取增量并合并显示
+        int inc = viewCountService.getPetViewIncrement(id);
+        vo.setViewCount(pet.getViewCount() + inc);
+        // 点赞/收藏计数读缓存
+        String likeKey = RedisKeyConstant.buildPetLikeCountKey(id);
+        Object likeVal = redisTemplate.opsForValue().get(likeKey);
+        if (likeVal instanceof Number) {
+            vo.setLikeCount(((Number) likeVal).intValue());
+        } else {
+            redisTemplate.opsForValue().set(likeKey, pet.getLikeCount());
+            vo.setLikeCount(pet.getLikeCount());
+        }
+        String favKey = RedisKeyConstant.buildPetFavoriteCountKey(id);
+        Object favVal = redisTemplate.opsForValue().get(favKey);
+        if (favVal instanceof Number) {
+            vo.setFavoriteCount(((Number) favVal).intValue());
+        } else {
+            redisTemplate.opsForValue().set(favKey, pet.getFavoriteCount());
+            vo.setFavoriteCount(pet.getFavoriteCount());
+        }
+        return vo;
     }
     
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void incrementViewCount(Long id) {
-        log.debug("增加宠物浏览次数, ID: {}", id);
-        
-        LambdaUpdateWrapper<Pet> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(Pet::getId, id)
-                .setSql("view_count = view_count + 1");
-        this.update(wrapper);
+        // 已改为通过Redis增量统计与定时任务入库
+        viewCountService.incrementPetView(id);
     }
     
     @Override

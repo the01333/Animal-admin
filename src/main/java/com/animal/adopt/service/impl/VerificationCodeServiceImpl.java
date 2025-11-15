@@ -23,6 +23,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
     
     private final VerificationCodeMapper verificationCodeMapper;
     private final JavaMailSender mailSender;
+    private final SmsSender smsSender;
     
     private static final int CODE_LENGTH = 6;
     private static final int EXPIRE_MINUTES = 5;
@@ -75,10 +76,9 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             verificationCode.setIsUsed(false);
             verificationCodeMapper.insert(verificationCode);
             
-            // TODO: 调用阿里云短信SDK发送短信
-            // 这里需要根据实际的阿里云短信配置来实现
-            log.info("手机验证码发送成功: {}", phone);
-            return true;
+            boolean sent = smsSender.sendLoginCode(phone, code);
+            log.info("手机验证码发送结果: {} -> {}", phone, sent);
+            return sent;
             
         } catch (Exception e) {
             log.error("手机验证码发送失败", e);

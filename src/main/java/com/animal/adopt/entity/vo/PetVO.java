@@ -1,6 +1,7 @@
 package com.animal.adopt.entity.vo;
 
 import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
  */
 @Data
 public class PetVO {
-    
+
     private Long id;
     private String name;
     private String category;
@@ -36,16 +37,17 @@ public class PetVO {
     private Integer favoriteCount;
     private Integer applicationCount;
     private LocalDateTime createTime;
-    
+
     // ========== 用户交互状态 ==========
     /**
      * 当前用户是否已点赞
      */
     private Boolean isLiked;
-    
+
     /**
      * 当前用户是否已收藏
      */
     private Boolean isFavorited;
+
 }
 

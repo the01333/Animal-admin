@@ -1,6 +1,8 @@
 package com.animal.adopt.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.annotation.SaMode;
 import com.animal.adopt.common.Result;
 import com.animal.adopt.entity.po.Article;
 import com.animal.adopt.service.ArticleService;
@@ -53,6 +55,7 @@ public class ArticleController {
      * 创建文章
      */
     @PostMapping
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
     public Result<String> createArticle(@Valid @RequestBody Article article) {
         Long userId = StpUtil.getLoginIdAsLong();
         article.setCreateBy(userId);
@@ -65,6 +68,7 @@ public class ArticleController {
      * 更新文章
      */
     @PutMapping("/{id}")
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
     public Result<String> updateArticle(@PathVariable Long id, @Valid @RequestBody Article article) {
         article.setId(id);
         articleService.updateById(article);
@@ -75,6 +79,7 @@ public class ArticleController {
      * 删除文章
      */
     @DeleteMapping("/{id}")
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
     public Result<String> deleteArticle(@PathVariable Long id) {
         articleService.removeById(id);
         return Result.success("删除成功", null);
@@ -84,6 +89,7 @@ public class ArticleController {
      * 发布文章
      */
     @PutMapping("/{id}/publish")
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
     public Result<String> publishArticle(@PathVariable Long id) {
         articleService.publishArticle(id);
         return Result.success("发布成功", null);
@@ -93,6 +99,7 @@ public class ArticleController {
      * 下架文章
      */
     @PutMapping("/{id}/unpublish")
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
     public Result<String> unpublishArticle(@PathVariable Long id) {
         articleService.unpublishArticle(id);
         return Result.success("下架成功", null);

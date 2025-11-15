@@ -5,7 +5,7 @@ spring:
   # 数据源配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/animal_adopt?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    url: jdbc:mysql://localhost:3306/animal_adopt?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: root
 
@@ -14,7 +14,7 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: 
+      password: root
       database: 3
       # 连接超时时间
       timeout: 5000ms
@@ -109,10 +109,11 @@ logging:
 
 # MinIO 配置
 minio:
-  endpoint: http://192.168.133.228:9000
-  access-key: 1txuyyzKi1KcTQ5xBDGu
-  secret-key: mmOVcA60qp5syJpqH8lpyn0LCymAf4nwmHMFAP4v
-  bucket-name: animal-adopt
+  endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9000}
+  access-key: ${MINIO_ACCESS_KEY:}
+  secret-key: ${MINIO_SECRET_KEY:}
+  bucket-name: ${MINIO_BUCKET:animal-adopt}
+  public-base-url: ${MINIO_PUBLIC_BASE_URL:http://127.0.0.1:9000}
 
 # 阿里云配置
 aliyun:
@@ -136,9 +137,11 @@ aliyun:
 wechat:
   app-id: ${WECHAT_APP_ID:your-app-id}
   app-secret: ${WECHAT_APP_SECRET:your-app-secret}
+  redirect-uri: ${WECHAT_REDIRECT_URL:http://localhost:8080/api/oauth/wechat/callback}
 
 # QQ配置
 qq:
   app-id: ${QQ_APP_ID:your-app-id}
   app-key: ${QQ_APP_KEY:your-app-key}
+  redirect-uri: ${QQ_REDIRECT_URL:http://localhost:8080/api/oauth/qq/callback}
 
