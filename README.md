@@ -241,4 +241,4 @@ Content-Type: application/json
 
 ## 联系方式
 
-如有问题, 请联系项目负责人。
+如有问题, 请联系项目负责人 YCc Lin - 3149696140@qq.com。
