@@ -1,8 +1,8 @@
 package com.animal.adopt.service;
 
-import com.animal.adopt.dto.PetQueryDTO;
-import com.animal.adopt.entity.Pet;
-import com.animal.adopt.vo.PetVO;
+import com.animal.adopt.entity.dto.PetQueryDTO;
+import com.animal.adopt.entity.po.Pet;
+import com.animal.adopt.entity.vo.PetVO;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 

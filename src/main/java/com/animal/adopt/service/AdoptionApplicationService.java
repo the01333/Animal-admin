@@ -1,7 +1,7 @@
 package com.animal.adopt.service;
 
-import com.animal.adopt.dto.AdoptionApplicationDTO;
-import com.animal.adopt.entity.AdoptionApplication;
+import com.animal.adopt.entity.dto.AdoptionApplicationDTO;
+import com.animal.adopt.entity.po.AdoptionApplication;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 

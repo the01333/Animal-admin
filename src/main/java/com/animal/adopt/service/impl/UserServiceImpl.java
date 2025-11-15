@@ -5,17 +5,19 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.animal.adopt.common.ResultCode;
-import com.animal.adopt.dto.LoginDTO;
-import com.animal.adopt.dto.RegisterDTO;
-import com.animal.adopt.entity.User;
+import com.animal.adopt.entity.dto.LoginDTO;
+import com.animal.adopt.entity.dto.RegisterDTO;
+import com.animal.adopt.entity.po.User;
 import com.animal.adopt.exception.BusinessException;
 import com.animal.adopt.mapper.UserMapper;
 import com.animal.adopt.service.UserService;
-import com.animal.adopt.vo.LoginVO;
-import com.animal.adopt.vo.UserVO;
+import com.animal.adopt.entity.vo.LoginVO;
+import com.animal.adopt.entity.vo.UserVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
+import com.animal.adopt.service.VerificationCodeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +26,10 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+
+    private final VerificationCodeService verificationCodeService;
     
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -60,6 +65,58 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         loginVO.setUserInfo(BeanUtil.copyProperties(user, UserVO.class));
         
         log.info("用户登录成功, 用户ID: {}", user.getId());
+        return loginVO;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public LoginVO loginByEmailCode(String email, String code, String purpose) {
+        log.info("邮箱验证码登录: {}", email);
+        if (!verificationCodeService.verifyEmailCode(email, code, purpose)) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "验证码错误或已过期");
+        }
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getEmail, email);
+        User user = this.getOne(wrapper);
+        if (user == null) {
+            user = new User();
+            user.setUsername(email);
+            user.setEmail(email);
+            user.setRole("user");
+            user.setStatus(1);
+            this.save(user);
+        }
+        StpUtil.login(user.getId());
+        String token = StpUtil.getTokenValue();
+        LoginVO loginVO = new LoginVO();
+        loginVO.setToken(token);
+        loginVO.setUserInfo(BeanUtil.copyProperties(user, UserVO.class));
+        return loginVO;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public LoginVO loginByPhoneCode(String phone, String code, String purpose) {
+        log.info("手机验证码登录: {}", phone);
+        if (!verificationCodeService.verifyPhoneCode(phone, code, purpose)) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "验证码错误或已过期");
+        }
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getPhone, phone);
+        User user = this.getOne(wrapper);
+        if (user == null) {
+            user = new User();
+            user.setUsername(phone);
+            user.setPhone(phone);
+            user.setRole("user");
+            user.setStatus(1);
+            this.save(user);
+        }
+        StpUtil.login(user.getId());
+        String token = StpUtil.getTokenValue();
+        LoginVO loginVO = new LoginVO();
+        loginVO.setToken(token);
+        loginVO.setUserInfo(BeanUtil.copyProperties(user, UserVO.class));
         return loginVO;
     }
     
@@ -124,6 +181,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             throw new BusinessException(ResultCode.USER_NOT_FOUND);
         }
+        
         return BeanUtil.copyProperties(user, UserVO.class);
     }
     

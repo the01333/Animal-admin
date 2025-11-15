@@ -2,7 +2,7 @@ package com.animal.adopt.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.animal.adopt.common.ResultCode;
-import com.animal.adopt.entity.Article;
+import com.animal.adopt.entity.po.Article;
 import com.animal.adopt.exception.BusinessException;
 import com.animal.adopt.mapper.ArticleMapper;
 import com.animal.adopt.service.ArticleService;
@@ -11,6 +11,11 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
+import com.animal.adopt.service.impl.ViewCountService;
+import com.animal.adopt.service.impl.MinioUrlService;
+import org.springframework.data.redis.core.RedisTemplate;
+import com.animal.adopt.constants.RedisKeyConstant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +26,12 @@ import java.time.LocalDateTime;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> implements ArticleService {
+
+    private final ViewCountService viewCountService;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final MinioUrlService minioUrlService;
     
     @Override
     public Page<Article> queryArticlePage(Page<Article> page, String category, Integer status, String keyword) {
@@ -48,8 +58,29 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         
         // 按发布时间倒序
         wrapper.orderByDesc(Article::getSortOrder, Article::getPublishTime);
-        
-        return this.page(page, wrapper);
+        var result = this.page(page, wrapper);
+        for (Article a : result.getRecords()) {
+            a.setCoverImage(minioUrlService.normalizeUrl(a.getCoverImage()));
+        }
+        // 列表计数读缓存
+        for (Article a : result.getRecords()) {
+            Long aid = a.getId();
+            String likeKey = com.animal.adopt.constants.RedisKeyConstant.buildArticleLikeCountKey(aid);
+            Object likeVal = redisTemplate.opsForValue().get(likeKey);
+            if (likeVal instanceof Number) {
+                a.setLikeCount(((Number) likeVal).intValue());
+            } else {
+                redisTemplate.opsForValue().set(likeKey, a.getLikeCount());
+            }
+            String favKey = com.animal.adopt.constants.RedisKeyConstant.buildArticleFavoriteCountKey(aid);
+            Object favVal = redisTemplate.opsForValue().get(favKey);
+            if (favVal instanceof Number) {
+                a.setFavoriteCount(((Number) favVal).intValue());
+            } else {
+                redisTemplate.opsForValue().set(favKey, a.getFavoriteCount());
+            }
+        }
+        return result;
     }
     
     @Override
@@ -61,21 +92,35 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "文章不存在");
         }
         
-        // 增加浏览次数
-        this.incrementViewCount(id);
-        
+        // 增加浏览次数（Redis增量）
+        viewCountService.incrementArticleView(id);
+        // 合并增量浏览次数
+        int inc = viewCountService.getArticleViewIncrement(id);
+        article.setViewCount(article.getViewCount() + inc);
+        // 点赞/收藏计数读缓存
+        String likeKey = RedisKeyConstant.buildArticleLikeCountKey(id);
+        Object likeVal = redisTemplate.opsForValue().get(likeKey);
+        if (likeVal instanceof Number) {
+            article.setLikeCount(((Number) likeVal).intValue());
+        } else {
+            redisTemplate.opsForValue().set(likeKey, article.getLikeCount());
+        }
+        String favKey = RedisKeyConstant.buildArticleFavoriteCountKey(id);
+        Object favVal = redisTemplate.opsForValue().get(favKey);
+        if (favVal instanceof Number) {
+            article.setFavoriteCount(((Number) favVal).intValue());
+        } else {
+            redisTemplate.opsForValue().set(favKey, article.getFavoriteCount());
+        }
+        article.setCoverImage(minioUrlService.normalizeUrl(article.getCoverImage()));
         return article;
     }
     
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void incrementViewCount(Long id) {
-        log.debug("增加文章浏览次数, ID: {}", id);
-        
-        LambdaUpdateWrapper<Article> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(Article::getId, id)
-                .setSql("view_count = view_count + 1");
-        this.update(wrapper);
+        // 已改为通过Redis增量统计与定时任务入库
+        viewCountService.incrementArticleView(id);
     }
     
     @Override

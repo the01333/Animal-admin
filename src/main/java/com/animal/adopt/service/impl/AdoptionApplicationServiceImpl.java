@@ -3,13 +3,14 @@ package com.animal.adopt.service.impl;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.animal.adopt.common.ResultCode;
-import com.animal.adopt.dto.AdoptionApplicationDTO;
-import com.animal.adopt.entity.AdoptionApplication;
-import com.animal.adopt.entity.Pet;
+import com.animal.adopt.entity.dto.AdoptionApplicationDTO;
+import com.animal.adopt.entity.po.AdoptionApplication;
+import com.animal.adopt.entity.po.Pet;
 import com.animal.adopt.enums.ApplicationStatus;
 import com.animal.adopt.exception.BusinessException;
 import com.animal.adopt.mapper.AdoptionApplicationMapper;
 import com.animal.adopt.service.AdoptionApplicationService;
+import com.animal.adopt.mapper.PetMapper;
 import com.animal.adopt.service.PetService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -32,6 +33,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         implements AdoptionApplicationService {
     
     private final PetService petService;
+    private final PetMapper petMapper;
     
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -71,8 +73,9 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         application.setStatus(ApplicationStatus.PENDING.getCode());
         
         this.save(application);
-        
         log.info("领养申请提交成功, 申请编号: {}", applicationNo);
+        // 增加宠物的申请次数
+        petMapper.incrementApplicationCount(applicationDTO.getPetId());
         return application.getId();
     }
     
@@ -137,9 +140,21 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         
         boolean success = this.updateById(application);
         
-        // 如果审核通过，更新宠物状态为已领养
+        // 如果审核通过, 更新宠物状态为已领养
         if (success && ApplicationStatus.APPROVED.getCode().equals(status)) {
             petService.updateAdoptionStatus(application.getPetId(), "adopted");
+            // 自动拒绝该宠物的其它待审核申请
+            LambdaQueryWrapper<AdoptionApplication> otherWrapper = new LambdaQueryWrapper<>();
+            otherWrapper.eq(AdoptionApplication::getPetId, application.getPetId())
+                    .eq(AdoptionApplication::getStatus, ApplicationStatus.PENDING.getCode())
+                    .ne(AdoptionApplication::getId, application.getId());
+            this.list(otherWrapper).forEach(other -> {
+                other.setStatus(ApplicationStatus.REJECTED.getCode());
+                other.setReviewComment("该宠物已被批准领养");
+                other.setReviewerId(reviewerId);
+                other.setReviewTime(LocalDateTime.now());
+                this.updateById(other);
+            });
         }
         
         log.info("领养申请审核完成, 结果: {}", success);

@@ -1,6 +1,6 @@
 package com.animal.adopt.mapper;
 
-import com.animal.adopt.entity.ChatMessage;
+import com.animal.adopt.entity.po.ChatMessage;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 

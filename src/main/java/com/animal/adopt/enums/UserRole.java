@@ -13,6 +13,7 @@ public enum UserRole {
     
     /** 超级管理员 */
     SUPER_ADMIN("super_admin", "超级管理员"),
+    ADMIN("admin", "管理员"),
     
     /** 审核员 */
     APPLICATION_AUDITOR("application_auditor", "审核员"),
@@ -44,7 +45,7 @@ public enum UserRole {
      * 判断是否是管理员角色
      */
     public boolean isAdmin() {
-        return this == SUPER_ADMIN || this == APPLICATION_AUDITOR;
+        return this == SUPER_ADMIN || this == ADMIN;
     }
 }
 

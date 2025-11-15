@@ -2,7 +2,7 @@ package com.animal.adopt.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.animal.adopt.common.Result;
-import com.animal.adopt.entity.Favorite;
+import com.animal.adopt.entity.po.Favorite;
 import com.animal.adopt.service.FavoriteService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.animal.adopt.mapper;
 
-import com.animal.adopt.entity.OperationLog;
+import com.animal.adopt.entity.po.OperationLog;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 

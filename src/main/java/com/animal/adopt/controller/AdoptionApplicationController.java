@@ -1,9 +1,11 @@
 package com.animal.adopt.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.annotation.SaMode;
 import com.animal.adopt.common.Result;
-import com.animal.adopt.dto.AdoptionApplicationDTO;
-import com.animal.adopt.entity.AdoptionApplication;
+import com.animal.adopt.entity.dto.AdoptionApplicationDTO;
+import com.animal.adopt.entity.po.AdoptionApplication;
 import com.animal.adopt.service.AdoptionApplicationService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +21,7 @@ import jakarta.validation.Valid;
 @Slf4j
 @Validated
 @RestController
-@RequestMapping("/adoption")
+@RequestMapping({"/adoption", "/application"})
 @RequiredArgsConstructor
 public class AdoptionApplicationController {
     
@@ -28,7 +30,7 @@ public class AdoptionApplicationController {
     /**
      * 提交领养申请
      */
-    @PostMapping("/apply")
+    @PostMapping({"/apply", ""})
     public Result<Long> submitApplication(@Valid @RequestBody AdoptionApplicationDTO applicationDTO) {
         Long userId = StpUtil.getLoginIdAsLong();
         Long applicationId = adoptionApplicationService.submitApplication(applicationDTO, userId);
@@ -52,11 +54,13 @@ public class AdoptionApplicationController {
     /**
      * 查询所有领养申请（管理员）
      */
-    @GetMapping("/all")
+    @GetMapping({"/all", "/list"})
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
     public Result<Page<AdoptionApplication>> queryAllApplications(
             @RequestParam(defaultValue = "1") Long current,
             @RequestParam(defaultValue = "10") Long size,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String keyword) {
         Page<AdoptionApplication> page = new Page<>(current, size);
         Page<AdoptionApplication> result = adoptionApplicationService.queryAllApplications(page, status);
         return Result.success(result);
@@ -75,10 +79,15 @@ public class AdoptionApplicationController {
      * 审核领养申请
      */
     @PutMapping("/{id}/review")
+    @SaCheckRole(value = {"super_admin", "application_auditor"}, mode = SaMode.OR)
     public Result<String> reviewApplication(
             @PathVariable Long id,
-            @RequestParam String status,
-            @RequestParam(required = false) String reviewComment) {
+            @RequestBody java.util.Map<String, String> params) {
+        String status = params.get("status");
+        String reviewComment = params.get("reviewComment");
+        if (cn.hutool.core.util.StrUtil.isBlank(status)) {
+            throw new com.animal.adopt.exception.BusinessException(com.animal.adopt.common.ResultCode.BAD_REQUEST.getCode(), "审核状态不能为空");
+        }
         Long reviewerId = StpUtil.getLoginIdAsLong();
         adoptionApplicationService.reviewApplication(id, status, reviewComment, reviewerId);
         return Result.success("审核完成", null);

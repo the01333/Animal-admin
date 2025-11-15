@@ -1,10 +1,10 @@
 package com.animal.adopt.service;
 
-import com.animal.adopt.dto.LoginDTO;
-import com.animal.adopt.dto.RegisterDTO;
-import com.animal.adopt.entity.User;
-import com.animal.adopt.vo.LoginVO;
-import com.animal.adopt.vo.UserVO;
+import com.animal.adopt.entity.dto.LoginDTO;
+import com.animal.adopt.entity.dto.RegisterDTO;
+import com.animal.adopt.entity.po.User;
+import com.animal.adopt.entity.vo.LoginVO;
+import com.animal.adopt.entity.vo.UserVO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -60,5 +60,15 @@ public interface UserService extends IService<User> {
      * @return 是否成功
      */
     boolean changePassword(Long userId, String oldPassword, String newPassword);
+
+    /**
+     * 邮箱验证码登录（不存在则自动注册）
+     */
+    LoginVO loginByEmailCode(String email, String code, String purpose);
+
+    /**
+     * 手机验证码登录（不存在则自动注册）
+     */
+    LoginVO loginByPhoneCode(String phone, String code, String purpose);
 }
 

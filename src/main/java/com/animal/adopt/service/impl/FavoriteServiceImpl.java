@@ -1,12 +1,14 @@
 package com.animal.adopt.service.impl;
 
 import com.animal.adopt.common.ResultCode;
-import com.animal.adopt.entity.Favorite;
-import com.animal.adopt.entity.Pet;
+import com.animal.adopt.entity.po.Favorite;
+import com.animal.adopt.entity.po.Pet;
 import com.animal.adopt.exception.BusinessException;
 import com.animal.adopt.mapper.FavoriteMapper;
+import com.animal.adopt.mapper.PetMapper;
 import com.animal.adopt.service.FavoriteService;
 import com.animal.adopt.service.PetService;
+import com.animal.adopt.constants.RedisKeyConstant;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -24,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> implements FavoriteService {
     
     private final PetService petService;
+    private final PetMapper petMapper;
+    private final org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate;
     
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -47,7 +51,14 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         favorite.setUserId(userId);
         favorite.setPetId(petId);
         
-        return this.save(favorite);
+        boolean saved = this.save(favorite);
+        if (saved) {
+            int updated = petMapper.incrementFavoriteCount(petId);
+            if (updated > 0) {
+                redisTemplate.delete(RedisKeyConstant.buildPetFavoriteCountKey(petId));
+            }
+        }
+        return saved;
     }
     
     @Override
@@ -59,7 +70,14 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         wrapper.eq(Favorite::getUserId, userId)
                 .eq(Favorite::getPetId, petId);
         
-        return this.remove(wrapper);
+        boolean removed = this.remove(wrapper);
+        if (removed) {
+            int updated = petMapper.decrementFavoriteCount(petId);
+            if (updated > 0) {
+                redisTemplate.delete(RedisKeyConstant.buildPetFavoriteCountKey(petId));
+            }
+        }
+        return removed;
     }
     
     @Override

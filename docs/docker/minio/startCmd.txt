@@ -1,0 +1,30 @@
+docker pull quay.io/minio/minio:RELEASE.2025-10-15T17-29-55Z
+
+本地创建目录 E:/minio4Animal/data
+
+docker run -d --name minio4Animal \
+  -p 9000:9000 -p 9001:9001 \
+  -v E:/minio4Animal/data:/data \
+  -e MINIO_ROOT_USER=puxinxiaolin \
+  -e MINIO_ROOT_PASSWORD=puxinxiaolin \
+  quay.io/minio/minio:RELEASE.2  025-10-15T17-29-55Z \
+  server /data --console-address ":9001"
+
+
+配置 MinIO 的 CORS（跨域资源共享）：
+登录 MinIO 控制台（http://192.168.133.228:9001）, 进入 Bucket settings, 然后添加 CORS 配置。
+
+```示例 CORS 配置（允许所有来源访问）：
+[
+  {
+    "AllowedOrigins": ["*"],
+    "AllowedMethods": ["GET", "PUT", "POST"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["x-amz-request-id", "x-amz-id-2"],
+    "MaxAgeSeconds": 3000
+  }
+]
+```
+
+通过这个路径访问图片：
+http://192.168.133.228:9000/xxx
