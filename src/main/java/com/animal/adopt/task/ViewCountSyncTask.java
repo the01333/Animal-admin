@@ -1,6 +1,7 @@
 package com.animal.adopt.task;
 
-import com.animal.adopt.constants.RedisKeyConstant;
+import cn.hutool.core.collection.CollUtil;
+import com.animal.adopt.constants.RedisConstant;
 import com.animal.adopt.mapper.ArticleMapper;
 import com.animal.adopt.mapper.PetMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -12,11 +13,10 @@ import org.springframework.stereotype.Component;
 import java.util.Set;
 
 /**
- * 浏览次数同步定时任务
+ * @Description: 浏览次数同步定时任务 <br />
  * 每5分钟将 redis 中的浏览次数增量同步到 MySQL 数据库
- *
- * @author Animal Adopt System
- * @date 2025-11-10
+ * @Author: YCcLin
+ * @Date: 2025/11/16 13:50
  */
 @Component
 @Slf4j
@@ -67,9 +67,9 @@ public class ViewCountSyncTask {
      */
     private int syncPetViewCount() {
         // 1. 获取所有宠物浏览计数的Key
-        Set<String> keys = redisTemplate.keys(RedisKeyConstant.PET_VIEW_COUNT_PREFIX + "*");
+        Set<String> keys = redisTemplate.keys(RedisConstant.PET_VIEW_COUNT_PREFIX + "*");
 
-        if (keys == null || keys.isEmpty()) {
+        if (CollUtil.isEmpty(keys)) {
             log.debug("没有需要同步的宠物浏览数据");
             return 0;
         }
@@ -95,7 +95,7 @@ public class ViewCountSyncTask {
 
                 // 提取petId
                 // key格式: pet:view:count:123
-                String petIdStr = key.replace(RedisKeyConstant.PET_VIEW_COUNT_PREFIX, "");
+                String petIdStr = key.replace(RedisConstant.PET_VIEW_COUNT_PREFIX, "");
                 Long petId = Long.parseLong(petIdStr);
 
                 // 3. 更新数据库（使用 += 操作）
@@ -134,9 +134,9 @@ public class ViewCountSyncTask {
      * @return 同步的记录数
      */
     private int syncArticleViewCount() {
-        Set<String> keys = redisTemplate.keys(RedisKeyConstant.ARTICLE_VIEW_COUNT_PREFIX + "*");
+        Set<String> keys = redisTemplate.keys(RedisConstant.ARTICLE_VIEW_COUNT_PREFIX + "*");
 
-        if (keys == null || keys.isEmpty()) {
+        if (CollUtil.isEmpty(keys)) {
             log.debug("没有需要同步的文章浏览数据");
             return 0;
         }
@@ -158,7 +158,7 @@ public class ViewCountSyncTask {
                     continue;
                 }
 
-                String articleIdStr = key.replace(RedisKeyConstant.ARTICLE_VIEW_COUNT_PREFIX, "");
+                String articleIdStr = key.replace(RedisConstant.ARTICLE_VIEW_COUNT_PREFIX, "");
                 Long articleId = Long.parseLong(articleIdStr);
 
                 int updated = articleMapper.incrementViewCount(articleId, increment);

@@ -7,7 +7,7 @@ package com.animal.adopt.constants;
  * @author Animal Adopt System
  * @date 2025-11-10
  */
-public class RedisKeyConstant {
+public class RedisConstant {
 
     // =========================== 宠物相关 ================================
     
@@ -70,20 +70,15 @@ public class RedisKeyConstant {
     public static final String ARTICLE_FAVORITE_COUNT_PREFIX = "article:favorite:count:";
     
     // =========================== 用户相关 ================================
-    
-    /**
-     * 验证码 key
-     * 格式: verification:code:{type}:{target}
-     * 用途: 存储邮箱/手机验证码
-     */
     public static final String VERIFICATION_CODE_PREFIX = "verification:code:";
-    
-    /**
-     * 用户登录token key
-     * 格式: user:token:{userId}
-     * 用途: 存储用户登录token
-     */
     public static final String USER_TOKEN_PREFIX = "user:token:";
+    
+    // =========================== 字典相关 ================================
+    public static final String DICT_ALL = "dict:all";
+    public static final String DICT_PET_CATEGORY = "dict:pet_category";
+    public static final String DICT_GENDER = "dict:gender";
+    public static final String DICT_ADOPTION_STATUS = "dict:adoption_status";
+    public static final String DICT_HEALTH_STATUS = "dict:health_status";
     
     // =========================== 工具方法 ================================
     

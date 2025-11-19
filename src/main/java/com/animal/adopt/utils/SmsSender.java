@@ -1,4 +1,4 @@
-package com.animal.adopt.service.impl;
+package com.animal.adopt.utils;
 
 import com.animal.adopt.config.SmsConfig;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +20,9 @@ public class SmsSender {
         try {
             if (isConfigured()) {
                 Config config = new Config()
+                        .setEndpoint("dysmsapi.aliyuncs.com")
                         .setAccessKeyId(smsConfig.getAccessKeyId())
                         .setAccessKeySecret(smsConfig.getAccessKeySecret());
-                config.endpoint = "dysmsapi.aliyuncs.com";
                 Client client = new Client(config);
                 SendSmsRequest req = new SendSmsRequest()
                         .setPhoneNumbers(phone)

@@ -12,9 +12,14 @@ import lombok.EqualsAndHashCode;
 public class PetQueryDTO extends PageInfo {
     
     /**
-     * 宠物名称
+     * 宠物名称或品种（模糊查询）
      */
     private String name;
+
+    /**
+     * 品种（可选，用于精确查询）
+     */
+    private String breed;
 
     /**
      * 种类

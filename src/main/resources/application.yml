@@ -2,7 +2,15 @@ spring:
   application:
     name: animal-adopt-system
 
-  # 数据源配置
+  # Spring Web 资源配置
+  web:
+    resources:
+      # 只处理特定的静态资源路径
+      static-locations: classpath:/static/,classpath:/public/
+      # 缓存配置
+      cache:
+        period: 3600
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/animal_adopt?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
@@ -109,20 +117,20 @@ logging:
 
 # MinIO 配置
 minio:
-  endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9000}
-  access-key: ${MINIO_ACCESS_KEY:}
-  secret-key: ${MINIO_SECRET_KEY:}
-  bucket-name: ${MINIO_BUCKET:animal-adopt}
-  public-base-url: ${MINIO_PUBLIC_BASE_URL:http://127.0.0.1:9000}
+  endpoint: http://localhost:9000
+  access-key: 4KNM4j457fx0WaZdEK9u
+  secret-key: 02Tpd8Hv1p1DbS3Pscul57jK8mZA1dfysOpA1TpG
+  bucket-name: animal-adopt
+  public-base-url: http://localhost:9000
 
 # 阿里云配置
 aliyun:
   # OSS配置
 #  oss:
-#    endpoint: ${ALIYUN_OSS_ENDPOINT:oss-cn-hangzhou.aliyuncs.com}
-#    access-key-id: ${ALIYUN_ACCESS_KEY_ID:your-access-key-id}
-#    access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET:your-access-key-secret}
-#    bucket-name: ${ALIYUN_OSS_BUCKET:animal-adopt}
+#    endpoint: oss-cn-beijing.aliyuncs.com
+#    access-key-id: LTAI5tJnvX5qrZ5cPo7z5iqD
+#    access-key-secret: BhXwXU86dkVVTmRb7cWCOJ9UCktuuE
+#    bucket-name: animal-admin
   # 短信配置
   sms:
     access-key-id: ${ALIYUN_SMS_ACCESS_KEY_ID:your-access-key-id}

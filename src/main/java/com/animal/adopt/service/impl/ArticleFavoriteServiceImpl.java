@@ -1,6 +1,6 @@
 package com.animal.adopt.service.impl;
 
-import com.animal.adopt.constants.RedisKeyConstant;
+import com.animal.adopt.constants.RedisConstant;
 import com.animal.adopt.entity.po.ArticleFavorite;
 import com.animal.adopt.mapper.ArticleFavoriteMapper;
 import com.animal.adopt.mapper.ArticleMapper;
@@ -36,7 +36,7 @@ public class ArticleFavoriteServiceImpl extends ServiceImpl<ArticleFavoriteMappe
         if (saved) {
             int updated = articleMapper.incrementFavoriteCount(articleId);
             if (updated > 0) {
-                redisTemplate.delete(RedisKeyConstant.buildArticleFavoriteCountKey(articleId));
+                redisTemplate.delete(RedisConstant.buildArticleFavoriteCountKey(articleId));
             }
         }
         return saved;
@@ -55,7 +55,7 @@ public class ArticleFavoriteServiceImpl extends ServiceImpl<ArticleFavoriteMappe
         if (removed) {
             int updated = articleMapper.decrementFavoriteCount(articleId);
             if (updated > 0) {
-                redisTemplate.delete(RedisKeyConstant.buildArticleFavoriteCountKey(articleId));
+                redisTemplate.delete(RedisConstant.buildArticleFavoriteCountKey(articleId));
             }
         }
         return removed;

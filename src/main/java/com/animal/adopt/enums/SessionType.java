@@ -7,21 +7,25 @@ import lombok.Getter;
  */
 @Getter
 public enum SessionType {
-    
-    /** AI助手 */
+
+    /**
+     * AI助手
+     */
     AI("ai", "AI助手"),
-    
-    /** 管家咨询 */
+
+    /**
+     * 管家咨询
+     */
     HOUSEKEEPER("housekeeper", "管家咨询");
-    
+
     private final String code;
     private final String desc;
-    
+
     SessionType(String code, String desc) {
         this.code = code;
         this.desc = desc;
     }
-    
+
     /**
      * 根据code获取枚举
      */

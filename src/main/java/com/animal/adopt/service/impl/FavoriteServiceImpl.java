@@ -8,7 +8,7 @@ import com.animal.adopt.mapper.FavoriteMapper;
 import com.animal.adopt.mapper.PetMapper;
 import com.animal.adopt.service.FavoriteService;
 import com.animal.adopt.service.PetService;
-import com.animal.adopt.constants.RedisKeyConstant;
+import com.animal.adopt.constants.RedisConstant;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -41,7 +41,12 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         }
         
         // 检查是否已收藏
-        if (isFavorite(userId, petId)) {
+        LambdaQueryWrapper<Favorite> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Favorite::getUserId, userId)
+                .eq(Favorite::getPetId, petId);
+        
+        Favorite existing = this.getOne(wrapper);
+        if (existing != null) {
             log.warn("该宠物已收藏, 用户ID: {}, 宠物ID: {}", userId, petId);
             return true;
         }
@@ -51,14 +56,24 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         favorite.setUserId(userId);
         favorite.setPetId(petId);
         
-        boolean saved = this.save(favorite);
-        if (saved) {
-            int updated = petMapper.incrementFavoriteCount(petId);
-            if (updated > 0) {
-                redisTemplate.delete(RedisKeyConstant.buildPetFavoriteCountKey(petId));
+        try {
+            boolean saved = this.save(favorite);
+            if (saved) {
+                int updated = petMapper.incrementFavoriteCount(petId);
+                if (updated > 0) {
+                    redisTemplate.delete(RedisConstant.buildPetFavoriteCountKey(petId));
+                }
             }
+            return saved;
+        } catch (Exception e) {
+            // 处理唯一键冲突异常 - 可能是并发操作导致的
+            if (e.getCause() != null && e.getCause().getMessage() != null 
+                    && e.getCause().getMessage().contains("Duplicate entry")) {
+                log.warn("收藏记录已存在（并发操作）, 用户ID: {}, 宠物ID: {}", userId, petId);
+                return true;
+            }
+            throw e;
         }
-        return saved;
     }
     
     @Override
@@ -74,7 +89,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         if (removed) {
             int updated = petMapper.decrementFavoriteCount(petId);
             if (updated > 0) {
-                redisTemplate.delete(RedisKeyConstant.buildPetFavoriteCountKey(petId));
+                redisTemplate.delete(RedisConstant.buildPetFavoriteCountKey(petId));
             }
         }
         return removed;
