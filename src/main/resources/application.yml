@@ -128,8 +128,8 @@ aliyun:
   # OSS配置
 #  oss:
 #    endpoint: oss-cn-beijing.aliyuncs.com
-#    access-key-id: LTAI5tJnvX5qrZ5cPo7z5iqD
-#    access-key-secret: BhXwXU86dkVVTmRb7cWCOJ9UCktuuE
+#    access-key-id: ${access-key-id}
+#    access-key-secret: ${access-key-secret}
 #    bucket-name: animal-admin
   # 短信配置
   sms:
