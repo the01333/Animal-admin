@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * 收藏实体类
  */
 @Data
-@TableName("t_favorite")
+@TableName("t_pet_favorite")
 public class Favorite implements Serializable {
     
     private static final long serialVersionUID = 1L;
@@ -27,5 +27,8 @@ public class Favorite implements Serializable {
     /** 收藏时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
-}
 
+    /** 删除标记 */
+    @TableLogic
+    private Integer deleted;
+}

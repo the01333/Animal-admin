@@ -1,6 +1,6 @@
 package com.animal.adopt.service.impl;
 
-import com.animal.adopt.constants.RedisKeyConstant;
+import com.animal.adopt.constants.RedisConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -32,7 +32,7 @@ public class ViewCountService {
             return;
         }
         
-        String key = RedisKeyConstant.PET_VIEW_COUNT_PREFIX + petId;
+        String key = RedisConstant.PET_VIEW_COUNT_PREFIX + petId;
         
         try {
             // Redis的INCR命令是原子操作，线程安全
@@ -57,10 +57,10 @@ public class ViewCountService {
         
         // 如果有用户ID，检查是否在限制时间内
         if (userId != null) {
-            String limitKey = RedisKeyConstant.PET_VIEW_LIMIT_PREFIX + petId + ":" + userId;
+            String limitKey = RedisConstant.PET_VIEW_LIMIT_PREFIX + petId + ":" + userId;
             
             Boolean exists = redisTemplate.hasKey(limitKey);
-            if (Boolean.TRUE.equals(exists)) {
+            if (exists) {
                 log.debug("用户{}在5分钟内已浏览过宠物{}，不重复计数", userId, petId);
                 return;
             }
@@ -83,7 +83,7 @@ public class ViewCountService {
             return;
         }
         
-        String key = RedisKeyConstant.ARTICLE_VIEW_COUNT_PREFIX + articleId;
+        String key = RedisConstant.ARTICLE_VIEW_COUNT_PREFIX + articleId;
         
         try {
             redisTemplate.opsForValue().increment(key, 1);
@@ -105,10 +105,10 @@ public class ViewCountService {
         }
         
         if (userId != null) {
-            String limitKey = RedisKeyConstant.ARTICLE_VIEW_LIMIT_PREFIX + articleId + ":" + userId;
+            String limitKey = RedisConstant.ARTICLE_VIEW_LIMIT_PREFIX + articleId + ":" + userId;
             
             Boolean exists = redisTemplate.hasKey(limitKey);
-            if (Boolean.TRUE.equals(exists)) {
+            if (exists) {
                 log.debug("用户{}在5分钟内已浏览过文章{}，不重复计数", userId, articleId);
                 return;
             }
@@ -130,7 +130,7 @@ public class ViewCountService {
             return 0;
         }
         
-        String key = RedisKeyConstant.PET_VIEW_COUNT_PREFIX + petId;
+        String key = RedisConstant.PET_VIEW_COUNT_PREFIX + petId;
         String value = redisTemplate.opsForValue().get(key);
         
         if (value == null) {
@@ -156,7 +156,7 @@ public class ViewCountService {
             return 0;
         }
         
-        String key = RedisKeyConstant.ARTICLE_VIEW_COUNT_PREFIX + articleId;
+        String key = RedisConstant.ARTICLE_VIEW_COUNT_PREFIX + articleId;
         String value = redisTemplate.opsForValue().get(key);
         
         if (value == null) {

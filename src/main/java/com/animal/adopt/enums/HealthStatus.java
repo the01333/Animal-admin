@@ -14,6 +14,9 @@ public enum HealthStatus {
     /** 生病 */
     SICK("sick", "生病"),
     
+    /** 受伤 */
+    INJURED("injured", "受伤"),
+    
     /** 康复中 */
     RECOVERING("recovering", "康复中");
     

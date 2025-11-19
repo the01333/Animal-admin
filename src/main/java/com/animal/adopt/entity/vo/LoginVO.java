@@ -7,11 +7,15 @@ import lombok.Data;
  */
 @Data
 public class LoginVO {
-    
-    /** Token */
+
+    /**
+     * Token
+     */
     private String token;
-    
-    /** 用户信息 */
+
+    /**
+     * 用户信息
+     */
     private UserVO userInfo;
 }
 

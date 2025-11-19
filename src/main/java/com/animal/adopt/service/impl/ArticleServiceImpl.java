@@ -7,15 +7,12 @@ import com.animal.adopt.exception.BusinessException;
 import com.animal.adopt.mapper.ArticleMapper;
 import com.animal.adopt.service.ArticleService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
-import com.animal.adopt.service.impl.ViewCountService;
-import com.animal.adopt.service.impl.MinioUrlService;
 import org.springframework.data.redis.core.RedisTemplate;
-import com.animal.adopt.constants.RedisKeyConstant;
+import com.animal.adopt.constants.RedisConstant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +28,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     private final ViewCountService viewCountService;
     private final RedisTemplate<String, Object> redisTemplate;
-    private final MinioUrlService minioUrlService;
+    private final OssUrlService ossUrlService;
     
     @Override
     public Page<Article> queryArticlePage(Page<Article> page, String category, Integer status, String keyword) {
@@ -60,19 +57,21 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         wrapper.orderByDesc(Article::getSortOrder, Article::getPublishTime);
         var result = this.page(page, wrapper);
         for (Article a : result.getRecords()) {
-            a.setCoverImage(minioUrlService.normalizeUrl(a.getCoverImage()));
+            a.setCoverImage(ossUrlService.normalizeUrl(a.getCoverImage()));
         }
+        
         // 列表计数读缓存
         for (Article a : result.getRecords()) {
             Long aid = a.getId();
-            String likeKey = com.animal.adopt.constants.RedisKeyConstant.buildArticleLikeCountKey(aid);
+            String likeKey = RedisConstant.buildArticleLikeCountKey(aid);
             Object likeVal = redisTemplate.opsForValue().get(likeKey);
             if (likeVal instanceof Number) {
                 a.setLikeCount(((Number) likeVal).intValue());
             } else {
                 redisTemplate.opsForValue().set(likeKey, a.getLikeCount());
             }
-            String favKey = com.animal.adopt.constants.RedisKeyConstant.buildArticleFavoriteCountKey(aid);
+            
+            String favKey = RedisConstant.buildArticleFavoriteCountKey(aid);
             Object favVal = redisTemplate.opsForValue().get(favKey);
             if (favVal instanceof Number) {
                 a.setFavoriteCount(((Number) favVal).intValue());
@@ -80,6 +79,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 redisTemplate.opsForValue().set(favKey, a.getFavoriteCount());
             }
         }
+        
         return result;
     }
     
@@ -98,21 +98,21 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         int inc = viewCountService.getArticleViewIncrement(id);
         article.setViewCount(article.getViewCount() + inc);
         // 点赞/收藏计数读缓存
-        String likeKey = RedisKeyConstant.buildArticleLikeCountKey(id);
+        String likeKey = RedisConstant.buildArticleLikeCountKey(id);
         Object likeVal = redisTemplate.opsForValue().get(likeKey);
         if (likeVal instanceof Number) {
             article.setLikeCount(((Number) likeVal).intValue());
         } else {
             redisTemplate.opsForValue().set(likeKey, article.getLikeCount());
         }
-        String favKey = RedisKeyConstant.buildArticleFavoriteCountKey(id);
+        String favKey = RedisConstant.buildArticleFavoriteCountKey(id);
         Object favVal = redisTemplate.opsForValue().get(favKey);
         if (favVal instanceof Number) {
             article.setFavoriteCount(((Number) favVal).intValue());
         } else {
             redisTemplate.opsForValue().set(favKey, article.getFavoriteCount());
         }
-        article.setCoverImage(minioUrlService.normalizeUrl(article.getCoverImage()));
+        article.setCoverImage(ossUrlService.normalizeUrl(article.getCoverImage()));
         return article;
     }
     

@@ -7,24 +7,30 @@ import lombok.Getter;
  */
 @Getter
 public enum ArticleCategory {
-    
-    /** 养宠指南 */
+
+    /**
+     * 养宠指南
+     */
     GUIDE("guide", "养宠指南"),
-    
-    /** 领养故事 */
+
+    /**
+     * 领养故事
+     */
     STORY("story", "领养故事"),
     
-    /** 新闻动态 */
+    /**
+     * 新闻动态
+     */
     NEWS("news", "新闻动态");
-    
+
     private final String code;
     private final String desc;
-    
+
     ArticleCategory(String code, String desc) {
         this.code = code;
         this.desc = desc;
     }
-    
+
     /**
      * 根据code获取枚举
      */

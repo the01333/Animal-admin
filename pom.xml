@@ -16,7 +16,7 @@
     <artifactId>animal-adopt-system</artifactId>
     <version>1.0.0</version>
     <name>Animal Adopt System</name>
-    <description>宠物领养系统后端</description>
+    <description>宠物领养系统</description>
 
     <properties>
         <java.version>21</java.version>

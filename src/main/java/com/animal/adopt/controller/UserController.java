@@ -50,7 +50,7 @@ public class UserController {
      * 邮箱验证码登录（不存在则自动注册）
      */
     @PostMapping("/login/email-code")
-    public Result<LoginVO> loginByEmailCode(@RequestBody java.util.Map<String, String> params) {
+    public Result<LoginVO> loginByEmailCode(@RequestBody Map<String, String> params) {
         String email = params.get("email");
         String code = params.get("code");
         LoginVO loginVO = userService.loginByEmailCode(email, code, "login");
@@ -61,7 +61,7 @@ public class UserController {
      * 手机验证码登录（不存在则自动注册）
      */
     @PostMapping("/login/phone-code")
-    public Result<LoginVO> loginByPhoneCode(@RequestBody java.util.Map<String, String> params) {
+    public Result<LoginVO> loginByPhoneCode(@RequestBody Map<String, String> params) {
         String phone = params.get("phone");
         String code = params.get("code");
         LoginVO loginVO = userService.loginByPhoneCode(phone, code, "login");
@@ -122,6 +122,7 @@ public class UserController {
     @PutMapping("/update")
     public Result<String> updateUserInfo(@Valid @RequestBody UserVO userVO) {
         Long userId = StpUtil.getLoginIdAsLong();
+        
         userService.updateUserInfo(userId, userVO);
         return Result.success("更新成功", null);
     }
@@ -136,7 +137,9 @@ public class UserController {
         if (StringUtils.isBlank(oldPassword) || StringUtils.isBlank(newPassword)) {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "旧密码和新密码不能为空");
         }
+        
         Long userId = StpUtil.getLoginIdAsLong();
+        
         userService.changePassword(userId, oldPassword, newPassword);
         return Result.success("密码修改成功", null);
     }
@@ -202,12 +205,15 @@ public class UserController {
         if (status == null) {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "状态不能为空");
         }
+        
         User user = userService.getById(id);
         if (user == null) {
             throw new BusinessException(ResultCode.USER_NOT_FOUND);
         }
+        
         user.setStatus(status);
         userService.updateById(user);
+        
         return Result.success("状态更新成功", null);
     }
 }

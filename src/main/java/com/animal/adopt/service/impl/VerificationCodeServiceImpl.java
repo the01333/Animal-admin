@@ -4,6 +4,7 @@ import cn.hutool.core.util.RandomUtil;
 import com.animal.adopt.entity.po.VerificationCode;
 import com.animal.adopt.mapper.VerificationCodeMapper;
 import com.animal.adopt.service.VerificationCodeService;
+import com.animal.adopt.utils.SmsSender;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

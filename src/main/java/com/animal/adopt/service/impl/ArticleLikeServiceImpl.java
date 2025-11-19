@@ -1,6 +1,6 @@
 package com.animal.adopt.service.impl;
 
-import com.animal.adopt.constants.RedisKeyConstant;
+import com.animal.adopt.constants.RedisConstant;
 import com.animal.adopt.entity.po.ArticleLike;
 import com.animal.adopt.mapper.ArticleLikeMapper;
 import com.animal.adopt.mapper.ArticleMapper;
@@ -36,7 +36,7 @@ public class ArticleLikeServiceImpl extends ServiceImpl<ArticleLikeMapper, Artic
         if (saved) {
             int updated = articleMapper.incrementLikeCount(articleId);
             if (updated > 0) {
-                redisTemplate.delete(RedisKeyConstant.buildArticleLikeCountKey(articleId));
+                redisTemplate.delete(RedisConstant.buildArticleLikeCountKey(articleId));
             }
         }
         return saved;
@@ -55,7 +55,7 @@ public class ArticleLikeServiceImpl extends ServiceImpl<ArticleLikeMapper, Artic
         if (removed) {
             int updated = articleMapper.decrementLikeCount(articleId);
             if (updated > 0) {
-                redisTemplate.delete(RedisKeyConstant.buildArticleLikeCountKey(articleId));
+                redisTemplate.delete(RedisConstant.buildArticleLikeCountKey(articleId));
             }
         }
         return removed;

@@ -7,28 +7,36 @@ import lombok.Getter;
  */
 @Getter
 public enum UserRole {
-    
-    /** 普通用户 */
+
+    /**
+     * 普通用户
+     */
     USER("user", "普通用户"),
-    
-    /** 超级管理员 */
+
+    /**
+     * 超级管理员
+     */
     SUPER_ADMIN("super_admin", "超级管理员"),
     ADMIN("admin", "管理员"),
-    
-    /** 审核员 */
+
+    /**
+     * 审核员
+     */
     APPLICATION_AUDITOR("application_auditor", "审核员"),
-    
-    /** 管家 */
+
+    /**
+     * 管家
+     */
     HOUSEKEEPER("housekeeper", "管家");
-    
+
     private final String code;
     private final String desc;
-    
+
     UserRole(String code, String desc) {
         this.code = code;
         this.desc = desc;
     }
-    
+
     /**
      * 根据code获取枚举
      */
@@ -40,7 +48,7 @@ public enum UserRole {
         }
         return null;
     }
-    
+
     /**
      * 判断是否是管理员角色
      */

@@ -7,27 +7,35 @@ import lombok.Getter;
  */
 @Getter
 public enum AdoptionStatus {
-    
-    /** 可领养 */
+
+    /**
+     * 可领养
+     */
     AVAILABLE("available", "可领养"),
-    
-    /** 待审核 */
+
+    /**
+     * 待审核
+     */
     PENDING("pending", "待审核"),
-    
-    /** 已领养 */
+
+    /**
+     * 已领养
+     */
     ADOPTED("adopted", "已领养"),
-    
-    /** 已预定 */
+
+    /**
+     * 已预定
+     */
     RESERVED("reserved", "已预定");
-    
+
     private final String code;
     private final String desc;
-    
+
     AdoptionStatus(String code, String desc) {
         this.code = code;
         this.desc = desc;
     }
-    
+
     /**
      * 根据code获取枚举
      */

@@ -21,9 +21,6 @@ import com.animal.adopt.service.VerificationCodeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * 用户服务实现类
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -40,7 +37,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, loginDTO.getUsername());
         User user = this.getOne(wrapper);
-        
         if (user == null) {
             throw new BusinessException(ResultCode.USER_NOT_FOUND);
         }
@@ -75,6 +71,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!verificationCodeService.verifyEmailCode(email, code, purpose)) {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "验证码错误或已过期");
         }
+        
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getEmail, email);
         User user = this.getOne(wrapper);
@@ -86,8 +83,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             user.setStatus(1);
             this.save(user);
         }
+        
         StpUtil.login(user.getId());
         String token = StpUtil.getTokenValue();
+        
         LoginVO loginVO = new LoginVO();
         loginVO.setToken(token);
         loginVO.setUserInfo(BeanUtil.copyProperties(user, UserVO.class));
@@ -254,6 +253,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         
         return BeanUtil.copyProperties(user, UserVO.class);
+    }
+
+    public static void main(String[] args) {
+        // $2a$10$smWyW1Z7pZq.nzzYNaCLdOrzUE6p3Pz3vZAKnkv4pshEX8jebulQi
+        // $2a$10$smWyW1Z7pZq.nzzYNaCLdOrzUE6p3Pz3vZAKnkv4pshEX8jebulQi
+        String rawPassword = "admin123";
+        String hashedPassword = BCrypt.hashpw(rawPassword);
+        System.out.println(hashedPassword);
+
+        System.out.println(BCrypt.checkpw(rawPassword, hashedPassword));
     }
 }
 

@@ -1,4 +1,4 @@
-package com.animal.adopt.common;
+package com.animal.adopt.utils;
 
 import cn.dev33.satoken.stp.StpUtil;
 

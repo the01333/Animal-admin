@@ -1,6 +1,6 @@
 package com.animal.adopt.service.impl;
 
-import com.animal.adopt.constants.RedisKeyConstant;
+import com.animal.adopt.constants.RedisConstant;
 import com.animal.adopt.entity.po.PetLike;
 import com.animal.adopt.mapper.PetLikeMapper;
 import com.animal.adopt.mapper.PetMapper;
@@ -28,27 +28,44 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
     @Transactional(rollbackFor = Exception.class)
     public boolean likePet(Long userId, Long petId) {
         // 检查是否已点赞
-        if (isLiked(userId, petId)) {
-            return false;
+        LambdaQueryWrapper<PetLike> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PetLike::getUserId, userId)
+                .eq(PetLike::getPetId, petId);
+        PetLike existing = this.getOne(wrapper);
+        
+        if (existing != null) {
+            log.warn("该宠物已点赞, 用户ID: {}, 宠物ID: {}", userId, petId);
+            return true;
         }
 
         // 添加点赞记录
         PetLike petLike = new PetLike();
         petLike.setUserId(userId);
         petLike.setPetId(petId);
-        this.save(petLike);
-
-        // 使用增量更新，避免并发问题
-        int updated = petMapper.incrementLikeCount(petId);
         
-        if (updated > 0) {
-            // 删除Redis缓存, 下次查询时重新加载
-            redisTemplate.delete(RedisKeyConstant.buildPetLikeCountKey(petId));
-            log.info("用户 {} 点赞宠物 {}", userId, petId);
-            return true;
-        } else {
-            log.warn("更新宠物点赞数失败: petId={}", petId);
-            throw new RuntimeException("更新点赞数失败");
+        try {
+            this.save(petLike);
+
+            // 使用增量更新，避免并发问题
+            int updated = petMapper.incrementLikeCount(petId);
+            
+            if (updated > 0) {
+                // 删除Redis缓存, 下次查询时重新加载
+                redisTemplate.delete(RedisConstant.buildPetLikeCountKey(petId));
+                log.info("用户 {} 点赞宠物 {}", userId, petId);
+                return true;
+            } else {
+                log.warn("更新宠物点赞数失败: petId={}", petId);
+                throw new RuntimeException("更新点赞数失败");
+            }
+        } catch (Exception e) {
+            // 处理唯一键冲突异常 - 可能是并发操作导致的
+            if (e.getCause() != null && e.getCause().getMessage() != null 
+                    && e.getCause().getMessage().contains("Duplicate entry")) {
+                log.warn("点赞记录已存在（并发操作）, 用户ID: {}, 宠物ID: {}", userId, petId);
+                return true;
+            }
+            throw e;
         }
     }
 
@@ -73,7 +90,7 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
         
         if (updated > 0) {
             // 删除Redis缓存
-            redisTemplate.delete(RedisKeyConstant.buildPetLikeCountKey(petId));
+            redisTemplate.delete(RedisConstant.buildPetLikeCountKey(petId));
             log.info("用户 {} 取消点赞宠物 {}", userId, petId);
             return true;
         } else {
