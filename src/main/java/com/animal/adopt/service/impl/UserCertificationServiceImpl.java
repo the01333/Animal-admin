@@ -37,7 +37,6 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
         UserCertification certification = this.getOne(wrapper);
         
         CertificationInfoVO vo = new CertificationInfoVO();
-        
         if (certification == null) {
             // 如果没有认证记录，返回未提交状态
             vo.setStatus("not_submitted");

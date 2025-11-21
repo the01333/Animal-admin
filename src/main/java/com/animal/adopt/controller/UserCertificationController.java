@@ -17,9 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/user/certification")
 @RequiredArgsConstructor
 public class UserCertificationController {
-    
+
     private final UserCertificationService userCertificationService;
-    
+
     /**
      * 获取用户认证信息
      */
@@ -29,19 +29,24 @@ public class UserCertificationController {
         CertificationInfoVO certificationInfo = userCertificationService.getCertificationInfo(userId);
         return Result.success(certificationInfo);
     }
-    
+
     /**
      * 提交用户认证
+     *
+     * @param idCard      身份证号
+     * @param idCardFront 身份证正面
+     * @param idCardBack  身份证反面
+     * @return
      */
     @PostMapping("/submit")
     public Result<String> submitCertification(
             @RequestParam String idCard,
             @RequestParam MultipartFile idCardFront,
-            @RequestParam MultipartFile idCardBack) {
-        
+            @RequestParam MultipartFile idCardBack
+    ) {
         Long userId = StpUtil.getLoginIdAsLong();
         userCertificationService.submitCertification(userId, idCard, idCardFront, idCardBack);
-        
+
         return Result.success("认证申请提交成功，请等待审核", null);
     }
 }

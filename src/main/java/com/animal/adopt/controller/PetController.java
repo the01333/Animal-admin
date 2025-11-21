@@ -28,16 +28,17 @@ import java.util.Map;
 @RequestMapping("/pet")
 @RequiredArgsConstructor
 public class PetController {
-    
+
     private final PetService petService;
     private final DictService dictService;
-    
+
     @GetMapping("/getPetCategories")
     public Result<Map<String, String>> getPetCategories() {
         Map<String, String> data = dictService.getPetCategories();
+        
         return Result.success(data);
     }
-    
+
     /**
      * 分页查询宠物列表
      * 统一使用此接口，移除了冗余的 /list 接口
@@ -51,22 +52,25 @@ public class PetController {
     ) {
         Page<Pet> page = new Page<>(current, size);
         Page<PetVO> result = petService.queryPetPage(page, queryDTO);
+        
         return Result.success(result);
     }
-    
+
     /**
      * 获取推荐宠物
      */
     @GetMapping("/recommended")
     public Result<List<PetVO>> getRecommendedPets(@RequestParam(defaultValue = "6") Integer limit) {
         Page<Pet> page = new Page<>(1, limit);
+        
         PetQueryDTO queryDTO = new PetQueryDTO();
         queryDTO.setAdoptionStatus("available");
         queryDTO.setShelfStatus(1);
         Page<PetVO> result = petService.queryPetPage(page, queryDTO);
+        
         return Result.success(result.getRecords());
     }
-    
+
     /**
      * 根据ID查询宠物详情
      */
@@ -75,7 +79,7 @@ public class PetController {
         PetVO petVO = petService.getPetDetail(id);
         return Result.success(petVO);
     }
-    
+
     /**
      * 创建宠物信息
      */
@@ -85,10 +89,10 @@ public class PetController {
         Long userId = StpUtil.getLoginIdAsLong();
         pet.setCreateBy(userId);
         petService.save(pet);
-        
+
         return Result.success("创建成功", null);
     }
-    
+
     /**
      * 更新宠物信息
      */
@@ -97,10 +101,10 @@ public class PetController {
     public Result<String> updatePet(@PathVariable Long id, @Valid @RequestBody Pet pet) {
         pet.setId(id);
         petService.updateById(pet);
-        
+
         return Result.success("更新成功", null);
     }
-    
+
     /**
      * 删除宠物信息
      */
@@ -108,10 +112,10 @@ public class PetController {
     @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
     public Result<String> deletePet(@PathVariable Long id) {
         petService.removeById(id);
-        
+
         return Result.success("删除成功", null);
     }
-    
+
     /**
      * 批量删除宠物
      */
@@ -119,10 +123,10 @@ public class PetController {
     @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
     public Result<String> batchDeletePet(@RequestBody java.util.List<Long> ids) {
         petService.removeByIds(ids);
-        
+
         return Result.success("批量删除成功", null);
     }
-    
+
     /**
      * 更新宠物上架状态
      */
@@ -134,7 +138,7 @@ public class PetController {
         petService.updateShelfStatus(id, shelfStatus);
         return Result.success("状态更新成功", null);
     }
-    
+
     /**
      * 更新宠物领养状态
      */
@@ -145,7 +149,7 @@ public class PetController {
             @RequestParam String adoptionStatus
     ) {
         petService.updateAdoptionStatus(id, adoptionStatus);
-        
+
         return Result.success("状态更新成功", null);
     }
 }

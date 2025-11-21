@@ -12,7 +12,7 @@ import com.aliyun.dysmsapi20170525.models.SendSmsResponse;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SmsSender {
+public class SmsSenderUtil {
 
     private final SmsConfig smsConfig;
 
