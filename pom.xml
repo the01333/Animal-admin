@@ -91,7 +91,6 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
-            <version>${spring-ai.version}</version>
         </dependency>
 
         <!-- Hutool 工具类 -->
@@ -150,10 +149,10 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
+    
     <dependencyManagement>
         <dependencies>
-            <!-- Spring AI BOM -->
+            <!-- 由于 SpringAI 的问题, 需要引入 ai-bom 库来管理版本 -->
             <dependency>
                 <groupId>org.springframework.ai</groupId>
                 <artifactId>spring-ai-bom</artifactId>

@@ -1,30 +1,31 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+    
 spring:
+  ai:
+    # openai - 接入 qwen
+    openai:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: qwen-plus
+          temperature: 0.8
   application:
     name: animal-adopt-system
-
-  # Spring Web 资源配置
-  web:
-    resources:
-      # 只处理特定的静态资源路径
-      static-locations: classpath:/static/,classpath:/public/
-      # 缓存配置
-      cache:
-        period: 3600
-
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/animal_adopt?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: root
-
-  # Redis 配置
   data:
     redis:
       host: localhost
       port: 6379
       password: root
       database: 3
-      # 连接超时时间
       timeout: 5000ms
       # Lettuce 连接池配置
       lettuce:
@@ -39,24 +40,10 @@ spring:
           max-wait: 3000ms
         # 关闭超时时间
         shutdown-timeout: 100ms
-
-  # AI 配置
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY:your-api-key-here}
-      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
-      chat:
-        options:
-          model: gpt-3.5-turbo
-          temperature: 0.7
-
-  # 文件上传配置
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 50MB
-
-  # 邮件配置
   mail:
     host: smtp.qq.com
     port: 587
@@ -71,7 +58,6 @@ spring:
             required: true
     default-encoding: UTF-8
 
-# MyBatis-Plus 配置
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
@@ -84,7 +70,6 @@ mybatis-plus:
       logic-not-delete-value: 0
   mapper-locations: classpath*:/mapper/**/*.xml
 
-# Sa-Token 配置
 sa-token:
   # token名称 (同时也是cookie名称)
   token-name: Authorization
@@ -101,21 +86,15 @@ sa-token:
   # 是否输出操作日志
   is-log: false
 
-# 服务器配置
-server:
-  port: 8080
-  servlet:
-    context-path: /api
-
-# 日志配置
+# 设置日志级别为 debug, 获取 Spring AI 的日志信息
 logging:
   level:
     com.animal: debug
     org.springframework.web: info
+    org.springframework.ai: debug
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
 
-# MinIO 配置
 minio:
   endpoint: http://localhost:9000
   access-key: 4KNM4j457fx0WaZdEK9u
@@ -123,15 +102,7 @@ minio:
   bucket-name: animal-adopt
   public-base-url: http://localhost:9000
 
-# 阿里云配置
 aliyun:
-  # OSS配置
-#  oss:
-#    endpoint: oss-cn-beijing.aliyuncs.com
-#    access-key-id: ${access-key-id}
-#    access-key-secret: ${access-key-secret}
-#    bucket-name: animal-admin
-  # 短信配置
   sms:
     access-key-id: ${ALIYUN_SMS_ACCESS_KEY_ID:your-access-key-id}
     access-key-secret: ${ALIYUN_SMS_ACCESS_KEY_SECRET:your-access-key-secret}
@@ -141,13 +112,11 @@ aliyun:
       login: ${ALIYUN_SMS_TEMPLATE_LOGIN:SMS_123457}
       reset-password: ${ALIYUN_SMS_TEMPLATE_RESET:SMS_123458}
 
-# 微信配置
 wechat:
   app-id: ${WECHAT_APP_ID:your-app-id}
   app-secret: ${WECHAT_APP_SECRET:your-app-secret}
   redirect-uri: ${WECHAT_REDIRECT_URL:http://localhost:8080/api/oauth/wechat/callback}
 
-# QQ配置
 qq:
   app-id: ${QQ_APP_ID:your-app-id}
   app-key: ${QQ_APP_KEY:your-app-key}

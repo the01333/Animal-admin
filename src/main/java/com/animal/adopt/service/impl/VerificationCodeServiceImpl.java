@@ -4,7 +4,7 @@ import cn.hutool.core.util.RandomUtil;
 import com.animal.adopt.entity.po.VerificationCode;
 import com.animal.adopt.mapper.VerificationCodeMapper;
 import com.animal.adopt.service.VerificationCodeService;
-import com.animal.adopt.utils.SmsSender;
+import com.animal.adopt.utils.SmsSenderUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
     
     private final VerificationCodeMapper verificationCodeMapper;
     private final JavaMailSender mailSender;
-    private final SmsSender smsSender;
+    private final SmsSenderUtil smsSenderUtil;
     
     private static final int CODE_LENGTH = 6;
     private static final int EXPIRE_MINUTES = 5;
@@ -77,7 +77,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             verificationCode.setIsUsed(false);
             verificationCodeMapper.insert(verificationCode);
             
-            boolean sent = smsSender.sendLoginCode(phone, code);
+            boolean sent = smsSenderUtil.sendLoginCode(phone, code);
             log.info("手机验证码发送结果: {} -> {}", phone, sent);
             return sent;
             

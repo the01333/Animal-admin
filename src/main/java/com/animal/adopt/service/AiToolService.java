@@ -72,4 +72,148 @@ public class AiToolService {
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<Article> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, limit == null ? 5 : limit);
         return articleService.queryArticlePage(page, "policy", 1, null).getRecords();
     }
+
+    /**
+     * 根据用户性格特征推荐宠物
+     * 用于处理"我性格内向/外向，适合养什么宠物？"等问题
+     */
+    @Tool(description = "根据用户性格特征推荐最适合的宠物")
+    public java.util.List<PetVO> recommendPetsByPersonality(
+            @ToolParam(description = "用户性格描述，如：内向、外向、忙碌、有耐心等", required = true) String userPersonality,
+            @ToolParam(description = "返回条数", required = false) Integer limit) {
+        // 性格映射到宠物性格
+        String petPersonality = mapUserPersonalityToPetPersonality(userPersonality);
+        return searchPets(null, petPersonality, "available", limit == null ? 8 : limit);
+    }
+
+    /**
+     * 根据生活方式推荐宠物
+     * 用于处理"我住在公寓/有院子，适合养什么宠物？"等问题
+     */
+    @Tool(description = "根据用户生活方式推荐合适的宠物")
+    public java.util.List<PetVO> recommendPetsByLifestyle(
+            @ToolParam(description = "生活方式描述，如：公寓、有院子、经常出差、有小孩等", required = true) String lifestyle,
+            @ToolParam(description = "返回条数", required = false) Integer limit) {
+        String personality = mapLifestyleToPetPersonality(lifestyle);
+        return searchPets(null, personality, "available", limit == null ? 8 : limit);
+    }
+
+    /**
+     * 获取宠物护理指南
+     * 用于处理"怎样照顾小猫/小狗？"等问题
+     */
+    @Tool(description = "获取特定宠物类别的护理指南")
+    public java.util.List<Article> getPetCareGuide(
+            @ToolParam(description = "宠物类别，如：cat/dog/rabbit等", required = true) String petCategory,
+            @ToolParam(description = "返回条数", required = false) Integer limit) {
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Article> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, limit == null ? 5 : limit);
+        return articleService.queryArticlePage(page, "care", 1, petCategory).getRecords();
+    }
+
+    /**
+     * 获取新手养宠指南
+     * 用于处理"新手养宠要注意什么？"等问题
+     */
+    @Tool(description = "获取新手养宠的入门指南")
+    public java.util.List<Article> getBeginnerGuide(
+            @ToolParam(description = "返回条数", required = false) Integer limit) {
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Article> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, limit == null ? 5 : limit);
+        return articleService.queryArticlePage(page, "guide", 1, "新手").getRecords();
+    }
+
+    /**
+     * 获取宠物训练指南
+     * 用于处理"怎样训练宠物？"等问题
+     */
+    @Tool(description = "获取宠物训练和教育指南")
+    public java.util.List<Article> getTrainingGuide(
+            @ToolParam(description = "宠物类别或训练主题，如：dog/cat/行为纠正等", required = false) String topic,
+            @ToolParam(description = "返回条数", required = false) Integer limit) {
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Article> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, limit == null ? 5 : limit);
+        return articleService.queryArticlePage(page, "training", 1, topic).getRecords();
+    }
+
+    /**
+     * 获取宠物健康相关信息
+     * 用于处理"宠物生病了怎么办？"等问题
+     */
+    @Tool(description = "获取宠物健康和医疗相关的信息")
+    public java.util.List<Article> getHealthGuide(
+            @ToolParam(description = "健康话题，如：疫苗、驱虫、常见病等", required = false) String topic,
+            @ToolParam(description = "返回条数", required = false) Integer limit) {
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Article> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, limit == null ? 5 : limit);
+        return articleService.queryArticlePage(page, "health", 1, topic).getRecords();
+    }
+
+    /**
+     * 获取热门可领养宠物
+     * 用于处理"有什么热门的宠物推荐吗？"等问题
+     */
+    @Tool(description = "获取当前最受欢迎的可领养宠物列表")
+    public java.util.List<PetVO> getPopularPets(
+            @ToolParam(description = "返回条数", required = false) Integer limit) {
+        return searchPets(null, null, "available", limit == null ? 10 : limit);
+    }
+
+    /**
+     * 性格映射：用户性格 → 宠物性格
+     */
+    private String mapUserPersonalityToPetPersonality(String userPersonality) {
+        if (userPersonality == null) return null;
+        
+        String lower = userPersonality.toLowerCase();
+        
+        // 内向的人适合温顺、独立的宠物
+        if (lower.contains("内向") || lower.contains("安静") || lower.contains("宅")) {
+            return "温顺,独立";
+        }
+        
+        // 外向的人适合活泼、亲人的宠物
+        if (lower.contains("外向") || lower.contains("活泼") || lower.contains("社交")) {
+            return "活泼,亲人";
+        }
+        
+        // 有耐心的人可以养需要训练的宠物
+        if (lower.contains("耐心") || lower.contains("细心")) {
+            return "聪慧,需要训练";
+        }
+        
+        // 忙碌的人适合独立的宠物
+        if (lower.contains("忙碌") || lower.contains("工作") || lower.contains("出差")) {
+            return "独立,自理";
+        }
+        
+        return null;
+    }
+
+    /**
+     * 生活方式映射：生活方式 → 宠物性格
+     */
+    private String mapLifestyleToPetPersonality(String lifestyle) {
+        if (lifestyle == null) return null;
+        
+        String lower = lifestyle.toLowerCase();
+        
+        // 住公寓的人适合安静、不需要大空间的宠物
+        if (lower.contains("公寓") || lower.contains("小房间") || lower.contains("城市")) {
+            return "温顺,安静";
+        }
+        
+        // 有院子的人可以养活泼、需要运动的宠物
+        if (lower.contains("院子") || lower.contains("别墅") || lower.contains("郊区")) {
+            return "活泼,好动";
+        }
+        
+        // 有小孩的家庭需要温顺、耐心的宠物
+        if (lower.contains("小孩") || lower.contains("家庭") || lower.contains("孩子")) {
+            return "温顺,亲人,耐心";
+        }
+        
+        // 经常出差的人需要独立的宠物
+        if (lower.contains("出差") || lower.contains("旅游") || lower.contains("经常外出")) {
+            return "独立,自理";
+        }
+        
+        return null;
+    }
 }

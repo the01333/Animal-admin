@@ -5,7 +5,7 @@ import cn.dev33.satoken.stp.StpUtil;
 /**
  * Sa-Token 工具类封装
  */
-public class StpKit {
+public class SaTokenUtil {
     
     /**
      * 获取当前登录用户ID

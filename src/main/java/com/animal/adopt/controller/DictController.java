@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * 字典数据控制器
  * 从数据库查询字典数据并缓存
- * 
+ *
  * @author Animal Adopt System
  * @date 2025-11-10
  */
@@ -20,9 +20,9 @@ import java.util.Map;
 @RequestMapping("/dict")
 @RequiredArgsConstructor
 public class DictController {
-    
+
     private final DictService dictService;
-    
+
     /**
      * 获取所有字典数据（一次性获取，带缓存）
      * 查询策略：先走Redis缓存，缓存未命中则查询数据库
@@ -33,7 +33,7 @@ public class DictController {
         Map<String, Object> data = dictService.getAllDictData();
         return Result.success(data);
     }
-    
+
     /**
      * 获取宠物类型选项（带缓存）
      * 从数据库 t_pet 表查询 DISTINCT category
@@ -44,7 +44,7 @@ public class DictController {
         Map<String, String> data = dictService.getPetCategories();
         return Result.success(data);
     }
-    
+
     /**
      * 获取性别选项（带缓存）
      */
@@ -54,7 +54,7 @@ public class DictController {
         Map<Integer, String> data = dictService.getGenders();
         return Result.success(data);
     }
-    
+
     /**
      * 获取领养状态选项（带缓存）
      * 从数据库 t_pet 表查询 DISTINCT adoption_status
@@ -65,7 +65,7 @@ public class DictController {
         Map<String, String> data = dictService.getAdoptionStatuses();
         return Result.success(data);
     }
-    
+
     /**
      * 获取健康状态选项（带缓存）
      */
@@ -75,7 +75,7 @@ public class DictController {
         Map<String, String> data = dictService.getHealthStatuses();
         return Result.success(data);
     }
-    
+
     /**
      * 刷新字典缓存
      * 管理员手动刷新缓存时调用
