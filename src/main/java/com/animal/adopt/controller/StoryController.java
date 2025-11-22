@@ -24,8 +24,7 @@ public class StoryController {
      */
     @GetMapping("/list")
     public Result<List<StoryVO>> getAllStories() {
-        List<StoryVO> stories = storyService.getAllStories();
-        return Result.success(stories);
+        return Result.success(storyService.getAllStories());
     }
 
     /**

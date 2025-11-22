@@ -41,7 +41,7 @@ public class PetController {
 
     /**
      * 分页查询宠物列表
-     * 统一使用此接口，移除了冗余的 /list 接口
+     * 统一使用此接口, 移除了冗余的 /list 接口
      * GET 请求使用 @ModelAttribute 接收查询参数
      */
     @GetMapping("/page")

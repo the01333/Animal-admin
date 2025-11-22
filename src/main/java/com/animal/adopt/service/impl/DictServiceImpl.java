@@ -50,8 +50,8 @@ public class DictServiceImpl implements DictService {
             return cachedData;
         }
 
-        // 2. 缓存未命中，查询数据库
-        log.info("缓存未命中，从数据库查询所有字典数据");
+        // 2. 缓存未命中, 查询数据库
+        log.info("缓存未命中, 从数据库查询所有字典数据");
         Map<String, Object> result = new HashMap<>();
 
         result.put("petCategories", getPetCategories());
@@ -90,7 +90,7 @@ public class DictServiceImpl implements DictService {
         // 4. 写入缓存
         if (!result.isEmpty()) {
             redisTemplate.opsForValue().set(CACHE_KEY_PET_CATEGORY, result, CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
-            log.debug("宠物类型字典已缓存，数量: {}", result.size());
+            log.debug("宠物类型字典已缓存, 数量: {}", result.size());
         }
 
         return result;
@@ -107,7 +107,7 @@ public class DictServiceImpl implements DictService {
             return cachedData;
         }
 
-        // 2. 性别是固定的，直接构建
+        // 2. 性别是固定的, 直接构建
         Map<Integer, String> result = new LinkedHashMap<>();
         result.put(0, "未知");
         result.put(1, "公");
@@ -144,7 +144,7 @@ public class DictServiceImpl implements DictService {
         // 4. 写入缓存
         if (!result.isEmpty()) {
             redisTemplate.opsForValue().set(CACHE_KEY_ADOPTION_STATUS, result, CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
-            log.debug("领养状态字典已缓存，数量: {}", result.size());
+            log.debug("领养状态字典已缓存, 数量: {}", result.size());
         }
 
         return result;
@@ -162,7 +162,7 @@ public class DictServiceImpl implements DictService {
             return cachedData;
         }
 
-        // 2. 健康状态是固定的，直接构建
+        // 2. 健康状态是固定的, 直接构建
         Map<String, String> result = new LinkedHashMap<>();
         result.put("healthy", "健康");
         result.put("sick", "生病");

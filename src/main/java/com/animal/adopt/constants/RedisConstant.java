@@ -14,7 +14,7 @@ public class RedisConstant {
     /**
      * 宠物浏览次数 key
      * 格式: pet:view:count:{petId}
-     * 用途: 存储浏览次数增量，定时同步到数据库
+     * 用途: 存储浏览次数增量, 定时同步到数据库
      */
     public static final String PET_VIEW_COUNT_PREFIX = "pet:view:count:";
     
@@ -28,14 +28,14 @@ public class RedisConstant {
     /**
      * 宠物点赞数缓存 key
      * 格式: pet:like:count:{petId}
-     * 用途: 缓存宠物点赞数，提高查询性能
+     * 用途: 缓存宠物点赞数, 提高查询性能
      */
     public static final String PET_LIKE_COUNT_PREFIX = "pet:like:count:";
     
     /**
      * 宠物收藏数缓存 key
      * 格式: pet:favorite:count:{petId}
-     * 用途: 缓存宠物收藏数，提高查询性能
+     * 用途: 缓存宠物收藏数, 提高查询性能
      */
     public static final String PET_FAVORITE_COUNT_PREFIX = "pet:favorite:count:";
     
@@ -44,7 +44,7 @@ public class RedisConstant {
     /**
      * 文章浏览次数 key
      * 格式: article:view:count:{articleId}
-     * 用途: 存储浏览次数增量，定时同步到数据库
+     * 用途: 存储浏览次数增量, 定时同步到数据库
      */
     public static final String ARTICLE_VIEW_COUNT_PREFIX = "article:view:count:";
     
@@ -58,14 +58,14 @@ public class RedisConstant {
     /**
      * 文章点赞数缓存 key
      * 格式: article:like:count:{articleId}
-     * 用途: 缓存文章点赞数，提高查询性能
+     * 用途: 缓存文章点赞数, 提高查询性能
      */
     public static final String ARTICLE_LIKE_COUNT_PREFIX = "article:like:count:";
     
     /**
      * 文章收藏数缓存 key
      * 格式: article:favorite:count:{articleId}
-     * 用途: 缓存文章收藏数，提高查询性能
+     * 用途: 缓存文章收藏数, 提高查询性能
      */
     public static final String ARTICLE_FAVORITE_COUNT_PREFIX = "article:favorite:count:";
     

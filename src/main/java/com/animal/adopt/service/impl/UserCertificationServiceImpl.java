@@ -38,7 +38,7 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
         
         CertificationInfoVO vo = new CertificationInfoVO();
         if (certification == null) {
-            // 如果没有认证记录，返回未提交状态
+            // 如果没有认证记录, 返回未提交状态
             vo.setStatus("not_submitted");
         } else {
             vo.setStatus(certification.getStatus());
@@ -82,7 +82,7 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
             certification.setStatus("pending");
             
             if (existingCertification != null) {
-                // 如果已有记录，更新状态
+                // 如果已有记录, 更新状态
                 certification.setId(existingCertification.getId());
                 this.updateById(certification);
             } else {

@@ -48,7 +48,7 @@ public class Story {
     private String author;
     
     /**
-     * 标签，逗号分隔
+     * 标签, 逗号分隔
      */
     private String tags;
     
