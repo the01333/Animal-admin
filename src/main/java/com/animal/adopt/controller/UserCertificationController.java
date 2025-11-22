@@ -47,6 +47,6 @@ public class UserCertificationController {
         Long userId = StpUtil.getLoginIdAsLong();
         userCertificationService.submitCertification(userId, idCard, idCardFront, idCardBack);
 
-        return Result.success("认证申请提交成功，请等待审核", null);
+        return Result.success("认证申请提交成功, 请等待审核", null);
     }
 }

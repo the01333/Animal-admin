@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 浏览次数服务
- * 使用Redis缓存浏览次数，定时同步到数据库
+ * 使用Redis缓存浏览次数, 定时同步到数据库
  * 
  * @author Animal Adopt System
  * @date 2025-11-10
@@ -35,7 +35,7 @@ public class ViewCountService {
         String key = RedisConstant.PET_VIEW_COUNT_PREFIX + petId;
         
         try {
-            // Redis的INCR命令是原子操作，线程安全
+            // Redis的INCR命令是原子操作, 线程安全
             redisTemplate.opsForValue().increment(key, 1);
             log.debug("宠物{}浏览次数+1", petId);
         } catch (Exception e) {
@@ -48,20 +48,20 @@ public class ViewCountService {
      * 同一用户5分钟内只计数一次
      * 
      * @param petId 宠物ID
-     * @param userId 用户ID（可为null，表示未登录用户）
+     * @param userId 用户ID（可为null, 表示未登录用户）
      */
     public void incrementPetViewWithLimit(Long petId, Long userId) {
         if (petId == null) {
             return;
         }
         
-        // 如果有用户ID，检查是否在限制时间内
+        // 如果有用户ID, 检查是否在限制时间内
         if (userId != null) {
             String limitKey = RedisConstant.PET_VIEW_LIMIT_PREFIX + petId + ":" + userId;
             
             Boolean exists = redisTemplate.hasKey(limitKey);
             if (exists) {
-                log.debug("用户{}在5分钟内已浏览过宠物{}，不重复计数", userId, petId);
+                log.debug("用户{}在5分钟内已浏览过宠物{}, 不重复计数", userId, petId);
                 return;
             }
             
@@ -109,7 +109,7 @@ public class ViewCountService {
             
             Boolean exists = redisTemplate.hasKey(limitKey);
             if (exists) {
-                log.debug("用户{}在5分钟内已浏览过文章{}，不重复计数", userId, articleId);
+                log.debug("用户{}在5分钟内已浏览过文章{}, 不重复计数", userId, articleId);
                 return;
             }
             

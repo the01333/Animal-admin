@@ -24,15 +24,15 @@ public class AiToolService {
      */
     @Tool(description = "根据类别、性格关键词、领养状态查询宠物列表")
     public List<PetVO> searchPets(
-            @ToolParam(description = "宠物类别，如 cat/dog 等", required = false) String category,
+            @ToolParam(description = "宠物类别, 如 cat/dog 等", required = false) String category,
             @ToolParam(description = "性格关键词（模糊匹配）", required = false) String personality,
-            @ToolParam(description = "领养状态，如 available/pending/adopted", required = false) String adoptionStatus,
+            @ToolParam(description = "领养状态, 如 available/pending/adopted", required = false) String adoptionStatus,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         PetQueryDTO query = new PetQueryDTO();
         query.setCategory(category);
         query.setAdoptionStatus(adoptionStatus);
         
-        // personality 为自由文本，前端数据结构为 Pet.personality 文本包含
+        // personality 为自由文本, 前端数据结构为 Pet.personality 文本包含
         Page<Pet> page = new Page<>(1, limit == null ? 10 : limit);
         Page<PetVO> result = petService.queryPetPage(page, query);
         
@@ -75,11 +75,11 @@ public class AiToolService {
 
     /**
      * 根据用户性格特征推荐宠物
-     * 用于处理"我性格内向/外向，适合养什么宠物？"等问题
+     * 用于处理"我性格内向/外向, 适合养什么宠物？"等问题
      */
     @Tool(description = "根据用户性格特征推荐最适合的宠物")
     public java.util.List<PetVO> recommendPetsByPersonality(
-            @ToolParam(description = "用户性格描述，如：内向、外向、忙碌、有耐心等", required = true) String userPersonality,
+            @ToolParam(description = "用户性格描述, 如：内向、外向、忙碌、有耐心等", required = true) String userPersonality,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         // 性格映射到宠物性格
         String petPersonality = mapUserPersonalityToPetPersonality(userPersonality);
@@ -88,11 +88,11 @@ public class AiToolService {
 
     /**
      * 根据生活方式推荐宠物
-     * 用于处理"我住在公寓/有院子，适合养什么宠物？"等问题
+     * 用于处理"我住在公寓/有院子, 适合养什么宠物？"等问题
      */
     @Tool(description = "根据用户生活方式推荐合适的宠物")
     public java.util.List<PetVO> recommendPetsByLifestyle(
-            @ToolParam(description = "生活方式描述，如：公寓、有院子、经常出差、有小孩等", required = true) String lifestyle,
+            @ToolParam(description = "生活方式描述, 如：公寓、有院子、经常出差、有小孩等", required = true) String lifestyle,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         String personality = mapLifestyleToPetPersonality(lifestyle);
         return searchPets(null, personality, "available", limit == null ? 8 : limit);
@@ -104,7 +104,7 @@ public class AiToolService {
      */
     @Tool(description = "获取特定宠物类别的护理指南")
     public java.util.List<Article> getPetCareGuide(
-            @ToolParam(description = "宠物类别，如：cat/dog/rabbit等", required = true) String petCategory,
+            @ToolParam(description = "宠物类别, 如：cat/dog/rabbit等", required = true) String petCategory,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<Article> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, limit == null ? 5 : limit);
         return articleService.queryArticlePage(page, "care", 1, petCategory).getRecords();
@@ -127,7 +127,7 @@ public class AiToolService {
      */
     @Tool(description = "获取宠物训练和教育指南")
     public java.util.List<Article> getTrainingGuide(
-            @ToolParam(description = "宠物类别或训练主题，如：dog/cat/行为纠正等", required = false) String topic,
+            @ToolParam(description = "宠物类别或训练主题, 如：dog/cat/行为纠正等", required = false) String topic,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<Article> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, limit == null ? 5 : limit);
         return articleService.queryArticlePage(page, "training", 1, topic).getRecords();
@@ -139,7 +139,7 @@ public class AiToolService {
      */
     @Tool(description = "获取宠物健康和医疗相关的信息")
     public java.util.List<Article> getHealthGuide(
-            @ToolParam(description = "健康话题，如：疫苗、驱虫、常见病等", required = false) String topic,
+            @ToolParam(description = "健康话题, 如：疫苗、驱虫、常见病等", required = false) String topic,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<Article> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, limit == null ? 5 : limit);
         return articleService.queryArticlePage(page, "health", 1, topic).getRecords();

@@ -33,8 +33,8 @@ public class SmsSenderUtil {
                 log.info("[SMS] 阿里云发送结果: {}", resp.getBody());
                 return resp.getBody() != null && "OK".equalsIgnoreCase(resp.getBody().getCode());
             }
-            // 未配置，模拟发送，保证系统可跑
-            log.warn("[SMS] 未配置阿里云密钥，模拟发送登录验证码到 {}: code={}", phone, code);
+            // 未配置, 模拟发送, 保证系统可跑
+            log.warn("[SMS] 未配置阿里云密钥, 模拟发送登录验证码到 {}: code={}", phone, code);
             return true;
         } catch (Exception e) {
             log.error("发送短信失败", e);

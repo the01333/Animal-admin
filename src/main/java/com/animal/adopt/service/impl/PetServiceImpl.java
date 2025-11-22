@@ -95,7 +95,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         // 转换为VO
         Page<PetVO> voPage = new Page<>(petPage.getCurrent(), petPage.getSize(), petPage.getTotal());
         List<PetVO> vos = BeanUtil.copyToList(petPage.getRecords(), PetVO.class);
-        // 读点赞/收藏缓存，未命中则写入
+        // 读点赞/收藏缓存, 未命中则写入
         for (PetVO p : vos) {
             Long pid = p.getId();
 

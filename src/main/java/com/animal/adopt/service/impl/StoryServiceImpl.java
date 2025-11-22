@@ -12,6 +12,7 @@ import com.animal.adopt.mapper.StoryFavoriteMapper;
 import com.animal.adopt.service.StoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -32,9 +33,13 @@ public class StoryServiceImpl extends ServiceImpl<StoryMapper, Story> implements
     @Autowired
     private StoryFavoriteMapper storyFavoriteMapper;
     
+    @Autowired
+    private OssUrlService ossUrlService;
+    
     @Override
     public List<StoryVO> getAllStories() {
         List<Story> stories = this.list();
+        
         return stories.stream()
                 .map(story -> convertToVO(story, null))
                 .collect(Collectors.toList());
@@ -75,7 +80,7 @@ public class StoryServiceImpl extends ServiceImpl<StoryMapper, Story> implements
                .eq(StoryLike::getStoryId, storyId);
         int deleted = storyLikeMapper.delete(wrapper);
         
-        // 如果成功删除了点赞记录，则更新故事表中的点赞数
+        // 如果成功删除了点赞记录, 则更新故事表中的点赞数
         if (deleted > 0) {
             Story story = this.getById(storyId);
             if (story != null && story.getLikes() > 0) {
@@ -114,7 +119,8 @@ public class StoryServiceImpl extends ServiceImpl<StoryMapper, Story> implements
         vo.setTitle(story.getTitle());
         vo.setExcerpt(story.getExcerpt());
         vo.setContent(story.getContent());
-        vo.setImage(story.getImage());
+        // 处理图片URL
+        vo.setImage(ossUrlService.normalizeUrl(story.getImage()));
         vo.setAuthor(story.getAuthor());
         
         // 解析标签

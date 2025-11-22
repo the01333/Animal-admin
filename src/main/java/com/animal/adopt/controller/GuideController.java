@@ -24,8 +24,7 @@ public class GuideController {
      */
     @GetMapping("/list")
     public Result<List<GuideVO>> getAllGuides() {
-        List<GuideVO> guides = guideService.getAllGuides();
-        return Result.success(guides);
+        return Result.success(guideService.getAllGuides());
     }
     
     /**

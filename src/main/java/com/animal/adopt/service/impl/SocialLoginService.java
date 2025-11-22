@@ -42,7 +42,7 @@ public class SocialLoginService {
                 openId = map == null ? null : (String) map.get("openid");
             }
         } catch (Exception e) {
-            log.warn("微信code换取openid失败，改用占位: {}", e.getMessage());
+            log.warn("微信code换取openid失败, 改用占位: {}", e.getMessage());
         }
         if (StrUtil.isBlank(openId)) {
             openId = pseudoId("wx:" + code);
@@ -54,7 +54,7 @@ public class SocialLoginService {
         String openId = null;
         try {
             if (StrUtil.isNotBlank(qqAppId) && StrUtil.isNotBlank(qqAppKey)) {
-                // QQ 平台实际需要浏览器回调拿 openid；这里提供占位调用，失败则走占位
+                // QQ 平台实际需要浏览器回调拿 openid；这里提供占位调用, 失败则走占位
                 String url = "https://graph.qq.com/oauth2.0/me?access_token=" + code;
                 String resp = restTemplate.getForObject(url, String.class);
                 if (resp != null && resp.contains("openid")) {
@@ -66,7 +66,7 @@ public class SocialLoginService {
                 }
             }
         } catch (Exception e) {
-            log.warn("QQ code换取openid失败，改用占位: {}", e.getMessage());
+            log.warn("QQ code换取openid失败, 改用占位: {}", e.getMessage());
         }
         if (StrUtil.isBlank(openId)) {
             openId = pseudoId("qq:" + code);

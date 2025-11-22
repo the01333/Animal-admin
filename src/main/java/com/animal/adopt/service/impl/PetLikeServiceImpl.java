@@ -46,7 +46,7 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
         try {
             this.save(petLike);
 
-            // 使用增量更新，避免并发问题
+            // 使用增量更新, 避免并发问题
             int updated = petMapper.incrementLikeCount(petId);
             
             if (updated > 0) {

@@ -10,6 +10,7 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +31,7 @@ public class AiChatService {
         String system = buildSystemPrompt();
         Message user = new UserMessage(content == null ? "" : content);
         Prompt prompt = new Prompt(List.of(new SystemMessage(system), user));
-        
+
         return chatClient.prompt(prompt)
                 .tools(aiToolService)
                 .call()
@@ -39,39 +40,40 @@ public class AiChatService {
 
     /**
      * 多轮对话（使用会话记忆）
+     *
      * @param sessionId 会话ID
-     * @param content 用户输入内容
-     * @param userId 用户ID
+     * @param content   用户输入内容
+     * @param userId    用户ID
      * @return AI回复内容
      */
     public String chatWithMemory(String sessionId, String content, Long userId) {
         log.info("多轮对话, 会话ID: {}, 用户ID: {}", sessionId, userId);
-        
+
         // 获取会话历史
         List<Message> conversationHistory = conversationService.getConversationHistory(sessionId);
-        
+
         // 构建消息列表
         List<Message> messages = new ArrayList<>();
         messages.add(new SystemMessage(buildSystemPrompt()));
-        
+
         // 添加历史消息
         messages.addAll(conversationHistory);
-        
+
         // 添加当前用户消息
         Message userMessage = new UserMessage(content == null ? "" : content);
         messages.add(userMessage);
-        
-        // 调用AI
+
+        // 调用 AI
         Prompt prompt = new Prompt(messages);
         String reply = chatClient.prompt(prompt)
                 .tools(aiToolService)
                 .call()
                 .content();
-        
-        // 保存用户消息和AI回复到数据库
+
+        // 保存用户消息和 AI 回复到数据库
         conversationService.saveMessage(sessionId, userId, "user", content, null, null, null);
         conversationService.saveMessage(sessionId, userId, "assistant", reply, null, null, null);
-        
+
         return reply;
     }
 
@@ -79,31 +81,102 @@ public class AiChatService {
      * 多轮对话（带工具调用信息）
      */
     public String chatWithMemoryAndTools(String sessionId, String content, Long userId,
-                                        String toolName, String toolParams, String toolResult) {
+                                         String toolName, String toolParams, String toolResult) {
         log.info("多轮对话（带工具调用）, 会话ID: {}, 工具: {}", sessionId, toolName);
-        
+
         // 获取会话历史
         List<Message> conversationHistory = conversationService.getConversationHistory(sessionId);
-        
+
         // 构建消息列表
         List<Message> messages = new ArrayList<>();
         messages.add(new SystemMessage(buildSystemPrompt()));
         messages.addAll(conversationHistory);
         messages.add(new UserMessage(content == null ? "" : content));
-        
+
         // 调用AI
         Prompt prompt = new Prompt(messages);
         String reply = chatClient.prompt(prompt)
                 .tools(aiToolService)
                 .call()
                 .content();
-        
+
         // 保存消息（包含工具调用信息）
-        conversationService.saveMessage(sessionId, userId, "user", content, 
+        conversationService.saveMessage(sessionId, userId, "user", content,
                 toolName, toolParams, toolResult);
         conversationService.saveMessage(sessionId, userId, "assistant", reply, null, null, null);
-        
+
         return reply;
+    }
+
+    /**
+     * 流式单轮对话（不使用会话记忆）
+     */
+    public Flux<String> chatStream(String content) {
+        String system = buildSystemPrompt();
+        Message user = new UserMessage(content == null ? "" : content);
+        Prompt prompt = new Prompt(List.of(new SystemMessage(system), user));
+
+        return chatClient.prompt(prompt)
+                .stream()
+                .content();
+    }
+
+    /**
+     * 流式多轮对话（使用会话记忆）
+     *
+     * @param sessionId 会话ID
+     * @param content   用户输入内容
+     * @param userId    用户ID
+     * @return 流式AI回复
+     */
+    public Flux<String> chatWithMemoryStream(String sessionId, String content, Long userId) {
+        log.info("流式多轮对话, 会话ID: {}, 用户ID: {}", sessionId, userId);
+
+        // 获取会话历史
+        List<Message> conversationHistory = conversationService.getConversationHistory(sessionId);
+
+        // 构建消息列表
+        List<Message> messages = new ArrayList<>();
+        messages.add(new SystemMessage(buildSystemPrompt()));
+
+        // 添加历史消息
+        messages.addAll(conversationHistory);
+
+        // 添加当前用户消息
+        Message userMessage = new UserMessage(content == null ? "" : content);
+        messages.add(userMessage);
+
+        // 调用AI流式接口
+        Prompt prompt = new Prompt(messages);
+        return chatClient.prompt(prompt)
+                .stream()
+                .content()
+                .doOnComplete(() -> {
+                    // 流完成后保存消息到数据库
+                    conversationService.saveMessage(sessionId, userId, "user", content, null, null, null);
+                    // 注意：完整回复内容需要在前端收集后再保存
+                    conversationService.saveMessage(sessionId, userId, "assistant", "", null, null, null);
+                });
+    }
+
+    /**
+     * 按换行符分割字符串并返回 Flux
+     */
+    private Flux<String> splitByNewline(String text) {
+        if (text == null || text.isEmpty()) {
+            return Flux.empty();
+        }
+
+        String[] lines = text.split("\n");
+        List<String> result = new ArrayList<>();
+
+        for (String line : lines) {
+            if (!line.isEmpty()) {
+                result.add(line + "\n");
+            }
+        }
+
+        return Flux.fromIterable(result);
     }
 
     /**
@@ -111,7 +184,7 @@ public class AiChatService {
      */
     private String buildSystemPrompt() {
         return """
-                你是i宠园的智能客服助手，一个专业、友好且富有同情心的宠物领养顾问。
+                你是i宠园的智能客服助手, 一个专业、友好且富有同情心的宠物领养顾问。
                 
                 【核心职责】
                 1. 帮助用户找到最适合他们的宠物伴侣
@@ -126,19 +199,19 @@ public class AiChatService {
                 - 鼓励负责任的宠物领养
                 
                 【工具使用指南】
-                当用户询问以下内容时，请调用相应工具：
+                当用户询问以下内容时, 请调用相应工具：
                 
                 1. 【宠物推荐查询】- 用户问"有什么推荐的宠物吗？"、"我想要一只活泼的小狗"等
-                   → 调用 searchPets 工具，根据用户描述的性格特征、偏好进行查询
+                   → 调用 searchPets 工具, 根据用户描述的性格特征、偏好进行查询
                    → 参数说明：
                      - category: 宠物类别（cat/dog/rabbit等）
                      - personality: 性格关键词（活泼/温顺/独立/亲人等）
                      - adoptionStatus: 领养状态（available=可领养）
                      - limit: 返回数量（建议5-10条）
                 
-                2. 【性格匹配推荐】- 用户问"我性格内向，适合养什么宠物？"等
+                2. 【性格匹配推荐】- 用户问"我性格内向, 适合养什么宠物？"等
                    → 先理解用户的生活方式和性格特征
-                   → 调用 searchPets 工具，推荐匹配的宠物
+                   → 调用 searchPets 工具, 推荐匹配的宠物
                    → 提供详细的匹配理由
                 
                 3. 【文章/指南查询】- 用户问"怎样照顾小猫？"、"新手养狗要注意什么？"等
@@ -166,15 +239,28 @@ public class AiChatService {
                 
                 【回复格式建议】
                 1. 直接回答用户的问题
-                2. 如果调用了工具，基于结果提供具体的宠物推荐或信息
+                2. 如果调用了工具, 基于结果提供具体的宠物推荐或信息
                 3. 提供额外的建议或相关信息
                 4. 鼓励用户采取下一步行动（如查看详情、提交申请等）
                 
+                【格式要求】
+                - 使用换行符分段, 每个段落之间空一行
+                - 对于列表项, 每项单独一行
+                - 对于宠物推荐, 格式必须为：
+                  🐾 **宠物名字 - 品种**
+                  性格描述...
+                  适合...
+                  （每只宠物之间空一行）
+                - 使用 🐾 符号开头标记每只宠物信息块
+                - 重要信息用【】括起来, 单独成行
+                - 【温馨提示】必须在所有宠物推荐之后
+                
                 【重要提示】
                 - 只回答与宠物领养相关的问题
-                - 如果用户问的问题超出范围，礼貌地说明并引导回相关话题
+                - 如果用户问的问题超出范围, 礼貌地说明并引导回相关话题
                 - 优先使用工具获取最新的数据库信息
                 - 始终以宠物福利和用户满意度为首要考虑
+                - 回复必须包含充分的换行符来保证可读性
                 """;
     }
 }

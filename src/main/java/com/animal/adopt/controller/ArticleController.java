@@ -28,7 +28,7 @@ public class ArticleController {
     
     /**
      * 分页查询文章列表
-     * 统一使用此接口，移除了冗余的 /list 接口
+     * 统一使用此接口, 移除了冗余的 /list 接口
      */
     @GetMapping("/page")
     public Result<Page<Article>> queryArticlePage(

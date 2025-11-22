@@ -1,15 +1,15 @@
 package com.animal.adopt.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.animal.adopt.entity.po.Guide;
+import com.animal.adopt.entity.po.GuideFavorite;
 import com.animal.adopt.entity.po.GuideLike;
 import com.animal.adopt.entity.vo.GuideVO;
-import com.animal.adopt.mapper.GuideMapper;
-import com.animal.adopt.mapper.GuideLikeMapper;
-import com.animal.adopt.entity.po.GuideFavorite;
 import com.animal.adopt.mapper.GuideFavoriteMapper;
+import com.animal.adopt.mapper.GuideLikeMapper;
+import com.animal.adopt.mapper.GuideMapper;
 import com.animal.adopt.service.GuideService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,10 +30,14 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
 
     @Autowired
     private GuideFavoriteMapper guideFavoriteMapper;
+    
+    @Autowired
+    private OssUrlService ossUrlService;
 
     @Override
     public List<GuideVO> getAllGuides() {
         List<Guide> guides = this.list();
+        
         return guides.stream()
                 .map(guide -> convertToVO(guide, null))
                 .collect(Collectors.toList());
@@ -78,7 +82,7 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
             guideLike.setGuideId(guideId);
             guideLikeMapper.insert(guideLike);
 
-            // 注意：指南表中没有likes字段，只有likeCount通过查询t_guide_like表计算
+            // 注意：指南表中没有likes字段, 只有likeCount通过查询t_guide_like表计算
             // 所以这里不需要更新指南表
         }
     }
@@ -90,7 +94,7 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
                 .eq(GuideLike::getGuideId, guideId);
         guideLikeMapper.delete(wrapper);
 
-        // 注意：指南表中没有likes字段，只有likeCount通过查询t_guide_like表计算
+        // 注意：指南表中没有likes字段, 只有likeCount通过查询t_guide_like表计算
         // 所以这里不需要更新指南表
     }
 
@@ -127,7 +131,8 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
         vo.setTitle(guide.getTitle());
         vo.setExcerpt(guide.getExcerpt());
         vo.setContent(guide.getContent());
-        vo.setImage(guide.getImage());
+        // 处理图片URL
+        vo.setImage(ossUrlService.normalizeUrl(guide.getImage()));
         vo.setCategory(guide.getCategory());
         vo.setViews(guide.getViews());
         if (guide.getCreatedAt() != null) {

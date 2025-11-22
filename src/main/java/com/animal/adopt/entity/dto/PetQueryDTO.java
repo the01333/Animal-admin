@@ -17,7 +17,7 @@ public class PetQueryDTO extends PageInfo {
     private String name;
 
     /**
-     * 品种（可选，用于精确查询）
+     * 品种（可选, 用于精确查询）
      */
     private String breed;
 
