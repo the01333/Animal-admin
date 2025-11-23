@@ -13,6 +13,11 @@ spring:
         options:
           model: qwen-plus
           temperature: 0.8
+  cassandra:
+    contact-points: localhost
+    port: 9042
+    local-datacenter: datacenter1
+    keyspace-name: animal_adopt_ai
   application:
     name: animal-adopt-system
   datasource:
@@ -74,9 +79,9 @@ sa-token:
   # token名称 (同时也是cookie名称)
   token-name: Authorization
   # token有效期, 单位秒, -1代表永不过期
-  timeout: 86400
-  # token临时有效期 (指定时间内无操作就视为token过期) 单位: 秒
-  active-timeout: 1800
+  timeout: -1
+  # token临时有效期 (指定时间内无操作就视为token过期) 单位: 秒, -1代表永不过期
+  active-timeout: -1
   # 是否允许同一账号并发登录 (为true时允许一起登录, 为false时新登录挤掉旧登录)
   is-concurrent: true
   # 在多人登录同一账号时, 是否共用一个token (为true时所有登录共用一个token, 为false时每次登录新建一个token)
@@ -85,15 +90,19 @@ sa-token:
   token-style: uuid
   # 是否输出操作日志
   is-log: false
+  # token前缀 (用于支持 Bearer 前缀)
+  token-prefix: Bearer
 
-# 设置日志级别为 debug, 获取 Spring AI 的日志信息
 logging:
   level:
     com.animal: debug
     org.springframework.web: info
+    # 设置日志级别为 debug, 获取 Spring AI 的日志信息
     org.springframework.ai: debug
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+#    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+    console: "%clr{%date{yyyy-MM-dd HH:mm:ss}}{cyan} %clr{[%thread]}{blue} %clr{%-5level}{highlightLevel} %clr{%logger{36}}{magenta} %clr{---} %clr{%msg%n}{faint}"
+#    console: "%clr{%date{yyyy-MM-dd HH:mm:ss}}{cyan} %clr{[%thread]}{blue} %clr{%-5level}{highlightLevel} %clr{%logger{36}}{magenta} %clr{---}{cyan} %clr{%msg%n}{faint}"
 
 minio:
   endpoint: http://localhost:9000
@@ -121,4 +130,3 @@ qq:
   app-id: ${QQ_APP_ID:your-app-id}
   app-key: ${QQ_APP_KEY:your-app-key}
   redirect-uri: ${QQ_REDIRECT_URL:http://localhost:8080/api/oauth/qq/callback}
-

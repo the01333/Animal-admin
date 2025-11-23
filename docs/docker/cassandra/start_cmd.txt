@@ -1,0 +1,29 @@
+docker exec -it cassandra5 cqlsh
+
+CREATE KEYSPACE IF NOT EXISTS animal_adopt_ai
+  WITH replication = {
+    'class': 'SimpleStrategy',
+    'replication_factor': 1
+  };
+
+USE animal_adopt_ai;
+
+CREATE TABLE IF NOT EXISTS conversation_history (
+    session_id text,
+    timestamp timestamp,
+    message_id uuid,
+    user_id bigint,
+    role text,
+    content text,
+    tool_name text,
+    tool_params text,
+    tool_result text,
+    created_at timestamp,
+    PRIMARY KEY ((session_id), timestamp, message_id)
+) WITH CLUSTERING ORDER BY (timestamp DESC, message_id DESC)
+  AND comment = 'AI客服对话历史表';
+
+CREATE INDEX IF NOT EXISTS idx_conversation_user_id ON conversation_history (user_id);
+CREATE INDEX IF NOT EXISTS idx_conversation_role ON conversation_history (role);
+
+DESCRIBE KEYSPACES;

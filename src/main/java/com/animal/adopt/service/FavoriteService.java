@@ -40,6 +40,13 @@ public interface FavoriteService extends IService<Favorite> {
      * @return 收藏分页数据
      */
     Page<Favorite> queryUserFavorites(Page<Favorite> page, Long userId);
+    
+    /**
+     * 获取宠物收藏数量（无需认证）
+     * @param petId 宠物ID
+     * @return 收藏数量
+     */
+    long getFavoriteCount(Long petId);
 }
 
 

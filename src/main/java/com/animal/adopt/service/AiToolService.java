@@ -27,7 +27,8 @@ public class AiToolService {
             @ToolParam(description = "宠物类别, 如 cat/dog 等", required = false) String category,
             @ToolParam(description = "性格关键词（模糊匹配）", required = false) String personality,
             @ToolParam(description = "领养状态, 如 available/pending/adopted", required = false) String adoptionStatus,
-            @ToolParam(description = "返回条数", required = false) Integer limit) {
+            @ToolParam(description = "返回条数", required = false) Integer limit
+    ) {
         PetQueryDTO query = new PetQueryDTO();
         query.setCategory(category);
         query.setAdoptionStatus(adoptionStatus);

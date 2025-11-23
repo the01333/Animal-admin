@@ -86,8 +86,8 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
             wrapper.eq(Pet::getVaccinated, queryDTO.getVaccinated());
         }
 
-        // 按排序号和创建时间排序
-        wrapper.orderByDesc(Pet::getSortOrder, Pet::getCreateTime);
+        // 按ID倒序排列（ID最大的在最前面，即最新创建的在最前面）
+        wrapper.orderByDesc(Pet::getId);
 
         // 分页查询
         Page<Pet> petPage = this.page(page, wrapper);
@@ -130,10 +130,18 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
             throw new BusinessException(ResultCode.PET_NOT_FOUND);
         }
 
-        long userId = StpUtil.getLoginIdAsLong();
+        // 尝试获取用户ID（未登录时为null）
+        Long userId = null;
+        try {
+            userId = StpUtil.getLoginIdAsLong();
+        } catch (Exception e) {
+            log.debug("用户未登录，跳过防刷检查");
+        }
 
-        // 增加浏览次数（Redis增量）
-        viewCountService.incrementPetViewWithLimit(id, userId);
+        // 只有登录用户才需要防刷检查
+        if (userId != null) {
+            viewCountService.incrementPetViewWithLimit(id, userId);
+        }
 
         // TODO: 看情况是否需要封装一个全局用户上下文并使用这个防刷的方法
 //        viewCountService.incrementPetView(id);

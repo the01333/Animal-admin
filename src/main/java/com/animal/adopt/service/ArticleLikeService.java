@@ -31,4 +31,11 @@ public interface ArticleLikeService extends IService<ArticleLike> {
      * @return 是否已点赞
      */
     boolean isLiked(Long userId, Long articleId);
+    
+    /**
+     * 获取文章点赞数量（无需认证）
+     * @param articleId 文章ID
+     * @return 点赞数量
+     */
+    long getLikeCount(Long articleId);
 }

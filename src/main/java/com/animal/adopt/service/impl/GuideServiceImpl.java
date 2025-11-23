@@ -118,6 +118,18 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
         guideFavoriteMapper.delete(wrapper);
     }
 
+    @Override
+    public boolean isGuideLiked(Long guideId, Long userId) {
+        int count = guideLikeMapper.checkUserLiked(userId, guideId);
+        return count > 0;
+    }
+
+    @Override
+    public boolean isGuideFavorited(Long guideId, Long userId) {
+        int count = guideFavoriteMapper.checkUserFavorited(userId, guideId);
+        return count > 0;
+    }
+
     /**
      * 将 Guide 转换为 GuideVO
      *

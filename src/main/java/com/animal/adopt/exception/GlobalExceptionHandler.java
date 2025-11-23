@@ -31,6 +31,15 @@ public class GlobalExceptionHandler {
     }
     
     /**
+     * 未授权异常（登录过期）
+     */
+    @ExceptionHandler(UnauthorizedException.class)
+    public Result<?> handleUnauthorizedException(UnauthorizedException e) {
+        log.warn("未授权异常: {}", e.getMessage());
+        return Result.error(ResultCode.UNAUTHORIZED.getCode(), e.getMessage());
+    }
+    
+    /**
      * Sa-Token 未登录异常
      */
     @ExceptionHandler(NotLoginException.class)

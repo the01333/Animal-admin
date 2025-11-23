@@ -67,4 +67,25 @@ public class ArticleLikeServiceImpl extends ServiceImpl<ArticleLikeMapper, Artic
         wrapper.eq(ArticleLike::getUserId, userId).eq(ArticleLike::getArticleId, articleId);
         return this.count(wrapper) > 0;
     }
+
+    @Override
+    public long getLikeCount(Long articleId) {
+        // 先从 Redis 缓存获取
+        String key = RedisConstant.buildArticleLikeCountKey(articleId);
+        Object cached = redisTemplate.opsForValue().get(key);
+        if (cached instanceof Number) {
+            return ((Number) cached).longValue();
+        }
+        
+        // 从数据库获取
+        com.animal.adopt.entity.po.Article article = articleMapper.selectById(articleId);
+        if (article == null) {
+            return 0;
+        }
+        
+        long count = article.getLikeCount();
+        // 缓存到 Redis
+        redisTemplate.opsForValue().set(key, count);
+        return count;
+    }
 }

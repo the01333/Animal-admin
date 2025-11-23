@@ -50,4 +50,14 @@ public interface GuideService extends IService<Guide> {
      * 取消收藏指南
      */
     void unfavoriteGuide(Long guideId, Long userId);
+    
+    /**
+     * 检查用户是否已点赞指南
+     */
+    boolean isGuideLiked(Long guideId, Long userId);
+    
+    /**
+     * 检查用户是否已收藏指南
+     */
+    boolean isGuideFavorited(Long guideId, Long userId);
 }
