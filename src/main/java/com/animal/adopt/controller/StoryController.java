@@ -79,4 +79,48 @@ public class StoryController {
         
         return Result.success();
     }
+
+    /**
+     * 检查用户是否已点赞故事（需要认证）
+     */
+    @GetMapping("/{id}/like/check")
+    public Result<Boolean> isStoryLiked(@PathVariable Long id) {
+        Long userId = cn.dev33.satoken.stp.StpUtil.getLoginIdAsLong();
+        boolean liked = storyService.isStoryLiked(id, userId);
+        return Result.success(liked);
+    }
+
+    /**
+     * 检查用户是否已收藏故事（需要认证）
+     */
+    @GetMapping("/{id}/favorite/check")
+    public Result<Boolean> isStoryFavorited(@PathVariable Long id) {
+        Long userId = cn.dev33.satoken.stp.StpUtil.getLoginIdAsLong();
+        boolean favorited = storyService.isStoryFavorited(id, userId);
+        return Result.success(favorited);
+    }
+
+    /**
+     * 获取故事点赞数量（无需认证）
+     */
+    @GetMapping("/{id}/like/count")
+    public Result<Long> getStoryLikeCount(@PathVariable Long id) {
+        StoryVO story = storyService.getStoryDetail(id, null);
+        if (story == null) {
+            return Result.error("故事不存在");
+        }
+        return Result.success((long) (story.getLikes() != null ? story.getLikes() : 0));
+    }
+
+    /**
+     * 获取故事收藏数量（无需认证）
+     */
+    @GetMapping("/{id}/favorite/count")
+    public Result<Long> getStoryFavoriteCount(@PathVariable Long id) {
+        StoryVO story = storyService.getStoryDetail(id, null);
+        if (story == null) {
+            return Result.error("故事不存在");
+        }
+        return Result.success(0L);  // 故事表中没有收藏计数字段，返回0
+    }
 }

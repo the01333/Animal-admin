@@ -39,4 +39,10 @@ public class ArticleFavoriteController {
         
         return Result.success(articleFavoriteService.isFavorited(userId, articleId));
     }
+
+    @GetMapping("/count/{articleId}")
+    public Result<Long> getFavoriteCount(@PathVariable Long articleId) {
+        long count = articleFavoriteService.getFavoriteCount(articleId);
+        return Result.success(count);
+    }
 }

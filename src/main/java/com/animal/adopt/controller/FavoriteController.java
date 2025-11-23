@@ -43,7 +43,16 @@ public class FavoriteController {
     }
     
     /**
-     * 检查是否已收藏
+     * 获取收藏数量（无需认证）
+     */
+    @GetMapping("/count/{petId}")
+    public Result<Long> getFavoriteCount(@PathVariable Long petId) {
+        long count = favoriteService.getFavoriteCount(petId);
+        return Result.success(count);
+    }
+    
+    /**
+     * 检查是否已收藏（需要认证）
      */
     @GetMapping("/check/{petId}")
     public Result<Boolean> isFavorite(@PathVariable Long petId) {

@@ -109,6 +109,18 @@ public class StoryServiceImpl extends ServiceImpl<StoryMapper, Story> implements
                .eq(StoryFavorite::getStoryId, storyId);
         storyFavoriteMapper.delete(wrapper);
     }
+
+    @Override
+    public boolean isStoryLiked(Long storyId, Long userId) {
+        int count = storyLikeMapper.checkUserLiked(userId, storyId);
+        return count > 0;
+    }
+
+    @Override
+    public boolean isStoryFavorited(Long storyId, Long userId) {
+        int count = storyFavoriteMapper.checkUserFavorited(userId, storyId);
+        return count > 0;
+    }
     
     /**
      * 将Story转换为StoryVO

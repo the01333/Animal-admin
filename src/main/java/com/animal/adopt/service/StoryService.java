@@ -40,4 +40,14 @@ public interface StoryService extends IService<Story> {
      * 取消收藏故事
      */
     void unfavoriteStory(Long storyId, Long userId);
+    
+    /**
+     * 检查用户是否已点赞故事
+     */
+    boolean isStoryLiked(Long storyId, Long userId);
+    
+    /**
+     * 检查用户是否已收藏故事
+     */
+    boolean isStoryFavorited(Long storyId, Long userId);
 }

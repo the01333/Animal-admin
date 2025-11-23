@@ -31,4 +31,11 @@ public interface PetLikeService extends IService<PetLike> {
      * @return 是否已点赞
      */
     boolean isLiked(Long userId, Long petId);
+    
+    /**
+     * 获取宠物点赞数量（无需认证）
+     * @param petId 宠物ID
+     * @return 点赞数量
+     */
+    long getLikeCount(Long petId);
 }

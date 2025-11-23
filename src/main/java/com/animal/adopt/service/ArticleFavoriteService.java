@@ -31,4 +31,11 @@ public interface ArticleFavoriteService extends IService<ArticleFavorite> {
      * @return 是否已收藏
      */
     boolean isFavorited(Long userId, Long articleId);
+    
+    /**
+     * 获取文章收藏数量（无需认证）
+     * @param articleId 文章ID
+     * @return 收藏数量
+     */
+    long getFavoriteCount(Long articleId);
 }

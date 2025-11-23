@@ -41,7 +41,16 @@ public class PetLikeController {
     }
 
     /**
-     * 检查是否已点赞
+     * 获取点赞数量（无需认证）
+     */
+    @GetMapping("/count/{petId}")
+    public Result<Long> getLikeCount(@PathVariable Long petId) {
+        long count = petLikeService.getLikeCount(petId);
+        return Result.success(count);
+    }
+
+    /**
+     * 检查是否已点赞（需要认证）
      */
     @GetMapping("/check/{petId}")
     public Result<Boolean> isLiked(@PathVariable Long petId) {

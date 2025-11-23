@@ -1,6 +1,7 @@
 package com.animal.adopt.service.impl;
 
 import com.animal.adopt.constants.RedisConstant;
+import com.animal.adopt.entity.po.Article;
 import com.animal.adopt.entity.po.ArticleFavorite;
 import com.animal.adopt.mapper.ArticleFavoriteMapper;
 import com.animal.adopt.mapper.ArticleMapper;
@@ -66,5 +67,26 @@ public class ArticleFavoriteServiceImpl extends ServiceImpl<ArticleFavoriteMappe
         LambdaQueryWrapper<ArticleFavorite> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ArticleFavorite::getUserId, userId).eq(ArticleFavorite::getArticleId, articleId);
         return this.count(wrapper) > 0;
+    }
+
+    @Override
+    public long getFavoriteCount(Long articleId) {
+        // 先从 Redis 缓存获取
+        String key = RedisConstant.buildArticleFavoriteCountKey(articleId);
+        Object cached = redisTemplate.opsForValue().get(key);
+        if (cached instanceof Number) {
+            return ((Number) cached).longValue();
+        }
+        
+        // 从数据库获取
+        Article article = articleMapper.selectById(articleId);
+        if (article == null) {
+            return 0;
+        }
+        
+        long count = article.getFavoriteCount();
+        // 缓存到 Redis
+        redisTemplate.opsForValue().set(key, count);
+        return count;
     }
 }

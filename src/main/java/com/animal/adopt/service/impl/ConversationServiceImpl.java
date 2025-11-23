@@ -1,14 +1,15 @@
 package com.animal.adopt.service.impl;
 
 import cn.hutool.core.util.IdUtil;
+import com.animal.adopt.entity.cassandra.ConversationHistoryCassandra;
 import com.animal.adopt.entity.po.ConversationHistory;
 import com.animal.adopt.entity.po.ConversationSession;
 import com.animal.adopt.entity.vo.ConversationMessageVO;
 import com.animal.adopt.entity.vo.ConversationSessionVO;
 import com.animal.adopt.mapper.ConversationHistoryMapper;
 import com.animal.adopt.mapper.ConversationSessionMapper;
+import com.animal.adopt.repository.ConversationHistoryCassandraRepository;
 import com.animal.adopt.service.ConversationService;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -34,6 +36,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
         implements ConversationService {
     
     private final ConversationHistoryMapper conversationHistoryMapper;
+    private final ConversationHistoryCassandraRepository cassandraRepository;
     private final RedisTemplate<String, Object> redisTemplate;
     
     private static final String CONVERSATION_CACHE_PREFIX = "conversation:";
@@ -78,13 +81,46 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
             return null;
         }
         
-        // 获取会话的所有消息
-        List<ConversationHistory> histories = conversationHistoryMapper.getBySessionId(sessionId);
+        // 直接从 Cassandra 获取所有消息（包括用户消息和 AI 回复）
+        List<ConversationHistoryCassandra> cassandraHistories = cassandraRepository.findBySessionId(sessionId);
+        log.info("从 Cassandra 查询到的消息数: {}", cassandraHistories.size());
+        
+        // 将 Cassandra 数据转换为前端格式，并去除重复消息
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        Map<String, ConversationMessageVO> messageMap = new LinkedHashMap<>();
+        
+        cassandraHistories.stream()
+                .sorted(Comparator.comparing((ConversationHistoryCassandra h) -> h.getKey().getTimestamp())
+                        .thenComparing(h -> h.getKey().getMessageId()))
+                .forEach(h -> {
+                    Instant instant = h.getKey().getTimestamp();
+                    LocalDateTime ldt = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault());
+                    
+                    ConversationMessageVO msg = ConversationMessageVO.builder()
+                            .id(h.getKey().getMessageId() != null ? h.getKey().getMessageId().getMostSignificantBits() : 0L)
+                            .sessionId(h.getKey().getSessionId())
+                            .role(h.getRole())
+                            .content(h.getContent())
+                            .toolName(h.getToolName())
+                            .toolParams(h.getToolParams())
+                            .toolResult(h.getToolResult())
+                            .timestamp(ldt.format(formatter))
+                            .createTime(h.getCreatedAt() != null ? 
+                                    LocalDateTime.ofInstant(h.getCreatedAt(), java.time.ZoneId.systemDefault()).format(formatter) : null)
+                            .build();
+                    
+                    // 使用 "role + timestamp + content" 作为去重键，避免完全相同的消息重复
+                    String key = msg.getRole() + "|" + msg.getTimestamp() + "|" + msg.getContent();
+                    messageMap.putIfAbsent(key, msg);
+                    
+                    log.debug("消息: role={}, timestamp={}, content长度={}", msg.getRole(), msg.getTimestamp(), msg.getContent().length());
+                });
+        
+        List<ConversationMessageVO> messages = new ArrayList<>(messageMap.values());
+        log.info("去重后返回给前端的消息数: {}", messages.size());
         
         ConversationSessionVO vo = convertSessionToVO(session);
-        vo.setMessages(histories.stream()
-                .map(this::convertHistoryToVO)
-                .collect(Collectors.toList()));
+        vo.setMessages(messages);
         
         return vo;
     }
@@ -102,7 +138,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
             return;
         }
         
-        // 保存消息到数据库
+        // 保存消息到 MySQL 数据库
         ConversationHistory history = new ConversationHistory();
         history.setSessionId(sessionId);
         history.setUserId(userId);
@@ -111,9 +147,17 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
         history.setToolName(toolName);
         history.setToolParams(toolParams);
         history.setToolResult(toolResult);
-        history.setTimestamp(System.currentTimeMillis());
+        history.setTimestamp(LocalDateTime.now());
         
         conversationHistoryMapper.insert(history);
+        
+        // 同时保存消息到 Cassandra（异步，不阻塞主流程）
+        try {
+            saveMessageToCassandra(sessionId, userId, role, content, toolName, toolParams, toolResult);
+        } catch (Exception e) {
+            log.warn("保存消息到 Cassandra 失败: {}", e.getMessage());
+            // 不影响主流程，仅记录警告
+        }
         
         // 更新会话的消息计数和最后消息
         session.setMessageCount(session.getMessageCount() + 1);
@@ -126,6 +170,41 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
         clearSessionCache(sessionId);
         
         log.info("对话消息保存成功");
+    }
+    
+    /**
+     * 保存消息到 Cassandra
+     */
+    private void saveMessageToCassandra(String sessionId, Long userId, String role, String content,
+                                       String toolName, String toolParams, String toolResult) {
+        try {
+            Instant now = Instant.now();
+            UUID messageId = UUID.randomUUID();
+            
+            ConversationHistoryCassandra.ConversationHistoryKey key = 
+                    ConversationHistoryCassandra.ConversationHistoryKey.builder()
+                    .sessionId(sessionId)
+                    .timestamp(now)
+                    .messageId(messageId)
+                    .build();
+            
+            ConversationHistoryCassandra cassandraHistory = ConversationHistoryCassandra.builder()
+                    .key(key)
+                    .userId(userId)
+                    .role(role)
+                    .content(content)
+                    .toolName(toolName)
+                    .toolParams(toolParams)
+                    .toolResult(toolResult)
+                    .createdAt(now)
+                    .build();
+            
+            cassandraRepository.save(cassandraHistory);
+            log.debug("消息已保存到 Cassandra, 会话ID: {}, 消息ID: {}", sessionId, messageId);
+        } catch (Exception e) {
+            log.error("保存消息到 Cassandra 失败: {}", e.getMessage(), e);
+            throw new RuntimeException("保存消息到 Cassandra 失败", e);
+        }
     }
     
     @Override
@@ -198,8 +277,15 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
             return;
         }
         
-        // 删除会话的所有消息
+        // 删除会话的所有消息（MySQL）
         conversationHistoryMapper.deleteBySessionId(sessionId);
+        
+        // 删除会话的所有消息（Cassandra）
+        try {
+            cassandraRepository.deleteBySessionId(sessionId);
+        } catch (Exception e) {
+            log.warn("从 Cassandra 删除消息失败: {}", e.getMessage());
+        }
         
         // 删除会话
         this.removeById(session.getId());
@@ -219,8 +305,15 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
             return;
         }
         
-        // 删除所有消息
+        // 删除所有消息（MySQL）
         conversationHistoryMapper.deleteBySessionId(sessionId);
+        
+        // 删除所有消息（Cassandra）
+        try {
+            cassandraRepository.deleteBySessionId(sessionId);
+        } catch (Exception e) {
+            log.warn("从 Cassandra 删除消息失败: {}", e.getMessage());
+        }
         
         // 重置会话
         session.setMessageCount(0);
@@ -280,7 +373,8 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
                 .toolName(history.getToolName())
                 .toolParams(history.getToolParams())
                 .toolResult(history.getToolResult())
-                .timestamp(history.getTimestamp())
+                .timestamp(history.getTimestamp() != null ? 
+                        history.getTimestamp().format(formatter) : null)
                 .createTime(history.getCreateTime() != null ? 
                         history.getCreateTime().format(formatter) : null)
                 .build();

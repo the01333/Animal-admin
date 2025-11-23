@@ -37,4 +37,10 @@ public class ArticleLikeController {
         boolean liked = articleLikeService.isLiked(userId, articleId);
         return Result.success(liked);
     }
+
+    @GetMapping("/count/{articleId}")
+    public Result<Long> getLikeCount(@PathVariable Long articleId) {
+        long count = articleLikeService.getLikeCount(articleId);
+        return Result.success(count);
+    }
 }

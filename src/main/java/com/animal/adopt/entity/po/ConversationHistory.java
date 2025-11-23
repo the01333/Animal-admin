@@ -1,7 +1,9 @@
 package com.animal.adopt.entity.po;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import lombok.Data;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -12,49 +14,73 @@ import java.time.LocalDateTime;
 @Data
 @TableName("t_conversation_history")
 public class ConversationHistory implements Serializable {
-    
+
     private static final long serialVersionUID = 1L;
-    
-    /** 对话记录ID */
+
+    /**
+     * 对话记录ID
+     */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
-    
-    /** 会话ID (用于关联同一次对话) */
+
+    /**
+     * 会话ID (用于关联同一次对话)
+     */
     private String sessionId;
-    
-    /** 用户ID */
+
+    /**
+     * 用户ID
+     */
     private Long userId;
-    
-    /** 消息角色 (user:用户 assistant:AI助手) */
+
+    /**
+     * 消息角色 (user:用户 assistant:AI助手)
+     */
     private String role;
-    
-    /** 消息内容 */
-    @TableField(typeHandler = com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler.class)
+
+    /**
+     * 消息内容
+     */
+    @TableField(typeHandler = JacksonTypeHandler.class)
     private String content;
-    
-    /** 调用的工具名称 (可选) */
+
+    /**
+     * 调用的工具名称 (可选)
+     */
     private String toolName;
-    
-    /** 工具调用参数 (JSON格式) */
-    @TableField(typeHandler = com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler.class)
+
+    /**
+     * 工具调用参数 (JSON格式)
+     */
+    @TableField(typeHandler = JacksonTypeHandler.class)
     private String toolParams;
-    
-    /** 工具返回结果 (JSON格式) */
-    @TableField(typeHandler = com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler.class)
+
+    /**
+     * 工具返回结果 (JSON格式)
+     */
+    @TableField(typeHandler = JacksonTypeHandler.class)
     private String toolResult;
+
+    /**
+     * 消息时间戳
+     */
+    private LocalDateTime timestamp;
     
-    /** 消息时间戳 */
-    private Long timestamp;
-    
-    /** 消息发送时间 */
+    /**
+     * 消息发送时间
+     */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
-    
-    /** 更新时间 */
+
+    /**
+     * 更新时间
+     */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
-    
-    /** 逻辑删除 */
+
+    /**
+     * 逻辑删除
+     */
     @TableLogic
     private Integer deleted;
 }

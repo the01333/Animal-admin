@@ -97,6 +97,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     
     @Override
     public boolean isFavorite(Long userId, Long petId) {
+        // 注意：MyBatis Plus 会自动添加 deleted=0 条件，所以这里不需要额外指定
         LambdaQueryWrapper<Favorite> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Favorite::getUserId, userId)
                 .eq(Favorite::getPetId, petId);
@@ -113,6 +114,27 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
                 .orderByDesc(Favorite::getCreateTime);
         
         return this.page(page, wrapper);
+    }
+    
+    @Override
+    public long getFavoriteCount(Long petId) {
+        // 先从 Redis 缓存获取
+        String key = RedisConstant.buildPetFavoriteCountKey(petId);
+        Object cached = redisTemplate.opsForValue().get(key);
+        if (cached instanceof Number) {
+            return ((Number) cached).longValue();
+        }
+        
+        // 从数据库获取
+        Pet pet = petService.getById(petId);
+        if (pet == null) {
+            return 0;
+        }
+        
+        long count = pet.getFavoriteCount();
+        // 缓存到 Redis
+        redisTemplate.opsForValue().set(key, count);
+        return count;
     }
 }
 

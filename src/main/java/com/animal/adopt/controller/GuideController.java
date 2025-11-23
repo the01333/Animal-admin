@@ -95,4 +95,48 @@ public class GuideController {
         guideService.unfavoriteGuide(id, userId);
         return Result.success();
     }
+
+    /**
+     * 获取指南点赞数量（无需认证）
+     */
+    @GetMapping("/{id}/like/count")
+    public Result<Long> getGuideLikeCount(@PathVariable Long id) {
+        GuideVO guide = guideService.getGuideDetail(id, null);
+        if (guide == null) {
+            return Result.error("指南不存在");
+        }
+        return Result.success((long) (guide.getLikeCount() != null ? guide.getLikeCount() : 0));
+    }
+
+    /**
+     * 获取指南收藏数量（无需认证）
+     */
+    @GetMapping("/{id}/favorite/count")
+    public Result<Long> getGuideFavoriteCount(@PathVariable Long id) {
+        GuideVO guide = guideService.getGuideDetail(id, null);
+        if (guide == null) {
+            return Result.error("指南不存在");
+        }
+        return Result.success(0L);  // 指南表中没有收藏计数字段，返回0
+    }
+
+    /**
+     * 检查用户是否已点赞指南（需要认证）
+     */
+    @GetMapping("/{id}/like/check")
+    public Result<Boolean> isGuideLiked(@PathVariable Long id) {
+        Long userId = cn.dev33.satoken.stp.StpUtil.getLoginIdAsLong();
+        boolean liked = guideService.isGuideLiked(id, userId);
+        return Result.success(liked);
+    }
+
+    /**
+     * 检查用户是否已收藏指南（需要认证）
+     */
+    @GetMapping("/{id}/favorite/check")
+    public Result<Boolean> isGuideFavorited(@PathVariable Long id) {
+        Long userId = cn.dev33.satoken.stp.StpUtil.getLoginIdAsLong();
+        boolean favorited = guideService.isGuideFavorited(id, userId);
+        return Result.success(favorited);
+    }
 }

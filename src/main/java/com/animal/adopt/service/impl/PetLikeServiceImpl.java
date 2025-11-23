@@ -101,9 +101,31 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
     
     @Override
     public boolean isLiked(Long userId, Long petId) {
+        // 注意：MyBatis Plus 会自动添加 deleted=0 条件，所以这里不需要额外指定
         LambdaQueryWrapper<PetLike> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PetLike::getUserId, userId)
                 .eq(PetLike::getPetId, petId);
         return this.count(wrapper) > 0;
+    }
+    
+    @Override
+    public long getLikeCount(Long petId) {
+        // 先从 Redis 缓存获取
+        String key = RedisConstant.buildPetLikeCountKey(petId);
+        Object cached = redisTemplate.opsForValue().get(key);
+        if (cached instanceof Number) {
+            return ((Number) cached).longValue();
+        }
+        
+        // 从数据库获取
+        com.animal.adopt.entity.po.Pet pet = petMapper.selectById(petId);
+        if (pet == null) {
+            return 0;
+        }
+        
+        long count = pet.getLikeCount();
+        // 缓存到 Redis
+        redisTemplate.opsForValue().set(key, count);
+        return count;
     }
 }

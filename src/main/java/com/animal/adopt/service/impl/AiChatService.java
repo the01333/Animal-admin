@@ -2,6 +2,7 @@ package com.animal.adopt.service.impl;
 
 import com.animal.adopt.service.AiToolService;
 import com.animal.adopt.service.ConversationService;
+import com.animal.adopt.service.SessionMemoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -23,6 +24,7 @@ public class AiChatService {
     private final ChatClient chatClient;
     private final AiToolService aiToolService;
     private final ConversationService conversationService;
+    private final SessionMemoryService sessionMemoryService;
 
     /**
      * 单轮对话（不使用会话记忆）
@@ -123,6 +125,12 @@ public class AiChatService {
 
     /**
      * 流式多轮对话（使用会话记忆）
+     * 
+     * 核心特性：
+     * 1. 用户隔离 - 不同用户的对话完全分离
+     * 2. 持久化 - 对话历史保存到 Cassandra
+     * 3. 缓存加速 - 使用 Redis 缓存热数据
+     * 4. 多轮对话 - 支持完整的对话上下文
      *
      * @param sessionId 会话ID
      * @param content   用户输入内容
@@ -132,31 +140,30 @@ public class AiChatService {
     public Flux<String> chatWithMemoryStream(String sessionId, String content, Long userId) {
         log.info("流式多轮对话, 会话ID: {}, 用户ID: {}", sessionId, userId);
 
-        // 获取会话历史
-        List<Message> conversationHistory = conversationService.getConversationHistory(sessionId);
+        // 1. 验证用户权限（确保用户隔离）
+        if (!sessionMemoryService.hasAccess(userId, sessionId)) {
+            log.warn("用户无权访问该会话");
+            return Flux.error(new RuntimeException("用户无权访问该会话"));
+        }
 
-        // 构建消息列表
+        // 2. 获取会话历史（最近10条消息用于上下文）
+        List<Message> conversationHistory = sessionMemoryService.getSessionHistory(userId, sessionId, 10);
+
+        // 3. 构建消息列表
         List<Message> messages = new ArrayList<>();
         messages.add(new SystemMessage(buildSystemPrompt()));
-
-        // 添加历史消息
         messages.addAll(conversationHistory);
+        messages.add(new UserMessage(content == null ? "" : content));
 
-        // 添加当前用户消息
-        Message userMessage = new UserMessage(content == null ? "" : content);
-        messages.add(userMessage);
+        // 4. 保存用户消息到 Cassandra（确保不丢失）
+        sessionMemoryService.addUserMessage(userId, sessionId, content);
 
-        // 调用AI流式接口
+        // 5. 调用AI流式接口
         Prompt prompt = new Prompt(messages);
         return chatClient.prompt(prompt)
                 .stream()
-                .content()
-                .doOnComplete(() -> {
-                    // 流完成后保存消息到数据库
-                    conversationService.saveMessage(sessionId, userId, "user", content, null, null, null);
-                    // 注意：完整回复内容需要在前端收集后再保存
-                    conversationService.saveMessage(sessionId, userId, "assistant", "", null, null, null);
-                });
+                .content();
+                // 注意：完整的AI回复内容由前端收集后通过 /save-message 接口保存
     }
 
     /**

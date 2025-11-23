@@ -8,6 +8,7 @@ import com.animal.adopt.entity.dto.PetQueryDTO;
 import com.animal.adopt.entity.po.Pet;
 import com.animal.adopt.entity.vo.PetVO;
 import com.animal.adopt.service.DictService;
+import com.animal.adopt.service.FileUploadService;
 import com.animal.adopt.service.PetService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.validation.Valid;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -31,6 +33,7 @@ public class PetController {
 
     private final PetService petService;
     private final DictService dictService;
+    private final FileUploadService fileUploadService;
 
     @GetMapping("/getPetCategories")
     public Result<Map<String, String>> getPetCategories() {
@@ -85,12 +88,14 @@ public class PetController {
      */
     @PostMapping
     @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
-    public Result<String> createPet(@Valid @RequestBody Pet pet) {
+    public Result<Pet> createPet(@Valid @RequestBody Pet pet) {
         Long userId = StpUtil.getLoginIdAsLong();
         pet.setCreateBy(userId);
+        // 设置创建时间为当前时间
+        pet.setCreateTime(java.time.LocalDateTime.now());
         petService.save(pet);
 
-        return Result.success("创建成功", null);
+        return Result.success(pet);
     }
 
     /**
@@ -151,6 +156,52 @@ public class PetController {
         petService.updateAdoptionStatus(id, adoptionStatus);
 
         return Result.success("状态更新成功", null);
+    }
+
+    /**
+     * 上传宠物图片
+     */
+    @PostMapping("/{id}/upload-image")
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    public Result<String> uploadPetImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file
+    ) {
+        log.info("上传宠物图片, 宠物ID: {}", id);
+        
+        // 验证宠物是否存在
+        Pet pet = petService.getById(id);
+        if (pet == null) {
+            return Result.error("宠物不存在");
+        }
+        
+        // 上传文件到Minio
+        String imageUrl = fileUploadService.uploadFile(file, "pet-images");
+        
+        return Result.success("上传成功", imageUrl);
+    }
+
+    /**
+     * 上传宠物封面图片
+     */
+    @PostMapping("/{id}/upload-cover")
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    public Result<String> uploadPetCover(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file
+    ) {
+        log.info("上传宠物封面图片, 宠物ID: {}", id);
+        
+        // 验证宠物是否存在
+        Pet pet = petService.getById(id);
+        if (pet == null) {
+            return Result.error("宠物不存在");
+        }
+        
+        // 上传文件到Minio
+        String coverUrl = fileUploadService.uploadFile(file, "pet-covers");
+        
+        return Result.success("上传成功", coverUrl);
     }
 }
 
