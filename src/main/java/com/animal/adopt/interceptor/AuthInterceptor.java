@@ -29,6 +29,12 @@ public class AuthInterceptor implements HandlerInterceptor {
         
         log.debug("拦截器检查: {} {}", method, requestPath);
         
+        // OPTIONS 请求直接放行（CORS 预检请求）
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            log.debug("OPTIONS 预检请求，直接放行");
+            return true;
+        }
+        
         // 尝试获取用户ID
         Long userId = null;
         try {
