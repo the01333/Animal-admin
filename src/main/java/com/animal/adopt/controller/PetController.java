@@ -10,6 +10,7 @@ import com.animal.adopt.entity.vo.PetVO;
 import com.animal.adopt.service.DictService;
 import com.animal.adopt.service.FileUploadService;
 import com.animal.adopt.service.PetService;
+import com.animal.adopt.service.impl.OssUrlService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 宠物控制器
@@ -34,6 +34,7 @@ public class PetController {
     private final PetService petService;
     private final DictService dictService;
     private final FileUploadService fileUploadService;
+    private final OssUrlService ossUrlService;
 
     @GetMapping("/getPetCategories")
     public Result<Map<String, String>> getPetCategories() {
@@ -126,7 +127,7 @@ public class PetController {
      */
     @DeleteMapping("/batch")
     @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
-    public Result<String> batchDeletePet(@RequestBody java.util.List<Long> ids) {
+    public Result<String> batchDeletePet(@RequestBody List<Long> ids) {
         petService.removeByIds(ids);
 
         return Result.success("批量删除成功", null);
@@ -175,7 +176,7 @@ public class PetController {
             return Result.error("宠物不存在");
         }
         
-        // 上传文件到Minio
+        // 上传文件到 Minio
         String imageUrl = fileUploadService.uploadFile(file, "pet-images");
         
         return Result.success("上传成功", imageUrl);
@@ -198,10 +199,67 @@ public class PetController {
             return Result.error("宠物不存在");
         }
         
-        // 上传文件到Minio
+        // 上传文件到 Minio
         String coverUrl = fileUploadService.uploadFile(file, "pet-covers");
         
         return Result.success("上传成功", coverUrl);
     }
-}
 
+    /**
+     * 获取随机宠物图片列表（用于前端展示）
+     * 每次请求都返回不同的随机图片组合
+     */
+    @GetMapping("/images/random")
+    public Result<List<String>> getRandomPetImages(@RequestParam(defaultValue = "6") Integer limit) {
+        log.info("获取随机宠物图片列表, 数量: {}", limit);
+        
+        // 获取所有宠物
+        List<Pet> pets = petService.list();
+        
+        // 收集所有有封面图片的宠物
+        List<String> allImages = new ArrayList<>();
+        for (Pet pet : pets) {
+            if (pet.getCoverImage() != null && !pet.getCoverImage().isEmpty()) {
+                allImages.add(pet.getCoverImage());
+            }
+        }
+        
+        // 如果没有图片，返回空列表
+        if (allImages.isEmpty()) {
+            log.warn("没有找到宠物封面图片");
+            return Result.success(new ArrayList<>());
+        }
+        
+        // 如果图片数量小于等于 limit，直接打乱后返回所有图片
+        if (allImages.size() <= limit) {
+            Collections.shuffle(allImages);
+            log.info("获取随机宠物图片成功，共 {} 张（所有可用图片）", allImages.size());
+            return Result.success(allImages);
+        }
+        
+        // 否则，从所有图片中随机选择 limit 个
+        // 使用 Fisher-Yates 洗牌算法的变种，只需要前 limit 个
+        Random random = new Random();
+        List<String> result = new ArrayList<>();
+        
+        for (int i = 0; i < limit; i++) {
+            // 从剩余的图片中随机选择一个
+            int randomIndex = i + random.nextInt(allImages.size() - i);
+            // 交换
+            String temp = allImages.get(i);
+            allImages.set(i, allImages.get(randomIndex));
+            allImages.set(randomIndex, temp);
+            // 添加到结果
+            result.add(allImages.get(i));
+        }
+        
+        // 处理URL - 将MinIO地址转换为本地访问地址
+        List<String> normalizedResult = new ArrayList<>();
+        for (String url : result) {
+            normalizedResult.add(ossUrlService.normalizeUrl(url));
+        }
+        
+        log.info("获取随机宠物图片成功，共 {} 张（从 {} 张中随机选择）", normalizedResult.size(), allImages.size());
+        return Result.success(normalizedResult);
+    }
+}
