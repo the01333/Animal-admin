@@ -16,6 +16,7 @@ public class AdoptionApplicationVO {
     private Long petId;
 
     private String status;
+    private String statusText;
     private String reason;
     private String familyInfo;
     private String careplan;
@@ -44,6 +45,8 @@ public class AdoptionApplicationVO {
     private String petName;
     private String petCoverImage;
     private String petCategory;
+    private String petCategoryText;
     private Integer petGender;
     private String petAdoptionStatus;
+    private String petAdoptionStatusText;
 }
