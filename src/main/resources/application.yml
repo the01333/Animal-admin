@@ -22,7 +22,7 @@ spring:
     name: animal-adopt-system
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/animal_adopt?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/animal_adopt_v2?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: root
   data:
@@ -78,10 +78,11 @@ mybatis-plus:
 sa-token:
   # token名称 (同时也是cookie名称)
   token-name: Authorization
-  # token有效期, 单位秒, -1代表永不过期
-  timeout: -1
-  # token临时有效期 (指定时间内无操作就视为token过期) 单位: 秒, -1代表永不过期
-  active-timeout: -1
+  # token有效期, 单位秒, 设置为7天 (604800秒)
+  timeout: 604800
+  # token临时有效期 (指定时间内无操作就视为token过期) 单位: 秒, 设置为30天 (2592000秒)
+  # 这样即使用户长时间不操作，只要在30天内有操作，token就不会过期
+  active-timeout: 2592000
   # 是否允许同一账号并发登录 (为true时允许一起登录, 为false时新登录挤掉旧登录)
   is-concurrent: true
   # 在多人登录同一账号时, 是否共用一个token (为true时所有登录共用一个token, 为false时每次登录新建一个token)
@@ -92,6 +93,10 @@ sa-token:
   is-log: false
   # token前缀 (用于支持 Bearer 前缀)
   token-prefix: Bearer
+  # 使用Redis存储token (需要Redis支持)
+  dao:
+    redis:
+      database: 4
 
 logging:
   level:
