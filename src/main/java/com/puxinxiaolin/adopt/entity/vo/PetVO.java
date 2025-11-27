@@ -15,6 +15,7 @@ public class PetVO {
     private Long id;
     private String name;
     private String category;
+    private String categoryText;
     private String breed;
     private Integer gender;
     private Integer age;
@@ -32,6 +33,7 @@ public class PetVO {
     private String rescueLocation;
     private String adoptionRequirements;
     private String adoptionStatus;
+    private String adoptionStatusText;
     private Integer viewCount;
     private Integer likeCount;
     private Integer favoriteCount;

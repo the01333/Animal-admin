@@ -12,7 +12,7 @@
 
 i宠园后端是一个基于 **Spring Boot 3.3.5** 和 **Java 21** 构建的宠物领养管理系统，提供完整的 RESTful API 接口，支持宠物信息管理、领养申请流程、用户认证授权、文章内容管理、实时通讯、AI 智能客服等核心功能。系统采用分层架构，集成了 Spring AI、MyBatis-Plus、Sa-Token 等主流框架，具有高性能、高可用、易扩展的特点。
 
-> **🎉 最新特性**: 已升级到 Java 21 + Spring Boot 3.3.5，支持 Spring AI 和流式输出！集成了 Cassandra 分布式存储、Redis 缓存、MinIO 对象存储等企业级组件。
+> **🎉 最新概览**: 已升级到 Java 21 + Spring Boot 3.3.5，支持 Spring AI 和流式输出！集成了 Cassandra 分布式存储、Redis 缓存、MinIO 对象存储等企业级组件。
 
 ## 🛠️ 技术栈
 
@@ -30,6 +30,7 @@ i宠园后端是一个基于 **Spring Boot 3.3.5** 和 **Java 21** 构建的宠�
 ### 缓存与存储
 - **Redis**: 6.0+ - 高性能缓存和会话存储
 - **MinIO**: 8.5.7 - 对象存储服务
+- **阿里云 OSS**: 可选的对象存储方案
 
 ### 认证与授权
 - **Sa-Token**: 1.39.0 - 轻量级权限认证框架
@@ -65,8 +66,8 @@ i宠园后端是一个基于 **Spring Boot 3.3.5** 和 **Java 21** 构建的宠�
 ```bash
 # 启动 MySQL
 docker run -d --name mysql \
-  -e MYSQL_ROOT_PASSWORD=root \
-  -e MYSQL_DATABASE=animal_adopt \
+  -e MYSQL_ROOT_PASSWORD=你的密码 \
+  -e MYSQL_DATABASE=animal_adopt_v2 \
   -p 3306:3306 \
   mysql:8.0
 
@@ -77,11 +78,12 @@ docker run -d --name redis \
 
 # 启动 MinIO（可选）
 docker run -d --name minio \
-  -e MINIO_ROOT_USER=minioadmin \
-  -e MINIO_ROOT_PASSWORD=minioadmin \
+  -e MINIO_ROOT_USER=你的用户名 \
+  -e MINIO_ROOT_PASSWORD=你的密码 \
   -p 9000:9000 \
   -p 9001:9001 \
-  minio/minio server /minio-data --console-address ":9001"
+  quay.io/minio/minio:RELEASE.2025-10-15T17-29-55Z \
+  server /data --console-address ":9001"
 
 # 启动 Cassandra（可选）
 docker run -d --name cassandra \
@@ -96,7 +98,7 @@ docker run -d --name cassandra \
 cd Animal-admin/Animal-admin
 
 # 执行数据库初始化脚本
-mysql -u root -p animal_adopt < docs/sql/init.sql
+mysql -u root -p animal_adopt_v2 < docs/sql/init.sql
 
 # 如果使用 Cassandra，执行 Cassandra 初始化
 # docker exec cassandra cqlsh < docs/cassandra/init_keyspace.cql
@@ -112,29 +114,33 @@ spring:
     name: animal-adopt-system
   
   datasource:
-    url: jdbc:mysql://localhost:3306/animal_adopt?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    username: root
-    password: root
+    url: jdbc:mysql://localhost:3306/animal_adopt_v2?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: 你的用户名
+    password: 你的密码
     driver-class-name: com.mysql.cj.jdbc.Driver
   
   data:
     redis:
       host: localhost
       port: 6379
-      password: 
-      timeout: 10000ms
-      jedis:
+      password: 你的密码
+      database: 3
+      timeout: 5000ms
+      lettuce:
         pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
-  
+          max-active: 20
+          max-idle: 10
+          min-idle: 2
+          max-wait: 3000ms
+        shutdown-timeout: 100ms
+
   # MinIO 配置（可选）
   minio:
     endpoint: http://localhost:9000
-    access-key: minioadmin
-    secret-key: minioadmin
+    access-key: 你的 access-key
+    secret-key: 你的 secret-key
     bucket-name: animal-adopt
+    public-base-url: http://localhost:9000
 
 server:
   port: 8080
@@ -174,72 +180,159 @@ curl http://localhost:8080/api/health
 Animal-admin/
 ├── src/
 │   ├── main/
-│   │   ├── java/com/animal/adopt/
-│   │   │   ├── config/                    # 配置类
-│   │   │   │   ├── CorsConfig.java       # CORS 跨域配置
-│   │   │   │   ├── SaTokenConfig.java    # Sa-Token 认证配置
-│   │   │   │   ├── RedisConfig.java      # Redis 配置
-│   │   │   │   ├── MybatisPlusConfig.java# MyBatis-Plus 配置
-│   │   │   │   └── ...
-│   │   │   ├── controller/                # 控制器层（REST API）
-│   │   │   │   ├── UserController.java
-│   │   │   │   ├── PetController.java
-│   │   │   │   ├── AdoptionController.java
-│   │   │   │   ├── IntelligentCustomerServiceController.java
-│   │   │   │   └── ...
-│   │   │   ├── service/                   # 业务逻辑层
-│   │   │   │   ├── UserService.java
-│   │   │   │   ├── PetService.java
-│   │   │   │   ├── AiChatService.java
-│   │   │   │   ├── ConversationService.java
-│   │   │   │   └── impl/                 # 服务实现
-│   │   │   ├── mapper/                    # 数据访问层（MyBatis）
-│   │   │   │   ├── UserMapper.java
-│   │   │   │   ├── PetMapper.java
-│   │   │   │   └── ...
-│   │   │   ├── entity/                    # 实体类
-│   │   │   │   ├── po/                   # 持久化对象
-│   │   │   │   │   ├── User.java
-│   │   │   │   │   ├── Pet.java
-│   │   │   │   │   └── ...
-│   │   │   │   ├── vo/                   # 视图对象
-│   │   │   │   │   ├── UserVO.java
-│   │   │   │   │   ├── PetVO.java
-│   │   │   │   │   └── ...
-│   │   │   │   └── dto/                  # 数据传输对象
-│   │   │   │       ├── LoginDTO.java
-│   │   │   │       ├── RegisterDTO.java
-│   │   │   │       └── ...
-│   │   │   ├── enums/                     # 枚举类
-│   │   │   │   ├── RoleEnum.java         # 角色枚举
-│   │   │   │   ├── AdoptionStatusEnum.java
-│   │   │   │   └── ...
+│   │   ├── java/com/puxinxiaolin/adopt/
 │   │   │   ├── common/                    # 公共类
-│   │   │   │   ├── Result.java           # 统一响应结果
-│   │   │   │   ├── PageResult.java       # 分页结果
-│   │   │   │   └── ...
+│   │   │   │   ├── PageInfo.java          # 分页工具类
+│   │   │   │   ├── Result.java            # 统一响应结果
+│   │   │   │   └── ResultCode.java        # 响应码
+│   │   │   ├── config/                    # 配置类
+│   │   │   │   ├── AiConfig.java          # AI配置
+│   │   │   │   ├── AliyunOssConfig.java   # 阿里云OSS配置
+│   │   │   │   ├── CassandraMemoryConfig.java # Cassandra配置
+│   │   │   │   ├── CorsConfig.java        # CORS跨域配置
+│   │   │   │   ├── MetaObjectHandlerConfig.java # MyBatis-Plus自动填充
+│   │   │   │   ├── MybatisPlusConfig.java # MyBatis-Plus配置
+│   │   │   │   ├── RedisConfig.java       # Redis配置
+│   │   │   │   ├── SaTokenConfig.java     # Sa-Token认证配置
+│   │   │   │   ├── SmsConfig.java         # 短信配置
+│   │   │   │   └── WebMvcConfig.java      # Web MVC配置
+│   │   │   ├── constants/                 # 常量
+│   │   │   │   ├── DateConstant.java      # 日期常量
+│   │   │   │   ├── MessageConstants.java  # 消息常量
+│   │   │   │   └── RedisConstant.java     # Redis常量
+│   │   │   ├── context/                   # 上下文工具
+│   │   │   │   └── UserContext.java       # 用户上下文
+│   │   │   ├── controller/                # 控制器层（REST API）
+│   │   │   │   ├── AdoptionApplicationController.java
+│   │   │   │   ├── ContentController.java
+│   │   │   │   ├── DictController.java
+│   │   │   │   ├── FavoriteController.java
+│   │   │   │   ├── FileUploadController.java
+│   │   │   │   ├── GuideController.java
+│   │   │   │   ├── IntelligentCustomerServiceController.java
+│   │   │   │   ├── OAuthController.java
+│   │   │   │   ├── PetController.java
+│   │   │   │   ├── PetLikeController.java
+│   │   │   │   ├── SocialLoginController.java
+│   │   │   │   ├── StatsController.java
+│   │   │   │   ├── StoryController.java
+│   │   │   │   ├── UserCertificationController.java
+│   │   │   │   ├── UserController.java
+│   │   │   │   └── VerificationCodeController.java
+│   │   │   ├── entity/                    # 实体类
+│   │   │   │   ├── cassandra/            # Cassandra实体
+│   │   │   │   │   └── ConversationHistoryCassandra.java
+│   │   │   │   ├── dto/                  # 数据传输对象
+│   │   │   │   │   ├── AdoptionApplicationDTO.java
+│   │   │   │   │   ├── AdoptionReviewDTO.java
+│   │   │   │   │   ├── CertificationReviewDTO.java
+│   │   │   │   │   ├── ChatMessageDTO.java
+│   │   │   │   │   ├── ContentDTO.java
+│   │   │   │   │   ├── ContentQueryDTO.java
+│   │   │   │   │   ├── LoginDTO.java
+│   │   │   │   │   ├── PetDTO.java
+│   │   │   │   │   ├── PetQueryDTO.java
+│   │   │   │   │   └── RegisterDTO.java
+│   │   │   │   ├── entity/               # 数据库实体
+│   │   │   │   │   ├── AdoptionApplication.java
+│   │   │   │   │   ├── ChatMessage.java
+│   │   │   │   │   ├── ChatSession.java
+│   │   │   │   │   ├── ConversationHistory.java
+│   │   │   │   │   ├── ConversationSession.java
+│   │   │   │   │   ├── Favorite.java
+│   │   │   │   │   ├── Guide.java
+│   │   │   │   │   ├── GuideFavorite.java
+│   │   │   │   │   ├── GuideLike.java
+│   │   │   │   │   ├── Notification.java
+│   │   │   │   │   ├── OperationLog.java
+│   │   │   │   │   ├── Pet.java
+│   │   │   │   │   ├── PetFavorite.java
+│   │   │   │   │   ├── PetLike.java
+│   │   │   │   │   ├── Story.java
+│   │   │   │   │   ├── StoryFavorite.java
+│   │   │   │   │   ├── StoryLike.java
+│   │   │   │   │   ├── SystemConfig.java
+│   │   │   │   │   ├── User.java
+│   │   │   │   │   ├── UserCertification.java
+│   │   │   │   │   └── VerificationCode.java
+│   │   │   │   └── vo/                   # 视图对象
+│   │   │   ├── enums/                     # 枚举类
+│   │   │   │   ├── AdoptionStatusEnum.java
+│   │   │   │   ├── ApplicationStatusEnum.java
+│   │   │   │   ├── CertificationStatusEnum.java
+│   │   │   │   ├── ContentCategoryEnum.java
+│   │   │   │   ├── HealthStatusEnum.java
+│   │   │   │   ├── PetCategoryEnum.java
+│   │   │   │   ├── SessionTypeEnum.java
+│   │   │   │   └── UserRoleEnum.java
 │   │   │   ├── exception/                 # 异常处理
-│   │   │   │   ├── GlobalExceptionHandler.java
 │   │   │   │   ├── BusinessException.java
-│   │   │   │   └── ...
-│   │   │   └── utils/                     # 工具类
-│   │   │       ├── JwtUtils.java
-│   │   │       ├── FileUploadService.java
-│   │   │       └── ...
+│   │   │   │   ├── GlobalExceptionHandler.java
+│   │   │   │   └── UnauthorizedException.java
+│   │   │   ├── interceptor/               # 拦截器
+│   │   │   │   └── AuthInterceptor.java
+│   │   │   ├── mapper/                    # 数据访问层（MyBatis）
+│   │   │   │   ├── AdoptionApplicationMapper.java
+│   │   │   │   ├── ChatMessageMapper.java
+│   │   │   │   ├── ChatSessionMapper.java
+│   │   │   │   ├── ConversationHistoryMapper.java
+│   │   │   │   ├── ConversationSessionMapper.java
+│   │   │   │   ├── FavoriteMapper.java
+│   │   │   │   ├── GuideFavoriteMapper.java
+│   │   │   │   ├── GuideLikeMapper.java
+│   │   │   │   ├── GuideMapper.java
+│   │   │   │   ├── NotificationMapper.java
+│   │   │   │   ├── OperationLogMapper.java
+│   │   │   │   ├── PetFavoriteMapper.java
+│   │   │   │   ├── PetLikeMapper.java
+│   │   │   │   ├── PetMapper.java
+│   │   │   │   ├── StoryFavoriteMapper.java
+│   │   │   │   ├── StoryLikeMapper.java
+│   │   │   │   ├── StoryMapper.java
+│   │   │   │   ├── SystemConfigMapper.java
+│   │   │   │   ├── UserCertificationMapper.java
+│   │   │   │   ├── UserMapper.java
+│   │   │   │   └── VerificationCodeMapper.java
+│   │   │   ├── model/                     # AI模型
+│   │   │   │   └── AlibabaOpenAiChatModel.java
+│   │   │   ├── repository/                # 仓储层
+│   │   │   │   └── ConversationHistoryCassandraRepository.java
+│   │   │   ├── service/                   # 业务逻辑层
+│   │   │   │   ├── impl/                  # 服务实现
+│   │   │   │   ├── AdoptionApplicationService.java
+│   │   │   │   ├── AiToolService.java
+│   │   │   │   ├── ContentService.java
+│   │   │   │   ├── ConversationService.java
+│   │   │   │   ├── DictService.java
+│   │   │   │   ├── FavoriteService.java
+│   │   │   │   ├── FileUploadService.java
+│   │   │   │   ├── GuideService.java
+│   │   │   │   ├── PetLikeService.java
+│   │   │   │   ├── PetService.java
+│   │   │   │   ├── SessionMemoryService.java
+│   │   │   │   ├── StoryService.java
+│   │   │   │   ├── UserCertificationService.java
+│   │   │   │   ├── UserService.java
+│   │   │   │   └── VerificationCodeService.java
+│   │   │   ├── task/                      # 定时任务
+│   │   │   │   └── ViewCountSyncTask.java
+│   │   │   ├── utils/                     # 工具类
+│   │   │   │   ├── RedisUtil.java
+│   │   │   │   ├── SaTokenUtil.java
+│   │   │   │   └── SmsSenderUtil.java
+│   │   │   └── AnimalAdoptApplication.java # 主应用类
 │   │   └── resources/
 │   │       ├── application.yml            # 主配置文件
-│   │       ├── application-dev.yml        # 开发环境配置
-│   │       ├── application-prod.yml       # 生产环境配置
-│   │       └── logback-spring.xml         # 日志配置
+│   │       └── banner.txt                 # 应用横幅
 │   └── test/                              # 单元测试
 ├── docs/
+│   ├── docker/                            # Docker配置
+│   │   ├── cassandra/                     # Cassandra设置
+│   │   └── minio/                         # MinIO设置
 │   ├── sql/                               # 数据库脚本
-│   │   ├── init.sql                      # 初始化脚本
-│   │   └── ...
-│   ├── cassandra/                         # Cassandra 脚本
-│   │   └── init_keyspace.cql
-│   └── ...
-├── pom.xml                                # Maven 配置文件
+│   │   └── init.sql                       # 初始化脚本
+│   └── todos/                             # 待办文档
+├── pom.xml                                # Maven配置文件
 └── README.md                              # 项目说明文档
 ```
 
@@ -252,7 +345,7 @@ Animal-admin/
 - **用户信息查询与更新** - 修改头像、昵称、联系方式等
 - **密码修改** - 旧密码验证、新密码加密存储
 - **身份认证** - 身份证上传、审核流程
-- **基于 Sa-Token 的认证授权** - 多角色权限控制
+- **基于 Sa-Token 的认证授权** - 多角色权限控制（超级管理员、审核员、管家、普通用户）
 
 ### 2. 宠物管理
 - **宠物信息 CRUD** - 创建、读取、更新、删除宠物信息
@@ -260,7 +353,7 @@ Animal-admin/
 - **多条件筛选** - 种类、状态、年龄、性别、绝育状态等
 - **宠物上架/下架管理** - 控制宠物的可见性
 - **浏览次数统计** - 记录宠物的热度
-- **图片上传管理** - 支持封面图、多张宠物图片上传到 MinIO
+- **图片上传管理** - 支持封面图、多张宠物图片上传到 MinIO/阿里云 OSS
 - **健康档案更新** - 记录宠物的健康信息、疫苗接种等
 
 ### 3. 领养申请管理
@@ -317,7 +410,7 @@ Content-Type: application/json
 
 {
   "username": "admin",
-  "password": "admin123"
+  "password": "123456"
 }
 
 # 响应
@@ -453,12 +546,12 @@ Content-Type: application/json
 
 ## 🔐 测试账号
 
-| 用户名 | 密码 | 角色 | 权限 |
-|--------|------|------|------|
-| admin | admin123 | 超级管理员 | 所有权限 |
+| 用户名 | 密码         | 角色 | 权限 |
+|--------|------------|------|------|
+| admin | 123456     | 超级管理员 | 所有权限 |
 | auditor | auditor123 | 审核员 | 审核申请、认证 |
-| keeper | keeper123 | 管家 | 客服聊天 |
-| user | user123 | 普通用户 | 浏览、申请 |
+| keeper | keeper123  | 管家 | 客服聊天 |
+| user | user123    | 普通用户 | 浏览、申请 |
 
 ## 📊 数据库设计
 
@@ -522,7 +615,7 @@ Content-Type: application/json
 mysql -u root -p -h localhost -P 3306
 
 # 执行初始化脚本
-mysql -u root -p animal_adopt < docs/sql/init.sql
+mysql -u root -p animal_adopt_v2 < docs/sql/init.sql
 ```
 
 ### Q: Token 验证失败
@@ -581,12 +674,9 @@ server:
 
 ## 📚 相关文档
 
-- [项目文档](./docs/PROJECT_GUIDE.md) - 完整的项目说明文档
 - [数据库设计](./docs/sql/init.sql) - 数据库建表脚本
-- [Java 21 升级说明](./docs/JAVA21_UPGRADE.md) - Java 21 升级指南
-- [Redis 配置说明](./docs/REDIS_CONFIG.md) - Redis 配置详解
-- [AI 客服指南](./docs/AI_CUSTOMER_SERVICE_GUIDE.md) - AI 客服使用指南
-- [会话记忆设计](./docs/CONVERSATION_MEMORY_DESIGN.md) - 会话记忆系统设计
+- [MinIO 设置指南](./docs/docker/minio/startCmd.txt) - MinIO 配置和启动
+- [Cassandra 设置指南](./docs/docker/cassandra/start_cmd.txt) - Cassandra 配置和初始化
 
 ## 🤝 贡献指南
 
@@ -608,7 +698,7 @@ server:
 
 - **Author**: YCcLin
 - **Email**: 3149696140@qq.com
-- **GitHub**: [项目地址]
+- **GitHub**: [项目地址](https://github.com/your-repo-url)
 
 ---
 

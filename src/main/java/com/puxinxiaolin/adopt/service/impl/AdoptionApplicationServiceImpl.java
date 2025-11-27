@@ -10,6 +10,8 @@ import com.puxinxiaolin.adopt.entity.entity.Pet;
 import com.puxinxiaolin.adopt.entity.entity.User;
 import com.puxinxiaolin.adopt.entity.vo.AdoptionApplicationVO;
 import com.puxinxiaolin.adopt.enums.ApplicationStatusEnum;
+import com.puxinxiaolin.adopt.enums.AdoptionStatusEnum;
+import com.puxinxiaolin.adopt.enums.PetCategoryEnum;
 import com.puxinxiaolin.adopt.exception.BusinessException;
 import com.puxinxiaolin.adopt.mapper.AdoptionApplicationMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
@@ -285,6 +287,12 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
 
             String status = application.getStatus();
             vo.setStatus(StrUtil.isBlank(status) ? null : status.toUpperCase(Locale.ROOT));
+            if (StrUtil.isNotBlank(status)) {
+                ApplicationStatusEnum statusEnum = ApplicationStatusEnum.fromCode(status.toLowerCase(Locale.ROOT));
+                vo.setStatusText(statusEnum != null ? statusEnum.getDesc() : status);
+            } else {
+                vo.setStatusText("未知");
+            }
             vo.setApplicantPhone(application.getContactPhone());
             vo.setApplicantAddress(application.getContactAddress());
 
@@ -309,8 +317,12 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
                 vo.setPetName(pet.getName());
                 vo.setPetCoverImage(pet.getCoverImage());
                 vo.setPetCategory(pet.getCategory());
+                PetCategoryEnum categoryEnum = PetCategoryEnum.fromCode(pet.getCategory());
+                vo.setPetCategoryText(categoryEnum != null ? categoryEnum.getDesc() : pet.getCategory());
                 vo.setPetGender(pet.getGender());
                 vo.setPetAdoptionStatus(pet.getAdoptionStatus());
+                AdoptionStatusEnum adoptionStatusEnum = AdoptionStatusEnum.fromCode(pet.getAdoptionStatus());
+                vo.setPetAdoptionStatusText(adoptionStatusEnum != null ? adoptionStatusEnum.getDesc() : pet.getAdoptionStatus());
             }
 
             return vo;

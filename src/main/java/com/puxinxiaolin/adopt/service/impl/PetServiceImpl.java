@@ -9,6 +9,8 @@ import com.puxinxiaolin.adopt.entity.dto.PetDTO;
 import com.puxinxiaolin.adopt.entity.dto.PetQueryDTO;
 import com.puxinxiaolin.adopt.entity.entity.Pet;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
+import com.puxinxiaolin.adopt.enums.AdoptionStatusEnum;
+import com.puxinxiaolin.adopt.enums.PetCategoryEnum;
 import com.puxinxiaolin.adopt.exception.BusinessException;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.service.PetService;
@@ -99,6 +101,11 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         for (PetVO p : vos) {
             Long pid = p.getId();
 
+            PetCategoryEnum categoryEnum = PetCategoryEnum.fromCode(p.getCategory());
+            p.setCategoryText(categoryEnum != null ? categoryEnum.getDesc() : p.getCategory());
+            AdoptionStatusEnum adoptionStatusEnum = AdoptionStatusEnum.fromCode(p.getAdoptionStatus());
+            p.setAdoptionStatusText(adoptionStatusEnum != null ? adoptionStatusEnum.getDesc() : p.getAdoptionStatus());
+
             String likeKey = RedisConstant.buildPetLikeCountKey(pid);
             Object likeVal = redisTemplate.opsForValue().get(likeKey);
             if (likeVal instanceof Number) {
@@ -147,6 +154,10 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
 //        viewCountService.incrementPetView(id);
 
         PetVO vo = BeanUtil.copyProperties(pet, PetVO.class);
+        PetCategoryEnum categoryEnum = PetCategoryEnum.fromCode(pet.getCategory());
+        vo.setCategoryText(categoryEnum != null ? categoryEnum.getDesc() : pet.getCategory());
+        AdoptionStatusEnum adoptionStatusEnum = AdoptionStatusEnum.fromCode(pet.getAdoptionStatus());
+        vo.setAdoptionStatusText(adoptionStatusEnum != null ? adoptionStatusEnum.getDesc() : pet.getAdoptionStatus());
         // 读取增量并合并显示
         int inc = viewCountService.getPetViewIncrement(id);
         vo.setViewCount(pet.getViewCount() + inc);
