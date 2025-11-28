@@ -1,6 +1,8 @@
 package com.puxinxiaolin.adopt.service;
 
 import com.puxinxiaolin.adopt.entity.entity.PetLike;
+import com.puxinxiaolin.adopt.entity.vo.PetVO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -38,4 +40,12 @@ public interface PetLikeService extends IService<PetLike> {
      * @return 点赞数量
      */
     long getLikeCount(Long petId);
+    
+    /**
+     * 查询用户点赞的宠物列表
+     * @param page 分页信息
+     * @param userId 用户ID
+     * @return 点赞宠物列表
+     */
+    Page<PetVO> queryUserLikedPets(Page<PetVO> page, Long userId);
 }

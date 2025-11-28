@@ -51,5 +51,10 @@ public class PetVO {
      */
     private Boolean isFavorited;
 
+    /**
+     * 当前用户是否已领养
+     */
+    private Long adoptedBy;
+
 }
 

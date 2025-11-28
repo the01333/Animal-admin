@@ -127,4 +127,13 @@ public class StoryController {
         }
         return Result.success(0L);  // 故事表中没有收藏计数字段, 返回0
     }
+
+    /**
+     * 获取所有故事分类
+     */
+    @GetMapping("/categories/list")
+    public Result<List<String>> getCategories() {
+        List<String> categories = storyService.getAllCategories();
+        return Result.success(categories);
+    }
 }

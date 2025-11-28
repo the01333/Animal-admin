@@ -120,6 +120,11 @@ public class Pet implements Serializable {
     private String adoptionStatus;
 
     /**
+     * 领养者ID
+     */
+    private Long adoptedBy;
+
+    /**
      * 上架状态 (0:下架 1:上架)
      */
     private Integer shelfStatus;

@@ -64,6 +64,15 @@ public interface PetService extends IService<Pet> {
      * @return 是否成功
      */
     boolean updateAdoptionStatus(Long id, String adoptionStatus);
+
+    /**
+     * 更新宠物领养状态和领养者
+     * @param id 宠物ID
+     * @param adoptionStatus 领养状态
+     * @param adoptedBy 领养者ID
+     * @return 是否成功
+     */
+    boolean updateAdoptionStatusAndAdoptedBy(Long id, String adoptionStatus, Long adoptedBy);
 }
 
 

@@ -2,6 +2,7 @@ package com.puxinxiaolin.adopt.service;
 
 import com.puxinxiaolin.adopt.entity.entity.Favorite;
 import com.puxinxiaolin.adopt.entity.vo.FavoriteVO;
+import com.puxinxiaolin.adopt.entity.vo.PetVO;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -41,6 +42,14 @@ public interface FavoriteService extends IService<Favorite> {
      * @return 收藏分页数据
      */
     Page<FavoriteVO> queryUserFavorites(Page<Favorite> page, Long userId);
+    
+    /**
+     * 查询用户收藏的宠物列表（包含完整宠物信息）
+     * @param page 分页参数
+     * @param userId 用户ID
+     * @return 宠物分页数据
+     */
+    Page<PetVO> queryUserFavoritePets(Page<PetVO> page, Long userId);
     
     /**
      * 获取宠物收藏数量（无需认证）

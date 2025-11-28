@@ -258,6 +258,21 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         pet.setAdoptionStatus(adoptionStatus);
         return this.updateById(pet);
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateAdoptionStatusAndAdoptedBy(Long id, String adoptionStatus, Long adoptedBy) {
+        log.info("更新宠物领养状态和领养者, ID: {}, 状态: {}, 领养者ID: {}", id, adoptionStatus, adoptedBy);
+
+        Pet pet = this.getById(id);
+        if (pet == null) {
+            throw new BusinessException(ResultCode.PET_NOT_FOUND);
+        }
+
+        pet.setAdoptionStatus(adoptionStatus);
+        pet.setAdoptedBy(adoptedBy);
+        return this.updateById(pet);
+    }
 }
 
 

@@ -32,6 +32,7 @@
         <minio.version>8.5.7</minio.version>
         <aliyun-oss.version>3.17.4</aliyun-oss.version>
         <aliyun-sms.version>2.0.24</aliyun-sms.version>
+        <aliyun-sms2.version>2.0.0</aliyun-sms2.version>
         <ttl.version>2.14.5</ttl.version>
     </properties>
 
@@ -143,14 +144,19 @@
             <artifactId>aliyun-sdk-oss</artifactId>
             <version>${aliyun-oss.version}</version>
         </dependency>
-
+        
         <!-- 阿里云短信SDK -->
+<!--        <dependency>-->
+<!--            <groupId>com.aliyun</groupId>-->
+<!--            <artifactId>dysmsapi20170525</artifactId>-->
+<!--            <version>${aliyun-sms.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.aliyun</groupId>
-            <artifactId>dysmsapi20170525</artifactId>
-            <version>${aliyun-sms.version}</version>
+            <artifactId>alibabacloud-dypnsapi20170525</artifactId>
+            <version>${aliyun-sms2.version}</version>
         </dependency>
-
+        
         <!-- Spring Boot Mail 邮件支持 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
