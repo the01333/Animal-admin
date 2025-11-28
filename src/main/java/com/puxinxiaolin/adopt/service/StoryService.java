@@ -50,4 +50,9 @@ public interface StoryService extends IService<Story> {
      * 检查用户是否已收藏故事
      */
     boolean isStoryFavorited(Long storyId, Long userId);
+    
+    /**
+     * 获取所有故事分类
+     */
+    List<String> getAllCategories();
 }

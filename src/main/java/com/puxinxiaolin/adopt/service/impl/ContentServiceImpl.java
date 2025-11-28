@@ -2,30 +2,20 @@ package com.puxinxiaolin.adopt.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.puxinxiaolin.adopt.common.ResultCode;
 import com.puxinxiaolin.adopt.constants.DateConstant;
 import com.puxinxiaolin.adopt.constants.MessageConstants;
 import com.puxinxiaolin.adopt.entity.dto.ContentDTO;
 import com.puxinxiaolin.adopt.entity.dto.ContentQueryDTO;
-import com.puxinxiaolin.adopt.entity.entity.Guide;
-import com.puxinxiaolin.adopt.entity.entity.Story;
-import com.puxinxiaolin.adopt.entity.entity.GuideFavorite;
-import com.puxinxiaolin.adopt.entity.entity.GuideLike;
-import com.puxinxiaolin.adopt.entity.entity.StoryFavorite;
-import com.puxinxiaolin.adopt.entity.entity.StoryLike;
+import com.puxinxiaolin.adopt.entity.entity.*;
 import com.puxinxiaolin.adopt.entity.vo.ContentCategoryVO;
 import com.puxinxiaolin.adopt.entity.vo.ContentVO;
 import com.puxinxiaolin.adopt.enums.ContentCategoryEnum;
 import com.puxinxiaolin.adopt.exception.BusinessException;
-import com.puxinxiaolin.adopt.mapper.GuideMapper;
-import com.puxinxiaolin.adopt.mapper.GuideFavoriteMapper;
-import com.puxinxiaolin.adopt.mapper.GuideLikeMapper;
-import com.puxinxiaolin.adopt.mapper.StoryMapper;
-import com.puxinxiaolin.adopt.mapper.StoryFavoriteMapper;
-import com.puxinxiaolin.adopt.mapper.StoryLikeMapper;
+import com.puxinxiaolin.adopt.mapper.*;
 import com.puxinxiaolin.adopt.service.ContentService;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,7 +25,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -146,27 +135,33 @@ public class ContentServiceImpl implements ContentService {
     private List<ContentVO> loadGuideContent(ContentQueryDTO queryDTO) {
         LambdaQueryWrapper<Guide> wrapper = new LambdaQueryWrapper<>();
         if (StrUtil.isNotBlank(queryDTO.getKeyword())) {
-            wrapper.and(w -> w.like(Guide::getTitle, queryDTO.getKeyword())
-                    .or()
-                    .like(Guide::getExcerpt, queryDTO.getKeyword()));
+            wrapper.and(w -> w.like(Guide::getCategory, queryDTO.getKeyword())
+                    // TODO: 后续看是否需要对摘要进行模糊查询
+//                    .or()
+//                    .like(Guide::getExcerpt, queryDTO.getKeyword()))
+            );
         }
+        
         List<Guide> guides = guideMapper.selectList(wrapper);
-        return guides.stream().map(guide -> toContentVO(guide, null)).collect(Collectors.toList());
+        return guides.stream()
+                .map(guide -> toContentVO(guide, null))
+                .toList();
     }
 
     private List<ContentVO> loadStoryContent(ContentQueryDTO queryDTO) {
         LambdaQueryWrapper<Story> wrapper = new LambdaQueryWrapper<>();
         if (StrUtil.isNotBlank(queryDTO.getKeyword())) {
             wrapper.and(w -> w.like(Story::getTitle, queryDTO.getKeyword())
-                    .or()
-                    // TODO: 看是否需要查询摘要
+                    // TODO: 后续看是否需要对摘要进行模糊查询
+//                    .or()
 //                    .like(Story::getExcerpt, queryDTO.getKeyword())
             );
         }
+        
         List<Story> stories = storyMapper.selectList(wrapper);
         return stories.stream()
                 .map(story -> toContentVO(story, null))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private Guide applyGuideFields(ContentDTO dto, Guide source) {

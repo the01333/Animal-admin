@@ -3,16 +3,21 @@ package com.puxinxiaolin.adopt.service.impl;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.entity.entity.Pet;
 import com.puxinxiaolin.adopt.entity.entity.PetLike;
+import com.puxinxiaolin.adopt.entity.vo.PetVO;
 import com.puxinxiaolin.adopt.mapper.PetLikeMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.service.PetLikeService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 宠物点赞服务实现类
@@ -128,5 +133,48 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
         // 缓存到 Redis
         redisTemplate.opsForValue().set(key, count);
         return count;
+    }
+
+    @Override
+    public Page<PetVO> queryUserLikedPets(Page<PetVO> page, Long userId) {
+        // 查询用户点赞的宠物ID列表
+        LambdaQueryWrapper<PetLike> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PetLike::getUserId, userId)
+                .orderByDesc(PetLike::getCreateTime);
+        
+        Page<PetLike> petLikePage = this.page(new Page<>(page.getCurrent(), page.getSize()), wrapper);
+        
+        // 转换为 PetVO 列表
+        Page<PetVO> result = new Page<>();
+        result.setCurrent(petLikePage.getCurrent());
+        result.setSize(petLikePage.getSize());
+        result.setTotal(petLikePage.getTotal());
+        result.setPages(petLikePage.getPages());
+        
+        // 获取宠物详情
+        List<PetVO> petVOList = petLikePage.getRecords().stream()
+                .map(petLike -> {
+                    Pet pet = petMapper.selectById(petLike.getPetId());
+                    if (pet != null) {
+                        PetVO vo = new PetVO();
+                        vo.setId(pet.getId());
+                        vo.setName(pet.getName());
+                        vo.setBreed(pet.getBreed());
+                        vo.setAge(pet.getAge());
+                        vo.setGender(pet.getGender());
+                        vo.setCategory(pet.getCategory());
+                        vo.setCoverImage(pet.getCoverImage());
+                        vo.setDescription(pet.getDescription());
+                        vo.setLikeCount(pet.getLikeCount());
+                        vo.setFavoriteCount(pet.getFavoriteCount());
+                        return vo;
+                    }
+                    return null;
+                })
+                .filter(vo -> vo != null)
+                .collect(Collectors.toList());
+        
+        result.setRecords(petVOList);
+        return result;
     }
 }

@@ -4,6 +4,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.puxinxiaolin.adopt.common.Result;
 import com.puxinxiaolin.adopt.entity.entity.Favorite;
 import com.puxinxiaolin.adopt.entity.vo.FavoriteVO;
+import com.puxinxiaolin.adopt.entity.vo.PetVO;
 import com.puxinxiaolin.adopt.service.FavoriteService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
@@ -72,6 +73,19 @@ public class FavoriteController {
         Long userId = StpUtil.getLoginIdAsLong();
         Page<Favorite> page = new Page<>(current, size);
         Page<FavoriteVO> result = favoriteService.queryUserFavorites(page, userId);
+        return Result.success(result);
+    }
+
+    /**
+     * 查询当前用户收藏的宠物列表（包含完整宠物信息）
+     */
+    @GetMapping("/my/pets")
+    public Result<Page<PetVO>> queryMyFavoritePets(
+            @RequestParam(defaultValue = "1") Long current,
+            @RequestParam(defaultValue = "10") Long size) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        Page<PetVO> page = new Page<>(current, size);
+        Page<PetVO> result = favoriteService.queryUserFavoritePets(page, userId);
         return Result.success(result);
     }
 }

@@ -60,4 +60,9 @@ public interface GuideService extends IService<Guide> {
      * 检查用户是否已收藏指南
      */
     boolean isGuideFavorited(Long guideId, Long userId);
+    
+    /**
+     * 获取所有指南分类
+     */
+    List<String> getAllCategories();
 }

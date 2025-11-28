@@ -50,31 +50,31 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
     private final PetService petService;
     private final PetMapper petMapper;
     private final UserService userService;
-    
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long submitApplication(AdoptionApplicationDTO applicationDTO, Long userId) {
         log.info("用户提交领养申请, 用户ID: {}, 宠物ID: {}", userId, applicationDTO.getPetId());
-        
+
         // 检查宠物是否存在
         Pet pet = petService.getById(applicationDTO.getPetId());
         if (pet == null) {
             throw new BusinessException(ResultCode.PET_NOT_FOUND);
         }
-        
+
         // 检查宠物是否可领养
         if (!"available".equals(pet.getAdoptionStatus())) {
             throw new BusinessException(ResultCode.PET_ALREADY_ADOPTED);
         }
-        
+
         // 检查用户是否已申请该宠物
         if (hasApplied(userId, applicationDTO.getPetId())) {
             throw new BusinessException(ResultCode.ADOPTION_ALREADY_EXISTS);
         }
-        
+
         // 生成申请编号
         String applicationNo = generateApplicationNo();
-        
+
         // 创建申请记录
         AdoptionApplication application = new AdoptionApplication();
         application.setApplicationNo(applicationNo);
@@ -87,27 +87,27 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         application.setContactPhone(applicationDTO.getContactPhone());
         application.setContactAddress(applicationDTO.getContactAddress());
         application.setStatus(ApplicationStatusEnum.PENDING.getCode());
-        
+
         this.save(application);
         log.info("领养申请提交成功, 申请编号: {}", applicationNo);
         // 增加宠物的申请次数
         petMapper.incrementApplicationCount(applicationDTO.getPetId());
         return application.getId();
     }
-    
+
     @Override
     public Page<AdoptionApplicationVO> queryUserApplications(Page<AdoptionApplication> page, Long userId, String status) {
         log.info("查询用户领养申请, 用户ID: {}, 状态: {}", userId, status);
-        
+
         LambdaQueryWrapper<AdoptionApplication> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AdoptionApplication::getUserId, userId);
-        
+
         if (StrUtil.isNotBlank(status)) {
             wrapper.eq(AdoptionApplication::getStatus, status.toLowerCase(Locale.ROOT));
         }
-        
+
         wrapper.orderByDesc(AdoptionApplication::getCreateTime);
-        
+
         Page<AdoptionApplication> applicationPage = this.page(page, wrapper);
         List<AdoptionApplicationVO> voList = assembleApplicationVOs(applicationPage.getRecords());
 
@@ -115,7 +115,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         voPage.setRecords(voList);
         return voPage;
     }
-    
+
     @Override
     public Page<AdoptionApplicationVO> queryAllApplications(Page<AdoptionApplication> page, String status, String keyword) {
         log.info("查询所有领养申请, 状态: {}, 关键词: {}", status, keyword);
@@ -125,12 +125,26 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
             wrapper.eq(AdoptionApplication::getStatus, status.toLowerCase(Locale.ROOT));
         }
         if (StrUtil.isNotBlank(keyword)) {
-            wrapper.and(qw ->
-                    qw.like(AdoptionApplication::getApplicationNo, keyword)
-                            .or().like(AdoptionApplication::getReason, keyword)
-                            .or().like(AdoptionApplication::getContactPhone, keyword)
-                            .or().like(AdoptionApplication::getContactAddress, keyword)
-            );
+            List<User> matchedUsers = userService.lambdaQuery()
+                    .like(User::getUsername, keyword)
+                    .or().like(User::getNickname, keyword)
+                    .or().like(User::getPhone, keyword)
+                    .or().like(User::getEmail, keyword)
+                    .list();
+            Set<Long> matchedUserIds = matchedUsers.stream()
+                    .map(User::getId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+            wrapper.and(qw -> {
+                qw.like(AdoptionApplication::getApplicationNo, keyword)
+                        .or().like(AdoptionApplication::getReason, keyword)
+                        .or().like(AdoptionApplication::getContactPhone, keyword)
+                        .or().like(AdoptionApplication::getContactAddress, keyword);
+                if (!matchedUserIds.isEmpty()) {
+                    qw.or().in(AdoptionApplication::getUserId, matchedUserIds);
+                }
+            });
         }
         wrapper.orderByDesc(AdoptionApplication::getCreateTime);
 
@@ -150,40 +164,40 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         }
         return assembleApplicationVOs(List.of(application)).stream().findFirst().orElse(null);
     }
-    
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean reviewApplication(Long id, String status, String reviewComment, Long reviewerId) {
         log.info("审核领养申请, ID: {}, 状态: {}, 审核人: {}", id, status, reviewerId);
-        
+
         // 查询申请
         AdoptionApplication application = this.getById(id);
         if (application == null) {
             throw new BusinessException(ResultCode.ADOPTION_NOT_FOUND);
         }
-        
+
         // 检查申请状态
         if (!ApplicationStatusEnum.PENDING.getCode().equals(application.getStatus())) {
             throw new BusinessException(ResultCode.ADOPTION_STATUS_ERROR);
         }
-        
+
         // 验证状态参数
         ApplicationStatusEnum targetStatus = ApplicationStatusEnum.fromCode(status.toLowerCase(Locale.ROOT));
         if (targetStatus == null || targetStatus == ApplicationStatusEnum.PENDING) {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "无效的审核状态");
         }
-        
+
         // 更新申请状态
         application.setStatus(targetStatus.getCode());
         application.setReviewComment(reviewComment);
         application.setReviewerId(reviewerId);
         application.setReviewTime(LocalDateTime.now());
-        
+
         boolean success = this.updateById(application);
-        
-        // 如果审核通过, 更新宠物状态为已领养
+
+        // 如果审核通过, 更新宠物状态为已领养，并设置领养者ID
         if (success && ApplicationStatusEnum.APPROVED.getCode().equals(targetStatus.getCode())) {
-            petService.updateAdoptionStatus(application.getPetId(), "adopted");
+            petService.updateAdoptionStatusAndAdoptedBy(application.getPetId(), "adopted", application.getUserId());
             // 自动拒绝该宠物的其它待审核申请
             LambdaQueryWrapper<AdoptionApplication> otherWrapper = new LambdaQueryWrapper<>();
             otherWrapper.eq(AdoptionApplication::getPetId, application.getPetId())
@@ -197,47 +211,47 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
                 this.updateById(other);
             });
         }
-        
+
         log.info("领养申请审核完成, 结果: {}", success);
         return success;
     }
-    
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean cancelApplication(Long id, Long userId) {
         log.info("撤销领养申请, ID: {}, 用户ID: {}", id, userId);
-        
+
         // 查询申请
         AdoptionApplication application = this.getById(id);
         if (application == null) {
             throw new BusinessException(ResultCode.ADOPTION_NOT_FOUND);
         }
-        
+
         // 检查申请是否属于该用户
         if (!application.getUserId().equals(userId)) {
             throw new BusinessException(ResultCode.FORBIDDEN);
         }
-        
+
         // 只有待审核状态可以撤销
         if (!ApplicationStatusEnum.PENDING.getCode().equals(application.getStatus())) {
             throw new BusinessException(ResultCode.ADOPTION_STATUS_ERROR);
         }
-        
+
         // 更新状态为已撤销
         application.setStatus(ApplicationStatusEnum.CANCELLED.getCode());
         return this.updateById(application);
     }
-    
+
     @Override
     public boolean hasApplied(Long userId, Long petId) {
         LambdaQueryWrapper<AdoptionApplication> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AdoptionApplication::getUserId, userId)
                 .eq(AdoptionApplication::getPetId, petId)
                 .eq(AdoptionApplication::getStatus, ApplicationStatusEnum.PENDING.getCode());
-        
+
         return this.count(wrapper) > 0;
     }
-    
+
     /**
      * 生成申请编号
      * 格式: AP + YYYYMMDD + 4位序号

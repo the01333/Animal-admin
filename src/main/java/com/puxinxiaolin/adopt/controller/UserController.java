@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -190,6 +191,20 @@ public class UserController {
         
         userService.updateUserInfo(userId, userVO);
         return Result.success("更新成功", null);
+    }
+
+    /**
+     * 上传用户头像
+     */
+    @PostMapping("/avatar/upload")
+    public Result<Map<String, String>> uploadAvatar(@RequestParam("avatar") MultipartFile file) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        String avatarUrl = userService.uploadAvatar(userId, file);
+        
+        Map<String, String> data = new HashMap<>();
+        data.put("avatar", avatarUrl);
+        
+        return Result.success("头像上传成功", data);
     }
 
     /**

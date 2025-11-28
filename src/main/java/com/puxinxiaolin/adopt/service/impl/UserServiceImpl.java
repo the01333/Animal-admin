@@ -260,5 +260,59 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         
         return BeanUtil.copyProperties(user, UserVO.class);
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String uploadAvatar(Long userId, org.springframework.web.multipart.MultipartFile file) {
+        log.info("上传用户头像, 用户ID: {}", userId);
+        
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "文件不能为空");
+        }
+        
+        // 验证文件类型
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "只支持图片文件");
+        }
+        
+        // 验证文件大小（限制为 5MB）
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "文件大小不能超过 5MB");
+        }
+        
+        try {
+            // 调用文件上传服务（这里假设有一个文件上传工具类）
+            // 实际实现需要根据你的文件存储方案调整
+            String avatarUrl = uploadFileToStorage(file);
+            
+            // 更新用户头像
+            User user = this.getById(userId);
+            if (user == null) {
+                throw new BusinessException(ResultCode.USER_NOT_FOUND);
+            }
+            
+            user.setAvatar(avatarUrl);
+            this.updateById(user);
+            
+            log.info("用户头像上传成功, 用户ID: {}, 头像URL: {}", userId, avatarUrl);
+            return avatarUrl;
+        } catch (Exception e) {
+            log.error("上传用户头像失败, 用户ID: {}", userId, e);
+            throw new BusinessException(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "上传头像失败");
+        }
+    }
+    
+    /**
+     * 上传文件到存储服务
+     * 这是一个占位符方法，实际实现需要根据你的文件存储方案调整
+     * 可以使用 MinIO、阿里云 OSS、腾讯云 COS 等
+     */
+    private String uploadFileToStorage(org.springframework.web.multipart.MultipartFile file) throws Exception {
+        // TODO: 实现文件上传逻辑
+        // 这里返回一个示例 URL，实际应该调用你的文件存储服务
+        String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        return "/animal-adopt/avatar/" + filename;
+    }
 }
 

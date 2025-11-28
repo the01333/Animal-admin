@@ -64,7 +64,8 @@ public class AdoptionApplicationController {
             @RequestParam(defaultValue = "1") Long current,
             @RequestParam(defaultValue = "10") Long size,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String keyword) {
+            @RequestParam(required = false) String keyword
+    ) {
         Page<AdoptionApplication> page = new Page<>(current, size);
         return Result.success(adoptionApplicationService.queryAllApplications(page, status, keyword));
     }

@@ -138,4 +138,13 @@ public class GuideController {
         boolean favorited = guideService.isGuideFavorited(id, userId);
         return Result.success(favorited);
     }
+
+    /**
+     * 获取所有指南分类
+     */
+    @GetMapping("/categories/list")
+    public Result<List<String>> getCategories() {
+        List<String> categories = guideService.getAllCategories();
+        return Result.success(categories);
+    }
 }

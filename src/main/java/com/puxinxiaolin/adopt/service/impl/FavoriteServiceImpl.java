@@ -4,6 +4,7 @@ import com.puxinxiaolin.adopt.common.ResultCode;
 import com.puxinxiaolin.adopt.entity.entity.Favorite;
 import com.puxinxiaolin.adopt.entity.entity.Pet;
 import com.puxinxiaolin.adopt.entity.vo.FavoriteVO;
+import com.puxinxiaolin.adopt.entity.vo.PetVO;
 import com.puxinxiaolin.adopt.exception.BusinessException;
 import com.puxinxiaolin.adopt.mapper.FavoriteMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
@@ -17,6 +18,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 收藏服务实现类
@@ -127,6 +131,51 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
                 })
                 .collect(java.util.stream.Collectors.toList()));
         return voPage;
+    }
+    
+    @Override
+    public Page<PetVO> queryUserFavoritePets(Page<PetVO> page, Long userId) {
+        log.info("查询用户收藏的宠物列表, 用户ID: {}", userId);
+        
+        // 查询用户收藏的宠物ID列表
+        LambdaQueryWrapper<Favorite> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Favorite::getUserId, userId)
+                .orderByDesc(Favorite::getCreateTime);
+        
+        Page<Favorite> favoritePage = this.page(new Page<>(page.getCurrent(), page.getSize()), wrapper);
+        
+        // 转换为 PetVO 列表
+        Page<PetVO> result = new Page<>();
+        result.setCurrent(favoritePage.getCurrent());
+        result.setSize(favoritePage.getSize());
+        result.setTotal(favoritePage.getTotal());
+        result.setPages(favoritePage.getPages());
+        
+        // 获取宠物详情
+        List<PetVO> petVOList = favoritePage.getRecords().stream()
+                .map(favorite -> {
+                    Pet pet = petMapper.selectById(favorite.getPetId());
+                    if (pet != null) {
+                        PetVO vo = new PetVO();
+                        vo.setId(pet.getId());
+                        vo.setName(pet.getName());
+                        vo.setBreed(pet.getBreed());
+                        vo.setAge(pet.getAge());
+                        vo.setGender(pet.getGender());
+                        vo.setCategory(pet.getCategory());
+                        vo.setCoverImage(pet.getCoverImage());
+                        vo.setDescription(pet.getDescription());
+                        vo.setLikeCount(pet.getLikeCount());
+                        vo.setFavoriteCount(pet.getFavoriteCount());
+                        return vo;
+                    }
+                    return null;
+                })
+                .filter(vo -> vo != null)
+                .collect(Collectors.toList());
+        
+        result.setRecords(petVOList);
+        return result;
     }
     
     @Override

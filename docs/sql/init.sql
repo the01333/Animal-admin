@@ -415,6 +415,9 @@ ALTER TABLE `t_user_certification`
 ALTER TABLE `t_user_certification`
     ADD INDEX `idx_id_card`(`id_card`);
 
+ALTER TABLE t_pet ADD COLUMN adopted_by BIGINT COMMENT '领养者ID' AFTER adoption_status;
+CREATE INDEX idx_adopted_by ON t_pet(adopted_by);
+
 -- =============================================================
 -- 初始化数据（来自现网导出）
 -- =============================================================

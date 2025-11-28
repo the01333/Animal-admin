@@ -70,5 +70,13 @@ public interface UserService extends IService<User> {
      * 手机验证码登录（不存在则自动注册）
      */
     LoginVO loginByPhoneCode(String phone, String code, String purpose);
+
+    /**
+     * 上传用户头像
+     * @param userId 用户ID
+     * @param file 头像文件
+     * @return 头像URL
+     */
+    String uploadAvatar(Long userId, org.springframework.web.multipart.MultipartFile file);
 }
 

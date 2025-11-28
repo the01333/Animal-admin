@@ -2,7 +2,9 @@ package com.puxinxiaolin.adopt.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.puxinxiaolin.adopt.common.Result;
+import com.puxinxiaolin.adopt.entity.vo.PetVO;
 import com.puxinxiaolin.adopt.service.PetLikeService;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -57,5 +59,18 @@ public class PetLikeController {
         Long userId = StpUtil.getLoginIdAsLong();
         boolean liked = petLikeService.isLiked(userId, petId);
         return Result.success(liked);
+    }
+
+    /**
+     * 查询当前用户点赞的宠物列表
+     */
+    @GetMapping("/my")
+    public Result<Page<PetVO>> queryMyLikes(
+            @RequestParam(defaultValue = "1") Long current,
+            @RequestParam(defaultValue = "10") Long size) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        Page<PetVO> page = new Page<>(current, size);
+        Page<PetVO> result = petLikeService.queryUserLikedPets(page, userId);
+        return Result.success(result);
     }
 }
