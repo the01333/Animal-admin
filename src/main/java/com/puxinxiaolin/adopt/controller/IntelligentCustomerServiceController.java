@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -90,31 +91,28 @@ public class IntelligentCustomerServiceController {
 
     /**
      * 保存AI回复内容到数据库
-     * 用于流式对话完成后, 前端将收集到的完整内容保存
-     * 认证由拦截器处理, 这里直接从上下文获取用户ID
      * <p>
-     * 使用 SessionMemoryService 确保：
-     * 1. 用户隔离 - 不同用户的对话完全分离
-     * 2. 持久化 - 对话历史保存到 Cassandra
+     * 认证由拦截器处理, 这里直接从上下文获取用户 ID
+     * <p>
+     * 通过自定义会话存储服务确保：<p>
+     * 1. 用户隔离 - 不同用户的对话完全分离 <p>
+     * 2. 持久化 - 对话历史保存到 Cassandra <p>
      * 3. 缓存加速 - 使用 Redis 缓存热数据
      */
     @PostMapping("/save-message")
-    public Map<String, Object> saveMessage(
-            @RequestBody Map<String, Object> body
-    ) {
-        // 从上下文获取用户ID（拦截器已验证登录状态并存储到上下文）
+    public Map<String, Object> saveMessage(@RequestBody Map<String, Object> body) {
         Long userId = UserContext.getUserId();
 
         String sessionId = body.get("sessionId") == null ? "" : body.get("sessionId").toString();
-        String role = body.get("role") == null ? "assistant" : body.get("role").toString();
-        String content = body.get("content") == null ? "" : body.get("content").toString();
-
-        if (sessionId.isEmpty()) {
+        if (StringUtils.isBlank(sessionId)) {
             return Map.of("code", 400, "message", "会话ID不能为空");
         }
 
+        String role = body.get("role") == null ? "assistant" : body.get("role").toString();
+        String content = body.get("content") == null ? "" : body.get("content").toString();
+
         try {
-            // 同时保存到 MySQL 和 Cassandra
+            // 同时保存到 DB 和 Cassandra
             conversationService.saveMessage(sessionId, userId, role, content, null, null, null);
 
             // 如果是 AI 回复, 也保存到会话记忆服务
@@ -131,6 +129,7 @@ public class IntelligentCustomerServiceController {
 
     /**
      * 获取会话的聊天记录
+     * <p>
      * 用于页面刷新时恢复聊天记录
      */
     @GetMapping("/session/{sessionId}/messages")
@@ -155,8 +154,9 @@ public class IntelligentCustomerServiceController {
     }
 
     /**
-     * 删除会话及其所有消息（真正删除, 不是逻辑删除）
-     * 用于登出时清空会话数据
+     * 删除会话及其所有消息（非逻辑删除）
+     * <p>
+     * 用于登出时清空会话数据, 减少内存成本
      */
     @DeleteMapping("/session/{sessionId}")
     public Map<String, Object> deleteSession(@PathVariable String sessionId) {
@@ -172,16 +172,18 @@ public class IntelligentCustomerServiceController {
     }
 
     /**
-     * 转义JSON字符串, 保留换行符等特殊字符
+     * 对 AI 答复进行处理
+     * <p>
+     * 转义 JSON 字符串, 保留换行符等特殊字符
      */
     private String escapeJsonString(String str) {
         if (str == null) {
             return "\"\"";
         }
+
         // 使用ObjectMapper来进行JSON序列化, 确保正确转义
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.writeValueAsString(str);
+            return new ObjectMapper().writeValueAsString(str);
         } catch (Exception e) {
             // 如果序列化失败, 使用手动转义
             StringBuilder sb = new StringBuilder("\"");

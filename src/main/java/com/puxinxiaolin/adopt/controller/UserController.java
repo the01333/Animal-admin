@@ -14,7 +14,7 @@ import com.puxinxiaolin.adopt.entity.dto.RegisterDTO;
 import com.puxinxiaolin.adopt.entity.entity.User;
 import com.puxinxiaolin.adopt.entity.vo.LoginVO;
 import com.puxinxiaolin.adopt.entity.vo.UserVO;
-import com.puxinxiaolin.adopt.exception.BusinessException;
+import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -215,7 +215,7 @@ public class UserController {
         String oldPassword = params.get("oldPassword");
         String newPassword = params.get("newPassword");
         if (StringUtils.isBlank(oldPassword) || StringUtils.isBlank(newPassword)) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "旧密码和新密码不能为空");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "旧密码和新密码不能为空");
         }
         
         Long userId = StpUtil.getLoginIdAsLong();
@@ -283,12 +283,12 @@ public class UserController {
     public Result<String> updateUserStatus(@PathVariable Long id, @RequestBody java.util.Map<String, Integer> params) {
         Integer status = params.get("status");
         if (status == null) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "状态不能为空");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "状态不能为空");
         }
         
         User user = userService.getById(id);
         if (user == null) {
-            throw new BusinessException(ResultCode.USER_NOT_FOUND);
+            throw new BizException(ResultCode.USER_NOT_FOUND);
         }
         
         user.setStatus(status);

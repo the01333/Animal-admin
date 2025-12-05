@@ -1,6 +1,7 @@
 package com.puxinxiaolin.adopt.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
+import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.entity.entity.VerificationCode;
 import com.puxinxiaolin.adopt.mapper.VerificationCodeMapper;
 import com.puxinxiaolin.adopt.service.VerificationCodeService;
@@ -8,11 +9,14 @@ import com.puxinxiaolin.adopt.utils.SmsSenderUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.puxinxiaolin.adopt.utils.EmailSendUtils;
 
 /**
  * 验证码服务实现类
@@ -23,8 +27,9 @@ import java.time.LocalDateTime;
 public class VerificationCodeServiceImpl implements VerificationCodeService {
     
     private final VerificationCodeMapper verificationCodeMapper;
-    private final JavaMailSender mailSender;
     private final SmsSenderUtil smsSenderUtil;
+    private final EmailSendUtils emailSendUtils;
+    private final RedisTemplate<String, Object> redisTemplate;
     
     private static final int CODE_LENGTH = 6;
     private static final int EXPIRE_MINUTES = 5;
@@ -45,12 +50,8 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             verificationCode.setIsUsed(false);
             verificationCodeMapper.insert(verificationCode);
             
-            // 发送邮件
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(email);
-            message.setSubject("【宠物领养系统】验证码");
-            message.setText(String.format("您的验证码是：%s, 有效期%d分钟, 请勿泄露给他人。", code, EXPIRE_MINUTES));
-            mailSender.send(message);
+            // 发送邮件并缓存验证码
+            emailSendUtils.sendVerificationEmail(email, code, EXPIRE_MINUTES * 60L);
             
             log.info("邮箱验证码发送成功: {}", email);
             return true;
@@ -76,11 +77,12 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             verificationCode.setExpireTime(LocalDateTime.now().plusMinutes(EXPIRE_MINUTES));
             verificationCode.setIsUsed(false);
             verificationCodeMapper.insert(verificationCode);
-            
-            boolean sent = smsSenderUtil.sendLoginCode(phone, code);
+
+            Map<String, String> templateParam = new HashMap<>();
+            templateParam.put("code", code);
+            boolean sent = smsSenderUtil.sendSmsCode(phone, purpose, templateParam);
             log.info("手机验证码发送结果: {} -> {}", phone, sent);
             return sent;
-            
         } catch (Exception e) {
             log.error("手机验证码发送失败", e);
             return false;
@@ -89,11 +91,26 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
     
     @Override
     public boolean verifyEmailCode(String email, String code, String purpose) {
+        String redisKey = RedisConstant.buildEmailCodeKey(email);
+        Object cached = redisTemplate.opsForValue().get(redisKey);
+        if (cached != null && code.equalsIgnoreCase(cached.toString())) {
+            redisTemplate.delete(redisKey);
+            markLatestCodeUsed("email", email, code, purpose);
+            return true;
+        }
         return verifyCode("email", email, code, purpose);
     }
     
     @Override
     public boolean verifyPhoneCode(String phone, String code, String purpose) {
+        String redisKey = RedisConstant.buildPhoneCodeKey(phone, purpose);
+        Object cached = redisTemplate.opsForValue().get(redisKey);
+        if (cached != null && code.equals(cached.toString())) {
+            redisTemplate.delete(redisKey);
+            // 同步标记数据库中的最新验证码记录
+            markLatestCodeUsed("phone", phone, code, purpose);
+            return true;
+        }
         return verifyCode("phone", phone, code, purpose);
     }
     
@@ -121,5 +138,21 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
         }
         
         return false;
+    }
+    
+    private void markLatestCodeUsed(String codeType, String target, String code, String purpose) {
+        LambdaQueryWrapper<VerificationCode> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(VerificationCode::getCodeType, codeType)
+                .eq(VerificationCode::getTarget, target)
+                .eq(VerificationCode::getCode, code)
+                .eq(VerificationCode::getPurpose, purpose)
+                .eq(VerificationCode::getIsUsed, false)
+                .orderByDesc(VerificationCode::getCreateTime)
+                .last("LIMIT 1");
+        VerificationCode record = verificationCodeMapper.selectOne(wrapper);
+        if (record != null) {
+            record.setIsUsed(true);
+            verificationCodeMapper.updateById(record);
+        }
     }
 }

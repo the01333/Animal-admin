@@ -36,4 +36,9 @@ public class ContentVO {
 
     private String publishDate;
     private LocalDateTime publishTime;
+
+    /**
+     * 用户与该内容产生关系（点赞/收藏）的时间
+     */
+    private LocalDateTime relationTime;
 }

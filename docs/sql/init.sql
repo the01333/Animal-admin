@@ -36,10 +36,6 @@ CREATE TABLE `t_user` (
   `housing` VARCHAR(100) DEFAULT NULL COMMENT '住房情况',
   `personality` VARCHAR(255) DEFAULT NULL COMMENT '性格特点',
   `has_experience` TINYINT(1) DEFAULT 0 COMMENT '是否有养宠经验',
-  `wechat_openid` VARCHAR(100) DEFAULT NULL COMMENT '微信OpenID',
-  `wechat_unionid` VARCHAR(100) DEFAULT NULL COMMENT '微信UnionID',
-  `qq_openid` VARCHAR(100) DEFAULT NULL COMMENT 'QQ OpenID',
-  `register_type` VARCHAR(20) DEFAULT 'username' COMMENT '注册方式',
   `role` VARCHAR(50) NOT NULL DEFAULT 'user' COMMENT '用户角色',
   `status` TINYINT DEFAULT 1 COMMENT '用户状态',
   `certified` TINYINT(1) DEFAULT 0 COMMENT '是否已认证',
@@ -51,9 +47,6 @@ CREATE TABLE `t_user` (
   UNIQUE KEY `uk_username` (`username`),
   UNIQUE KEY `uk_phone` (`phone`),
   UNIQUE KEY `uk_email` (`email`),
-  UNIQUE KEY `uk_wechat_openid` (`wechat_openid`),
-  UNIQUE KEY `uk_wechat_unionid` (`wechat_unionid`),
-  UNIQUE KEY `uk_qq_openid` (`qq_openid`),
   KEY `idx_role` (`role`),
   KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';

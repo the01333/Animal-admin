@@ -3,8 +3,8 @@ package com.puxinxiaolin.adopt.service.impl;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.puxinxiaolin.adopt.common.ResultCode;
-import com.puxinxiaolin.adopt.config.AliyunOssConfig;
-import com.puxinxiaolin.adopt.exception.BusinessException;
+import com.puxinxiaolin.adopt.config.MinioConfig;
+import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.service.FileUploadService;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
@@ -28,7 +28,7 @@ import java.io.InputStream;
 public class OssFileUploadServiceImpl implements FileUploadService {
 
     private final MinioClient minioClient;
-    private final AliyunOssConfig ossConfig;
+    private final MinioConfig ossConfig;
 
     @Override
     public String uploadFile(MultipartFile file, String folder) {
@@ -59,7 +59,7 @@ public class OssFileUploadServiceImpl implements FileUploadService {
             return objectName;
         } catch (Exception e) {
             log.error("文件上传失败", e);
-            throw new BusinessException(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "文件上传失败: " + e.getMessage());
+            throw new BizException(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "文件上传失败: " + e.getMessage());
         }
     }
 
@@ -92,7 +92,7 @@ public class OssFileUploadServiceImpl implements FileUploadService {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             }
         } catch (Exception e) {
-            throw new BusinessException(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "校验/创建 MinIO 存储桶失败: " + e.getMessage());
+            throw new BizException(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "校验/创建 MinIO 存储桶失败: " + e.getMessage());
         }
     }
 

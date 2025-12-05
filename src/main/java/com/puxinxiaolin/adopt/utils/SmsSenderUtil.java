@@ -1,103 +1,83 @@
 package com.puxinxiaolin.adopt.utils;
 
-import com.aliyun.auth.credentials.Credential;
-import com.aliyun.auth.credentials.provider.StaticCredentialProvider;
-import com.aliyun.sdk.service.dypnsapi20170525.AsyncClient;
-import com.aliyun.sdk.service.dypnsapi20170525.models.SendSmsVerifyCodeRequest;
-import com.aliyun.sdk.service.dypnsapi20170525.models.SendSmsVerifyCodeResponse;
-import com.google.gson.Gson;
+import com.aliyun.sdk.service.dysmsapi20170525.AsyncClient;
+import com.aliyun.sdk.service.dysmsapi20170525.models.SendSmsRequest;
+import com.aliyun.sdk.service.dysmsapi20170525.models.SendSmsResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.puxinxiaolin.adopt.config.SmsConfig;
-import darabonba.core.client.ClientOverrideConfiguration;
+import com.puxinxiaolin.adopt.constants.RedisConstant;
+import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
+/**
+ *
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class SmsSenderUtil {
 
     private final SmsConfig smsConfig;
+    private final ObjectMapper objectMapper;
+    private final AsyncClient asyncClient;
+    private final RedisTemplate<String, Object> redisTemplate;
 
-    // TODO [YCcLin 2025/11/28]: 待完善
-    public boolean sendSmsCodeAsync() throws ExecutionException, InterruptedException {
-        // HttpClient Configuration
-//        HttpClient httpClient = new ApacheAsyncHttpClientBuilder()
-//                .connectionTimeout(Duration.ofSeconds(10)) // Set the connection timeout time, the default is 10 seconds
-//                .responseTimeout(Duration.ofSeconds(10)) // Set the response timeout time, the default is 20 seconds
-//                .maxConnections(128) // Set the connection pool size
-//                .maxIdleTimeOut(Duration.ofSeconds(50)) // Set the connection pool timeout, the default is 30 seconds
-//                // Configure the proxy
-//                .proxy(new ProxyOptions(ProxyOptions.Type.HTTP, new InetSocketAddress("<your-proxy-hostname>", 9001))
-//                        .setCredentials("<your-proxy-username>", "<your-proxy-password>"))
-//                // If it is an https connection, you need to configure the certificate, or ignore the certificate(.ignoreSSL(true))
-//                .x509TrustManagers(new X509TrustManager[]{})
-//                .keyManagers(new KeyManager[]{})
-//                .ignoreSSL(false)
-//                .build();
+    /**
+     * 发送短信验证码
+     * <p>
+     * Map<String, String> templateParam = new HashMap<>(); <br />
+     * templateParam.put("code", smsCode);
+     *
+     * @param phoneNumbers
+     * @param purpose
+     * @param templateParam
+     * @return
+     */
+    public boolean sendSmsCode(String phoneNumbers, String purpose, Map<String, String> templateParam) {
+        try {
+            String code = templateParam != null ? templateParam.get("code") : null;
+            if (StrUtil.isBlank(code)) {
+                throw new IllegalArgumentException("templateParam must contain verification code");
+            }
+            cachePhoneCode(phoneNumbers, purpose, code);
 
-        StaticCredentialProvider provider = StaticCredentialProvider.create(Credential.builder()
-                .accessKeyId(System.getenv("ALIBABA_CLOUD_ACCESS_KEY_ID"))
-                .accessKeySecret(System.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET"))
-                .build());
-
-        try (AsyncClient client = AsyncClient.builder()
-                .region("ap-southeast-1")
-                .credentialsProvider(provider)
-                .overrideConfiguration(
-                        ClientOverrideConfiguration.create()
-                                .setEndpointOverride("dypnsapi.aliyuncs.com")
-                )
-                .build()) {
-            SendSmsVerifyCodeRequest sendSmsVerifyCodeRequest = SendSmsVerifyCodeRequest.builder()
-                    .signName("速通互联验证码")
-                    .templateCode("100001")
-                    .phoneNumber("13063184972")
-                    .templateParam("{\"code\":\"##code##\",\"min\":\"5\"}")
+            SendSmsRequest sendSmsRequest = SendSmsRequest.builder()
+                    .phoneNumbers(phoneNumbers)
+                    .signName(smsConfig.getSignName())
+                    .templateCode(smsConfig.getTemplateCode())
+                    .templateParam(objectMapper.writeValueAsString(templateParam))
                     .build();
-            CompletableFuture<SendSmsVerifyCodeResponse> response = client.sendSmsVerifyCode(sendSmsVerifyCodeRequest);
-            SendSmsVerifyCodeResponse resp = response.get();
-            log.info("发送短信成功, 响应结果: {}", new Gson().toJson(resp));
+            CompletableFuture<SendSmsResponse> response = asyncClient.sendSms(sendSmsRequest);
+            SendSmsResponse resp = response.get();
+            log.debug("{}", objectMapper.writeValueAsString(resp));
 
             return true;
         } catch (Exception e) {
-            log.error("发送短信失败", e);
-            return false;
+            log.error("{}", e.getMessage(), e);
         }
+        return false;
     }
 
-//    public boolean sendLoginCode(String phone, String code) {
-//        try {
-//            if (isConfigured()) {
-//                Config config = new Config()
-//                        .setEndpoint("dysmsapi.aliyuncs.com")
-//                        .setAccessKeyId(smsConfig.getAccessKeyId())
-//                        .setAccessKeySecret(smsConfig.getAccessKeySecret());
-//                Client client = new Client(config);
-//                SendSmsRequest req = new SendSmsRequest()
-//                        .setPhoneNumbers(phone)
-//                        .setSignName(smsConfig.getSignName())
-//                        .setTemplateCode(smsConfig.getTemplateCode().getLogin())
-//                        .setTemplateParam("{\"code\":\"" + code + "\"}");
-//                SendSmsResponse resp = client.sendSms(req);
-//                log.info("[SMS] 阿里云发送结果: {}", resp.getBody());
-//                return resp.getBody() != null && "OK".equalsIgnoreCase(resp.getBody().getCode());
-//            }
-//            // 未配置, 模拟发送, 保证系统可跑
-//            log.warn("[SMS] 未配置阿里云密钥, 模拟发送登录验证码到 {}: code={}", phone, code);
-//            return true;
-//        } catch (Exception e) {
-//            log.error("发送短信失败", e);
-//            return false;
-//        }
-//    }
-
-    private boolean isConfigured() {
-        return smsConfig.getAccessKeyId() != null && !smsConfig.getAccessKeyId().isEmpty()
-                && smsConfig.getAccessKeySecret() != null && !smsConfig.getAccessKeySecret().isEmpty();
+    /**
+     * 保存短信验证码, 默认 1 分钟
+     *
+     * @param phoneNumbers
+     * @param purpose
+     * @param code
+     */
+    private void cachePhoneCode(String phoneNumbers, String purpose, String code) {
+        if (StrUtil.isBlank(phoneNumbers) || StrUtil.isBlank(code)) {
+            return;
+        }
+        
+        String redisKey = RedisConstant.buildPhoneCodeKey(phoneNumbers, StrUtil.blankToDefault(purpose, "default"));
+        redisTemplate.opsForValue().set(redisKey, code, 60, TimeUnit.SECONDS);
     }
-
 }

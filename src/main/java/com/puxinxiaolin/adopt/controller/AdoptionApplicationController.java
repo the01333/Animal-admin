@@ -10,7 +10,7 @@ import com.puxinxiaolin.adopt.entity.dto.AdoptionApplicationDTO;
 import com.puxinxiaolin.adopt.entity.dto.AdoptionReviewDTO;
 import com.puxinxiaolin.adopt.entity.entity.AdoptionApplication;
 import com.puxinxiaolin.adopt.entity.vo.AdoptionApplicationVO;
-import com.puxinxiaolin.adopt.exception.BusinessException;
+import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.service.AdoptionApplicationService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.validation.Valid;
@@ -87,7 +87,7 @@ public class AdoptionApplicationController {
             @PathVariable Long id,
             @Valid @RequestBody AdoptionReviewDTO reviewDTO) {
         if (StrUtil.isBlank(reviewDTO.getStatus())) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "审核状态不能为空");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "审核状态不能为空");
         }
         
         Long reviewerId = StpUtil.getLoginIdAsLong();

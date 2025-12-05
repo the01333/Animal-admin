@@ -15,7 +15,7 @@ import java.util.function.IntSupplier;
  * <p>
  * 使用Redis缓存浏览次数, 定时同步到数据库
  * <p>
- * Redis仅存储增量，持久值仍以数据库为准
+ * Redis仅存储增量, 持久值仍以数据库为准
  *
  * @author Animal Adopt System
  * @date 2025-11-10
@@ -115,7 +115,7 @@ public class ViewCountService {
     }
 
     /**
-     * 增加内容浏览次数（带防刷限制，登录用户5分钟内不重复计数）
+     * 增加内容浏览次数（带防刷限制, 登录用户5分钟内不重复计数）
      */
     public void incrementContentViewWithLimit(ContentCategoryEnum category, Long contentId, Long userId) {
         if (category == null || contentId == null) {
@@ -124,7 +124,7 @@ public class ViewCountService {
         if (userId != null) {
             String limitKey = RedisConstant.buildContentViewLimitKey(category, contentId, userId);
             if (Boolean.TRUE.equals(redisTemplate.hasKey(limitKey))) {
-                log.debug("用户{}在5分钟内已浏览过{}-{}，不重复计数", userId, category, contentId);
+                log.debug("用户{}在5分钟内已浏览过{}-{}, 不重复计数", userId, category, contentId);
                 return;
             }
             redisTemplate.opsForValue().set(limitKey, "1", 5, TimeUnit.MINUTES);

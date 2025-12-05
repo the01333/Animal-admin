@@ -2,7 +2,7 @@ package com.puxinxiaolin.adopt.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.puxinxiaolin.adopt.common.Result;
-import com.puxinxiaolin.adopt.constants.MessageConstants;
+import com.puxinxiaolin.adopt.constants.MessageConstant;
 import com.puxinxiaolin.adopt.entity.vo.StoryVO;
 import com.puxinxiaolin.adopt.service.StoryService;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +38,7 @@ public class StoryController {
     public Result<StoryVO> getStoryDetail(@PathVariable Long id, @RequestParam(required = false) Long userId) {
         StoryVO story = storyService.getStoryDetail(id, userId);
         if (story == null) {
-            return Result.error(MessageConstants.STORY_NOT_FOUND);
+            return Result.error(MessageConstant.STORY_NOT_FOUND);
         }
         
         return Result.success(story);
@@ -111,7 +111,7 @@ public class StoryController {
     public Result<Long> getStoryLikeCount(@PathVariable Long id) {
         StoryVO story = storyService.getStoryDetail(id, null);
         if (story == null) {
-            return Result.error(MessageConstants.STORY_NOT_FOUND);
+            return Result.error(MessageConstant.STORY_NOT_FOUND);
         }
         return Result.success((long) (story.getLikes() != null ? story.getLikes() : 0));
     }
@@ -123,7 +123,7 @@ public class StoryController {
     public Result<Long> getStoryFavoriteCount(@PathVariable Long id) {
         StoryVO story = storyService.getStoryDetail(id, null);
         if (story == null) {
-            return Result.error(MessageConstants.STORY_NOT_FOUND);
+            return Result.error(MessageConstant.STORY_NOT_FOUND);
         }
         return Result.success(0L);  // 故事表中没有收藏计数字段, 返回0
     }

@@ -2,7 +2,7 @@ package com.puxinxiaolin.adopt.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.puxinxiaolin.adopt.common.Result;
-import com.puxinxiaolin.adopt.constants.MessageConstants;
+import com.puxinxiaolin.adopt.constants.MessageConstant;
 import com.puxinxiaolin.adopt.entity.vo.GuideVO;
 import com.puxinxiaolin.adopt.service.GuideService;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +38,7 @@ public class GuideController {
     public Result<GuideVO> getGuideDetail(@PathVariable Long id, @RequestParam(required = false) Long userId) {
         GuideVO guide = guideService.getGuideDetail(id, userId);
         if (guide == null) {
-            return Result.error(MessageConstants.GUIDE_NOT_FOUND);
+            return Result.error(MessageConstant.GUIDE_NOT_FOUND);
         }
         
         // 增加浏览次数
@@ -102,7 +102,7 @@ public class GuideController {
     public Result<Long> getGuideLikeCount(@PathVariable Long id) {
         GuideVO guide = guideService.getGuideDetail(id, null);
         if (guide == null) {
-            return Result.error(MessageConstants.GUIDE_NOT_FOUND);
+            return Result.error(MessageConstant.GUIDE_NOT_FOUND);
         }
         return Result.success((long) (guide.getLikeCount() != null ? guide.getLikeCount() : 0));
     }
@@ -114,7 +114,7 @@ public class GuideController {
     public Result<Long> getGuideFavoriteCount(@PathVariable Long id) {
         GuideVO guide = guideService.getGuideDetail(id, null);
         if (guide == null) {
-            return Result.error(MessageConstants.GUIDE_NOT_FOUND);
+            return Result.error(MessageConstant.GUIDE_NOT_FOUND);
         }
         return Result.success(0L);  // 指南表中没有收藏计数字段, 返回0
     }

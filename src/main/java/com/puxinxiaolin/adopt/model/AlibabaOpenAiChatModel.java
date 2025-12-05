@@ -423,7 +423,7 @@ public class AlibabaOpenAiChatModel extends AbstractToolCallSupport implements C
                 .map(toolCall ->
                         new AssistantMessage.ToolCall(toolCall.id(), "function",
                                 toolCall.function().name(), toolCall.function().arguments()))
-                // TODO: 这里通过 reduce + stream 对 toolCalls 进行合并, 解决了使用 Function Call 进行流式输出导致的词条分割问题
+                // MY_KEY: 这里通过 reduce + stream 对 toolCalls 进行合并, 解决了使用 Function Call 进行流式输出导致的词条分割问题
                 .reduce((tc1, tc2) -> new AssistantMessage.ToolCall(tc1.id(), "function", tc1.name(), tc1.arguments() + tc2.arguments()))
                 .stream()
                 .toList();
@@ -648,7 +648,7 @@ public class AlibabaOpenAiChatModel extends AbstractToolCallSupport implements C
 
     private String fromAudioData(Object audioData) {
         if (audioData instanceof byte[] bytes) {
-            // TODO: 阿里的规范和 openai 的规范里的音频文件不兼容, 也需要遵守阿里的规范自定义拼接前缀 - data:;base64
+            // MY_KEY: 阿里的规范和 openai 的规范里的音频文件不兼容, 也需要遵守阿里的规范自定义拼接前缀 - data:;base64
             return String.format("data:;base64,%s", Base64.getEncoder().encodeToString(bytes));
         }
         throw new IllegalArgumentException("Unsupported audio data type: " + audioData.getClass().getSimpleName());

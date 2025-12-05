@@ -11,7 +11,7 @@ import com.puxinxiaolin.adopt.entity.entity.Pet;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
 import com.puxinxiaolin.adopt.enums.AdoptionStatusEnum;
 import com.puxinxiaolin.adopt.enums.PetCategoryEnum;
-import com.puxinxiaolin.adopt.exception.BusinessException;
+import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.service.PetService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -134,7 +134,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
 
         Pet pet = this.getById(id);
         if (pet == null) {
-            throw new BusinessException(ResultCode.PET_NOT_FOUND);
+            throw new BizException(ResultCode.PET_NOT_FOUND);
         }
 
         // 尝试获取用户ID（未登录时为null）
@@ -231,7 +231,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
 
         Pet pet = this.getById(id);
         if (pet == null) {
-            throw new BusinessException(ResultCode.PET_NOT_FOUND);
+            throw new BizException(ResultCode.PET_NOT_FOUND);
         }
 
         pet.setShelfStatus(shelfStatus);
@@ -252,7 +252,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
 
         Pet pet = this.getById(id);
         if (pet == null) {
-            throw new BusinessException(ResultCode.PET_NOT_FOUND);
+            throw new BizException(ResultCode.PET_NOT_FOUND);
         }
 
         pet.setAdoptionStatus(adoptionStatus);
@@ -266,7 +266,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
 
         Pet pet = this.getById(id);
         if (pet == null) {
-            throw new BusinessException(ResultCode.PET_NOT_FOUND);
+            throw new BizException(ResultCode.PET_NOT_FOUND);
         }
 
         pet.setAdoptionStatus(adoptionStatus);

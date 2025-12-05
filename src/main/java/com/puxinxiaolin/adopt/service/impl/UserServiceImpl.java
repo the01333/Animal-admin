@@ -8,7 +8,7 @@ import com.puxinxiaolin.adopt.common.ResultCode;
 import com.puxinxiaolin.adopt.entity.dto.LoginDTO;
 import com.puxinxiaolin.adopt.entity.dto.RegisterDTO;
 import com.puxinxiaolin.adopt.entity.entity.User;
-import com.puxinxiaolin.adopt.exception.BusinessException;
+import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.UserMapper;
 import com.puxinxiaolin.adopt.service.UserService;
 import com.puxinxiaolin.adopt.entity.vo.LoginVO;
@@ -38,17 +38,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         wrapper.eq(User::getUsername, loginDTO.getUsername());
         User user = this.getOne(wrapper);
         if (user == null) {
-            throw new BusinessException(ResultCode.USER_NOT_FOUND);
+            throw new BizException(ResultCode.USER_NOT_FOUND);
         }
         
         // 验证密码
         if (!BCrypt.checkpw(loginDTO.getPassword(), user.getPassword())) {
-            throw new BusinessException(ResultCode.PASSWORD_ERROR);
+            throw new BizException(ResultCode.PASSWORD_ERROR);
         }
         
         // 检查用户状态
         if (user.getStatus() == 0) {
-            throw new BusinessException(ResultCode.USER_DISABLED);
+            throw new BizException(ResultCode.USER_DISABLED);
         }
         
         // 登录
@@ -69,7 +69,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public LoginVO loginByEmailCode(String email, String code, String purpose) {
         log.info("邮箱验证码登录: {}", email);
         if (!verificationCodeService.verifyEmailCode(email, code, purpose)) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "验证码错误或已过期");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "验证码错误或已过期");
         }
         
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
@@ -98,7 +98,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public LoginVO loginByPhoneCode(String phone, String code, String purpose) {
         log.info("手机验证码登录: {}", phone);
         if (!verificationCodeService.verifyPhoneCode(phone, code, purpose)) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "验证码错误或已过期");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "验证码错误或已过期");
         }
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getPhone, phone);
@@ -128,7 +128,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, registerDTO.getUsername());
         if (this.count(wrapper) > 0) {
-            throw new BusinessException(ResultCode.USER_ALREADY_EXISTS);
+            throw new BizException(ResultCode.USER_ALREADY_EXISTS);
         }
         
         // 检查手机号是否已存在
@@ -136,7 +136,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(User::getPhone, registerDTO.getPhone());
             if (this.count(wrapper) > 0) {
-                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "手机号已被使用");
+                throw new BizException(ResultCode.BAD_REQUEST.getCode(), "手机号已被使用");
             }
         }
         
@@ -145,7 +145,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(User::getEmail, registerDTO.getEmail());
             if (this.count(wrapper) > 0) {
-                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "邮箱已被使用");
+                throw new BizException(ResultCode.BAD_REQUEST.getCode(), "邮箱已被使用");
             }
         }
         
@@ -178,7 +178,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Long userId = StpUtil.getLoginIdAsLong();
         User user = this.getById(userId);
         if (user == null) {
-            throw new BusinessException(ResultCode.USER_NOT_FOUND);
+            throw new BizException(ResultCode.USER_NOT_FOUND);
         }
         
         return BeanUtil.copyProperties(user, UserVO.class);
@@ -191,7 +191,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         
         User user = this.getById(userId);
         if (user == null) {
-            throw new BusinessException(ResultCode.USER_NOT_FOUND);
+            throw new BizException(ResultCode.USER_NOT_FOUND);
         }
         
         // 更新允许修改的字段
@@ -236,12 +236,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         
         User user = this.getById(userId);
         if (user == null) {
-            throw new BusinessException(ResultCode.USER_NOT_FOUND);
+            throw new BizException(ResultCode.USER_NOT_FOUND);
         }
         
         // 验证旧密码
         if (!BCrypt.checkpw(oldPassword, user.getPassword())) {
-            throw new BusinessException(ResultCode.PASSWORD_ERROR);
+            throw new BizException(ResultCode.PASSWORD_ERROR);
         }
         
         // 更新密码
@@ -255,7 +255,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         
         User user = this.getById(userId);
         if (user == null) {
-            throw new BusinessException(ResultCode.USER_NOT_FOUND);
+            throw new BizException(ResultCode.USER_NOT_FOUND);
         }
         
         return BeanUtil.copyProperties(user, UserVO.class);
@@ -267,18 +267,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("上传用户头像, 用户ID: {}", userId);
         
         if (file == null || file.isEmpty()) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "文件不能为空");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "文件不能为空");
         }
         
         // 验证文件类型
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "只支持图片文件");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "只支持图片文件");
         }
         
         // 验证文件大小（限制为 5MB）
         if (file.getSize() > 5 * 1024 * 1024) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "文件大小不能超过 5MB");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "文件大小不能超过 5MB");
         }
         
         try {
@@ -289,7 +289,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             // 更新用户头像
             User user = this.getById(userId);
             if (user == null) {
-                throw new BusinessException(ResultCode.USER_NOT_FOUND);
+                throw new BizException(ResultCode.USER_NOT_FOUND);
             }
             
             user.setAvatar(avatarUrl);
@@ -299,18 +299,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return avatarUrl;
         } catch (Exception e) {
             log.error("上传用户头像失败, 用户ID: {}", userId, e);
-            throw new BusinessException(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "上传头像失败");
+            throw new BizException(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "上传头像失败");
         }
     }
     
     /**
      * 上传文件到存储服务
-     * 这是一个占位符方法，实际实现需要根据你的文件存储方案调整
+     * 这是一个占位符方法, 实际实现需要根据你的文件存储方案调整
      * 可以使用 MinIO、阿里云 OSS、腾讯云 COS 等
      */
     private String uploadFileToStorage(org.springframework.web.multipart.MultipartFile file) throws Exception {
         // TODO: 实现文件上传逻辑
-        // 这里返回一个示例 URL，实际应该调用你的文件存储服务
+        // 这里返回一个示例 URL, 实际应该调用你的文件存储服务
         String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         return "/animal-adopt/avatar/" + filename;
     }

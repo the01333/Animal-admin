@@ -138,7 +138,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
             return;
         }
         
-        // 保存消息到 MySQL 数据库
+        // 入库到 DB
         ConversationHistory history = new ConversationHistory();
         history.setSessionId(sessionId);
         history.setUserId(userId);
@@ -187,7 +187,6 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
                     .timestamp(now)
                     .messageId(messageId)
                     .build();
-            
             ConversationHistoryCassandra cassandraHistory = ConversationHistoryCassandra.builder()
                     .key(key)
                     .userId(userId)

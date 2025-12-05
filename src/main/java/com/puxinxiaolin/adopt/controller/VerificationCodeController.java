@@ -3,7 +3,7 @@ package com.puxinxiaolin.adopt.controller;
 import cn.hutool.core.util.StrUtil;
 import com.puxinxiaolin.adopt.common.Result;
 import com.puxinxiaolin.adopt.common.ResultCode;
-import com.puxinxiaolin.adopt.exception.BusinessException;
+import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.service.VerificationCodeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ public class VerificationCodeController {
         String purpose = params.get("purpose");
         
         if (StrUtil.isBlank(email) || StrUtil.isBlank(purpose)) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "邮箱和用途不能为空");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "邮箱和用途不能为空");
         }
         
         boolean success = verificationCodeService.sendEmailCode(email, purpose);
@@ -47,7 +47,7 @@ public class VerificationCodeController {
         String purpose = params.get("purpose");
         
         if (StrUtil.isBlank(phone) || StrUtil.isBlank(purpose)) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "手机号和用途不能为空");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "手机号和用途不能为空");
         }
         
         boolean success = verificationCodeService.sendPhoneCode(phone, purpose);

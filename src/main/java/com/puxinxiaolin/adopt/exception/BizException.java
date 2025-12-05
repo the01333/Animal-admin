@@ -7,28 +7,33 @@ import lombok.Getter;
  * 业务异常类
  */
 @Getter
-public class BusinessException extends RuntimeException {
+public class BizException extends RuntimeException {
     
     private Integer code;
     
-    public BusinessException(String message) {
+    public BizException(String message) {
         super(message);
         this.code = 500;
     }
     
-    public BusinessException(Integer code, String message) {
+    public BizException(Integer code, String message) {
         super(message);
         this.code = code;
     }
     
-    public BusinessException(ResultCode resultCode) {
+    public BizException(ResultCode resultCode) {
         super(resultCode.getMessage());
         this.code = resultCode.getCode();
     }
     
-    public BusinessException(ResultCode resultCode, String customMessage) {
+    public BizException(ResultCode resultCode, String customMessage) {
         super(customMessage);
         this.code = resultCode.getCode();
+    }
+    
+    public BizException(Exception e) {
+        super(e.getMessage());
+        this.code = 500;
     }
 }
 

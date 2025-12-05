@@ -5,7 +5,7 @@ import com.puxinxiaolin.adopt.entity.entity.Favorite;
 import com.puxinxiaolin.adopt.entity.entity.Pet;
 import com.puxinxiaolin.adopt.entity.vo.FavoriteVO;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
-import com.puxinxiaolin.adopt.exception.BusinessException;
+import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.FavoriteMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.service.FavoriteService;
@@ -42,7 +42,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         // 检查宠物是否存在
         Pet pet = petService.getById(petId);
         if (pet == null) {
-            throw new BusinessException(ResultCode.PET_NOT_FOUND);
+            throw new BizException(ResultCode.PET_NOT_FOUND);
         }
         
         // 检查是否已收藏

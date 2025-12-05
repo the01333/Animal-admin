@@ -24,20 +24,18 @@ import java.util.Set;
 @Component
 @Slf4j
 public class ViewCountSyncTask {
-
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
-
     @Autowired
     private PetMapper petMapper;
-
     @Autowired
     private GuideMapper guideMapper;
-
     @Autowired
     private StoryMapper storyMapper;
 
     /**
+     * 同步浏览量到 DB
+     * <p>
      * 每5分钟同步一次浏览次数到数据库
      */
     // cron表达式: 0 */5 * * * ?
@@ -66,7 +64,6 @@ public class ViewCountSyncTask {
 
     private int syncPetViewCount() {
         Set<String> keys = redisTemplate.keys(RedisConstant.PET_VIEW_COUNT_PREFIX + "*");
-
         if (CollUtil.isEmpty(keys)) {
             log.debug("没有需要同步的宠物浏览数据");
             return 0;
@@ -221,6 +218,7 @@ public class ViewCountSyncTask {
     private String formatDelta(int delta) {
         return delta > 0 ? "+" + delta : String.valueOf(delta);
     }
+
     /**
      * 手动触发同步（用于测试或紧急情况）
      */

@@ -10,7 +10,7 @@ import com.puxinxiaolin.adopt.entity.entity.UserCertification;
 import com.puxinxiaolin.adopt.entity.vo.CertificationInfoVO;
 import com.puxinxiaolin.adopt.entity.vo.UserCertificationAdminVO;
 import com.puxinxiaolin.adopt.enums.CertificationStatusEnum;
-import com.puxinxiaolin.adopt.exception.BusinessException;
+import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.UserCertificationMapper;
 import com.puxinxiaolin.adopt.service.FileUploadService;
 import com.puxinxiaolin.adopt.service.UserCertificationService;
@@ -61,11 +61,11 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
         log.info("提交用户认证, 用户ID: {}", userId);
         
         if (idCardFront == null || idCardFront.isEmpty()) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "身份证正面照片不能为空");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "身份证正面照片不能为空");
         }
         
         if (idCardBack == null || idCardBack.isEmpty()) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "身份证反面照片不能为空");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "身份证反面照片不能为空");
         }
         
         try {
@@ -100,7 +100,7 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
             log.info("用户认证提交成功, 用户ID: {}", userId);
         } catch (Exception e) {
             log.error("上传认证文件失败", e);
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "上传认证文件失败");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "上传认证文件失败");
         }
     }
 
@@ -149,7 +149,7 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
     public UserCertificationAdminVO getAdminCertificationDetail(Long id) {
         UserCertification certification = this.getById(id);
         if (certification == null) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "认证记录不存在");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "认证记录不存在");
         }
         java.util.Map<Long, User> userMap = new java.util.HashMap<>();
         User applicant = userService.getById(certification.getUserId());
@@ -170,21 +170,21 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
     public void reviewCertification(Long id, String status, String rejectReason, Long reviewerId) {
         UserCertification certification = this.getById(id);
         if (certification == null) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "认证记录不存在");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "认证记录不存在");
         }
 
         CertificationStatusEnum currentStatus = CertificationStatusEnum.fromCode(certification.getStatus());
         if (currentStatus != CertificationStatusEnum.PENDING) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "仅待审核状态可以操作");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "仅待审核状态可以操作");
         }
 
         CertificationStatusEnum targetStatus = CertificationStatusEnum.fromCode(status);
         if (targetStatus == null || targetStatus == CertificationStatusEnum.PENDING) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "无效的审核状态");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "无效的审核状态");
         }
 
         if (targetStatus == CertificationStatusEnum.REJECTED && StrUtil.isBlank(rejectReason)) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "拒绝原因不能为空");
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "拒绝原因不能为空");
         }
 
         certification.setStatus(targetStatus.getCode());

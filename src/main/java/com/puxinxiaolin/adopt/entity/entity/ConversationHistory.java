@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 @TableName("t_conversation_history")
 public class ConversationHistory implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
@@ -65,7 +67,7 @@ public class ConversationHistory implements Serializable {
      * 消息时间戳
      */
     private LocalDateTime timestamp;
-    
+
     /**
      * 消息发送时间
      */
