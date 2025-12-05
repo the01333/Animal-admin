@@ -214,8 +214,8 @@ public class UserController {
     public Result<String> changePassword(@RequestBody Map<String, String> params) {
         String oldPassword = params.get("oldPassword");
         String newPassword = params.get("newPassword");
-        if (StringUtils.isBlank(oldPassword) || StringUtils.isBlank(newPassword)) {
-            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "旧密码和新密码不能为空");
+        if (StringUtils.isBlank(newPassword)) {
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "新密码不能为空");
         }
         
         Long userId = StpUtil.getLoginIdAsLong();

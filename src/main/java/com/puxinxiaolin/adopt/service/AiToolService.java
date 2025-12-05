@@ -1,18 +1,23 @@
 package com.puxinxiaolin.adopt.service;
 
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.puxinxiaolin.adopt.entity.dto.ContentQueryDTO;
 import com.puxinxiaolin.adopt.entity.dto.PetQueryDTO;
 import com.puxinxiaolin.adopt.entity.entity.Pet;
 import com.puxinxiaolin.adopt.entity.vo.ContentVO;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
 import com.puxinxiaolin.adopt.enums.ContentCategoryEnum;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +25,19 @@ public class AiToolService {
 
     private final PetService petService;
     private final ContentService contentService;
+
+    private static final Map<String, List<String>> KEYWORD_SYNONYMS = Map.of(
+            "新手", List.of("新手", "入门", "初学", "基础"),
+            "护理", List.of("护理", "照顾", "照护", "保养"),
+            "训练", List.of("训练", "教育", "驯养", "行为"),
+            "健康", List.of("健康", "医疗", "常见病", "体检"),
+            "疫苗", List.of("疫苗", "免疫", "打针"),
+            "须知", List.of("须知", "注意事项", "指南")
+    );
+
+    private static final List<String> KEYWORD_FALLBACKS = List.of(
+            "宠物护理", "领养须知", "养宠技巧", "宠物健康", "领养流程"
+    );
 
     /**
      * 根据条件查询宠物（用于AI工具调用）
@@ -216,13 +234,72 @@ public class AiToolService {
     }
 
     private List<ContentVO> queryContent(String category, String keyword, Integer limit) {
-        ContentQueryDTO queryDTO = new ContentQueryDTO();
-        if (category != null && !category.isBlank()) {
-            queryDTO.setCategory(category);
+        List<String> categoryCandidates = buildCategoryCandidates(category);
+        List<String> keywordCandidates = buildKeywordCandidates(keyword);
+        long size = limit == null ? 10L : Math.max(limit, 1);
+
+        for (String categoryOption : categoryCandidates) {
+            for (String keywordOption : keywordCandidates) {
+                ContentQueryDTO queryDTO = new ContentQueryDTO();
+                if (StrUtil.isNotBlank(categoryOption)) {
+                    queryDTO.setCategory(categoryOption);
+                }
+                queryDTO.setKeyword(keywordOption);
+                queryDTO.setCurrent(1L);
+                queryDTO.setSize(size);
+
+                List<ContentVO> records = contentService.queryContentPage(queryDTO).getRecords();
+                if (!records.isEmpty()) {
+                    return records;
+                }
+            }
         }
-        queryDTO.setKeyword(keyword);
-        queryDTO.setCurrent(1L);
-        queryDTO.setSize(Long.valueOf(limit == null ? 10 : Math.max(limit, 1)));
-        return contentService.queryContentPage(queryDTO).getRecords();
+
+        ContentQueryDTO fallbackQuery = new ContentQueryDTO();
+        fallbackQuery.setCurrent(1L);
+        fallbackQuery.setSize(size);
+        return contentService.queryContentPage(fallbackQuery).getRecords();
+    }
+
+    private List<String> buildKeywordCandidates(String keyword) {
+        if (StrUtil.isBlank(keyword)) {
+            return Collections.singletonList(null);
+        }
+
+        String normalized = keyword.trim();
+        LinkedHashSet<String> candidates = new LinkedHashSet<>();
+        candidates.add(normalized);
+
+        KEYWORD_SYNONYMS.forEach((trigger, synonyms) -> {
+            if (normalized.contains(trigger)) {
+                candidates.addAll(synonyms);
+                return;
+            }
+            for (String synonym : synonyms) {
+                if (normalized.contains(synonym)) {
+                    candidates.addAll(synonyms);
+                    break;
+                }
+            }
+        });
+
+        candidates.addAll(KEYWORD_FALLBACKS);
+
+        return new ArrayList<>(candidates);
+    }
+
+    private List<String> buildCategoryCandidates(String category) {
+        LinkedHashSet<String> candidates = new LinkedHashSet<>();
+        if (StrUtil.isNotBlank(category)) {
+            String normalized = category.trim().toUpperCase();
+            candidates.add(normalized);
+            if (ContentCategoryEnum.GUIDE.name().equalsIgnoreCase(normalized)) {
+                candidates.add(ContentCategoryEnum.STORY.name());
+            } else if (ContentCategoryEnum.STORY.name().equalsIgnoreCase(normalized)) {
+                candidates.add(ContentCategoryEnum.GUIDE.name());
+            }
+        }
+        candidates.add(null);
+        return new ArrayList<>(candidates);
     }
 }

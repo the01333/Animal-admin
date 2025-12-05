@@ -1,6 +1,7 @@
 package com.puxinxiaolin.adopt.entity.vo;
 
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
 /**
@@ -8,7 +9,7 @@ import java.time.LocalDateTime;
  */
 @Data
 public class UserVO {
-    
+
     private Long id;
     private String username;
     private String nickname;
@@ -26,5 +27,10 @@ public class UserVO {
     private Integer status;
     private Boolean certified;
     private LocalDateTime createTime;
+    private LocalDateTime updateTime;
+    /**
+     * 是否已设置密码
+     */
+    private Boolean hasPassword;
 }
 
