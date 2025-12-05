@@ -140,7 +140,10 @@ public class ContentServiceImpl implements ContentService {
     private List<ContentVO> loadGuideContent(ContentQueryDTO queryDTO) {
         LambdaQueryWrapper<Guide> wrapper = new LambdaQueryWrapper<>();
         if (StrUtil.isNotBlank(queryDTO.getKeyword())) {
-            wrapper.and(w -> w.like(Guide::getCategory, queryDTO.getKeyword()));
+            String keyword = queryDTO.getKeyword();
+            wrapper.and(w -> w.like(Guide::getTitle, keyword)
+                    .or().like(Guide::getExcerpt, keyword)
+                    .or().like(Guide::getCategory, keyword));
         }
 
         List<Guide> guides = guideMapper.selectList(wrapper);
@@ -152,7 +155,8 @@ public class ContentServiceImpl implements ContentService {
     private List<ContentVO> loadStoryContent(ContentQueryDTO queryDTO) {
         LambdaQueryWrapper<Story> wrapper = new LambdaQueryWrapper<>();
         if (StrUtil.isNotBlank(queryDTO.getKeyword())) {
-            wrapper.and(w -> w.like(Story::getTitle, queryDTO.getKeyword()));
+            wrapper.and(w -> w.like(Story::getTitle, queryDTO.getKeyword()))
+                    .or().like(Story::getTags, queryDTO.getKeyword());
         }
 
         List<Story> stories = storyMapper.selectList(wrapper);

@@ -1,5 +1,6 @@
 package com.puxinxiaolin.adopt.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -20,6 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 用户认证服务实现
@@ -48,8 +52,13 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
             // 如果没有认证记录, 返回未提交状态
             vo.setStatus("not_submitted");
         } else {
-            vo.setStatus(certification.getStatus());
-            vo.setRejectReason(certification.getRejectReason());
+            String status = certification.getStatus();
+            vo.setStatus(status);
+            if (CertificationStatusEnum.REJECTED.getCode().equals(status)) {
+                vo.setRejectReason(certification.getRejectReason());
+            } else {
+                vo.setRejectReason(null);
+            }
         }
         
         return vo;
@@ -87,6 +96,9 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
             certification.setIdCardFrontUrl(idCardFrontUrl);
             certification.setIdCardBackUrl(idCardBackUrl);
             certification.setStatus(CertificationStatusEnum.PENDING.getCode());
+            certification.setRejectReason(null);
+            certification.setReviewerId(null);
+            certification.setReviewTime(null);
             
             if (existingCertification != null) {
                 // 如果已有记录, 更新状态
@@ -111,9 +123,20 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
             wrapper.eq(UserCertification::getStatus, status.toLowerCase());
         }
         if (StrUtil.isNotBlank(keyword)) {
-            wrapper.and(w -> w.like(UserCertification::getIdCard, keyword)
-                    .or().like(UserCertification::getIdCardFrontUrl, keyword)
-                    .or().like(UserCertification::getIdCardBackUrl, keyword));
+            // FIXME: 通过 t_user 表匹配手机号, 再过滤筛选出 user_id
+            LambdaQueryWrapper<User> filterWrapper = new LambdaQueryWrapper<User>()
+                    .like(User::getPhone, keyword);
+            List<User> filterUsers = userService.list(filterWrapper);
+            if (CollUtil.isNotEmpty(filterUsers)) {
+                Set<Long> targetUserIds = filterUsers.stream()
+                        .map(User::getId)
+                        .collect(Collectors.toSet());
+
+                wrapper.and(w -> w.like(UserCertification::getIdCard, keyword)
+                        .or().in(UserCertification::getUserId, targetUserIds));
+            } else {
+                wrapper.like(UserCertification::getIdCard, keyword);
+            }
         }
         wrapper.orderByDesc(UserCertification::getCreateTime);
 
@@ -123,25 +146,25 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
         }
 
         // 批量查询用户与审核人信息
-        java.util.Set<Long> userIds = certPage.getRecords().stream()
+        Set<Long> userIds = certPage.getRecords().stream()
                 .map(UserCertification::getUserId)
-                .filter(java.util.Objects::nonNull)
-                .collect(java.util.stream.Collectors.toSet());
-        java.util.Set<Long> reviewerIds = certPage.getRecords().stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Set<Long> reviewerIds = certPage.getRecords().stream()
                 .map(UserCertification::getReviewerId)
-                .filter(java.util.Objects::nonNull)
-                .collect(java.util.stream.Collectors.toSet());
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
         userIds.addAll(reviewerIds);
 
-        java.util.Map<Long, User> userMap = userIds.isEmpty()
-                ? java.util.Collections.emptyMap()
+        Map<Long, User> userMap = userIds.isEmpty()
+                ? Collections.emptyMap()
                 : userService.listByIds(userIds).stream()
-                .collect(java.util.stream.Collectors.toMap(User::getId, java.util.function.Function.identity()));
+                .collect(Collectors.toMap(User::getId, java.util.function.Function.identity()));
 
         Page<UserCertificationAdminVO> voPage = new Page<>(certPage.getCurrent(), certPage.getSize(), certPage.getTotal());
         voPage.setRecords(certPage.getRecords().stream()
                 .map(record -> assembleAdminVO(record, userMap))
-                .collect(java.util.stream.Collectors.toList()));
+                .collect(Collectors.toList()));
         return voPage;
     }
 
@@ -209,9 +232,20 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
         vo.setIdCardFrontUrl(certification.getIdCardFrontUrl());
         vo.setIdCardBackUrl(certification.getIdCardBackUrl());
         vo.setStatus(certification.getStatus());
-        vo.setRejectReason(certification.getRejectReason());
-        vo.setReviewerId(certification.getReviewerId());
-        vo.setReviewTime(certification.getReviewTime());
+        String status = certification.getStatus();
+        if (CertificationStatusEnum.REJECTED.getCode().equals(status)) {
+            vo.setRejectReason(certification.getRejectReason());
+        } else {
+            vo.setRejectReason(null);
+        }
+
+        if (CertificationStatusEnum.PENDING.getCode().equals(status)) {
+            vo.setReviewerId(null);
+            vo.setReviewTime(null);
+        } else {
+            vo.setReviewerId(certification.getReviewerId());
+            vo.setReviewTime(certification.getReviewTime());
+        }
         vo.setCreateTime(certification.getCreateTime());
         vo.setUpdateTime(certification.getUpdateTime());
 

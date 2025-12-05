@@ -47,16 +47,18 @@ public class OssFileUploadServiceImpl implements FileUploadService {
                         .object(objectName)
                         .stream(inputStream, file.getSize(), -1);
                 String contentType = file.getContentType();
+                
                 if (StrUtil.isNotBlank(contentType)) {
                     builder.contentType(contentType);
                 } else {
                     builder.contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
                 }
+                
                 minioClient.putObject(builder.build());
             }
 
             log.info("文件上传成功: bucket={}, object={} ", ossConfig.getBucketName(), objectName);
-            return objectName;
+            return buildFileUrl(objectName);
         } catch (Exception e) {
             log.error("文件上传失败", e);
             throw new BizException(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "文件上传失败: " + e.getMessage());
