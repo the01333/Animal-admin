@@ -152,7 +152,8 @@ public class ContentServiceImpl implements ContentService {
     private List<ContentVO> loadStoryContent(ContentQueryDTO queryDTO) {
         LambdaQueryWrapper<Story> wrapper = new LambdaQueryWrapper<>();
         if (StrUtil.isNotBlank(queryDTO.getKeyword())) {
-            wrapper.and(w -> w.like(Story::getTitle, queryDTO.getKeyword()));
+            wrapper.and(w -> w.like(Story::getTitle, queryDTO.getKeyword()))
+                    .or().like(Story::getTags, queryDTO.getKeyword());
         }
 
         List<Story> stories = storyMapper.selectList(wrapper);
