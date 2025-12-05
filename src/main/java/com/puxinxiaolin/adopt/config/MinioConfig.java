@@ -13,7 +13,7 @@ import java.net.URISyntaxException;
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "minio")
-public class AliyunOssConfig {
+public class MinioConfig {
 
     private String endpoint;
     private String accessKey;

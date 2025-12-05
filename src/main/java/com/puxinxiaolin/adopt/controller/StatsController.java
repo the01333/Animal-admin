@@ -5,6 +5,8 @@ import cn.dev33.satoken.annotation.SaMode;
 import com.puxinxiaolin.adopt.common.Result;
 import com.puxinxiaolin.adopt.entity.entity.AdoptionApplication;
 import com.puxinxiaolin.adopt.entity.entity.Pet;
+import com.puxinxiaolin.adopt.enums.AdoptionStatusEnum;
+import com.puxinxiaolin.adopt.enums.ApplicationStatusEnum;
 import com.puxinxiaolin.adopt.mapper.AdoptionApplicationMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.mapper.UserMapper;
@@ -44,11 +46,11 @@ public class StatsController {
             long totalPets = petMapper.selectCount(null);
             // 可领养宠物数
             long availablePets = petMapper.selectCount(
-                    new LambdaQueryWrapper<Pet>().eq(Pet::getAdoptionStatus, "available")
+                    new LambdaQueryWrapper<Pet>().eq(Pet::getAdoptionStatus, AdoptionStatusEnum.AVAILABLE.getCode())
             );
             // 已领养宠物数
             long adoptedPets = petMapper.selectCount(
-                    new LambdaQueryWrapper<Pet>().eq(Pet::getAdoptionStatus, "adopted")
+                    new LambdaQueryWrapper<Pet>().eq(Pet::getAdoptionStatus, AdoptionStatusEnum.ADOPTED.getCode())
             );
             // 用户总数
             long totalUsers = userMapper.selectCount(null);
@@ -75,20 +77,23 @@ public class StatsController {
         try {
             // 待审核申请数
             long pendingCount = adoptionApplicationMapper.selectCount(
-                    new LambdaQueryWrapper<AdoptionApplication>().eq(AdoptionApplication::getStatus, "pending")
+                    new LambdaQueryWrapper<AdoptionApplication>()
+                            .eq(AdoptionApplication::getStatus, ApplicationStatusEnum.PENDING.getCode())
             );
             // 已通过申请数
             long approvedCount = adoptionApplicationMapper.selectCount(
-                    new LambdaQueryWrapper<AdoptionApplication>().eq(AdoptionApplication::getStatus, "approved")
+                    new LambdaQueryWrapper<AdoptionApplication>()
+                            .eq(AdoptionApplication::getStatus, ApplicationStatusEnum.APPROVED.getCode())
             );
             // 已拒绝申请数
             long rejectedCount = adoptionApplicationMapper.selectCount(
-                    new LambdaQueryWrapper<AdoptionApplication>().eq(AdoptionApplication::getStatus, "rejected")
+                    new LambdaQueryWrapper<AdoptionApplication>()
+                            .eq(AdoptionApplication::getStatus, ApplicationStatusEnum.REJECTED.getCode())
             );
 
-            data.put("pending", pendingCount);
-            data.put("approved", approvedCount);
-            data.put("rejected", rejectedCount);
+            data.put(ApplicationStatusEnum.PENDING.getCode(), pendingCount);
+            data.put(ApplicationStatusEnum.APPROVED.getCode(), approvedCount);
+            data.put(ApplicationStatusEnum.REJECTED.getCode(), rejectedCount);
 
             return Result.success(data);
         } catch (Exception e) {

@@ -167,9 +167,9 @@ public class StoryServiceImpl extends ServiceImpl<StoryMapper, Story> implements
 
     @Override
     public List<String> getAllCategories() {
-        // 查询所有故事，提取不重复的标签
+        // 查询所有故事, 提取不重复的标签
         List<Story> stories = this.list();
-        log.info("获取故事分类，总故事数: {}", stories.size());
+        log.info("获取故事分类, 总故事数: {}", stories.size());
 
         List<String> categories = stories.stream()
                 .map(Story::getTags)

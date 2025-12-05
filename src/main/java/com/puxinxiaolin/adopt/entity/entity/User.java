@@ -63,18 +63,6 @@ public class User implements Serializable {
     /** 是否有养宠经验 */
     private Boolean hasExperience;
     
-    /** 微信OpenID */
-    private String wechatOpenid;
-    
-    /** 微信UnionID */
-    private String wechatUnionid;
-    
-    /** QQ OpenID */
-    private String qqOpenid;
-    
-    /** 注册方式 (username:用户名 phone:手机号 email:邮箱 wechat:微信 qq:QQ) */
-    private String registerType;
-    
     /** 用户角色 (user:普通用户 super_admin:超级管理员 auditor:审核员) */
     private String role;
     

@@ -2,7 +2,7 @@ package com.puxinxiaolin.adopt.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
-import com.puxinxiaolin.adopt.config.AliyunOssConfig;
+import com.puxinxiaolin.adopt.config.MinioConfig;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class OssUrlService {
-    private final AliyunOssConfig ossConfig;
+    private final MinioConfig ossConfig;
 
     public String normalizeUrl(String input) {
         if (input == null || input.isEmpty()) return input;

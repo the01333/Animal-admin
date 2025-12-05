@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 /**
  * 会话记忆服务实现
- * 
+ * <p>
  * 核心特性：
  * 1. 用户隔离 - 每个用户的对话完全独立
  * 2. 持久化存储 - 使用 Cassandra 存储对话历史
@@ -125,13 +125,11 @@ public class SessionMemoryServiceImpl implements SessionMemoryService {
         }
 
         // 保存到 Cassandra
-        ConversationHistoryCassandra.ConversationHistoryKey key =
-                ConversationHistoryCassandra.ConversationHistoryKey.builder()
-                        .sessionId(sessionId)
-                        .timestamp(Instant.now())
-                        .messageId(UUID.randomUUID())
-                        .build();
-
+        ConversationHistoryCassandra.ConversationHistoryKey key = ConversationHistoryCassandra.ConversationHistoryKey.builder()
+                .sessionId(sessionId)
+                .timestamp(Instant.now())
+                .messageId(UUID.randomUUID())
+                .build();
         ConversationHistoryCassandra history = ConversationHistoryCassandra.builder()
                 .key(key)
                 .userId(userId)
@@ -139,7 +137,6 @@ public class SessionMemoryServiceImpl implements SessionMemoryService {
                 .content(content)
                 .createdAt(Instant.now())
                 .build();
-
         cassandraRepository.save(history);
 
         // 清除缓存

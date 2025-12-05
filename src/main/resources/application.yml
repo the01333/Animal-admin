@@ -52,8 +52,8 @@ spring:
   mail:
     host: smtp.qq.com
     port: 587
-    username: ${MAIL_USERNAME:your-email@qq.com}
-    password: ${MAIL_PASSWORD:your-authorization-code}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -93,10 +93,6 @@ sa-token:
   is-log: false
   # token前缀 (用于支持 Bearer 前缀)
   token-prefix: Bearer
-  # 使用Redis存储token (需要Redis支持)
-  dao:
-    redis:
-      database: 4
 
 logging:
   level:
@@ -118,20 +114,7 @@ minio:
 
 aliyun:
   sms:
-    access-key-id: ${ALIYUN_SMS_ACCESS_KEY_ID:your-access-key-id}
-    access-key-secret: ${ALIYUN_SMS_ACCESS_KEY_SECRET:your-access-key-secret}
-    sign-name: ${ALIYUN_SMS_SIGN_NAME:宠物领养系统}
-    template-code:
-      register: ${ALIYUN_SMS_TEMPLATE_REGISTER:SMS_123456}
-      login: ${ALIYUN_SMS_TEMPLATE_LOGIN:SMS_123457}
-      reset-password: ${ALIYUN_SMS_TEMPLATE_RESET:SMS_123458}
-
-wechat:
-  app-id: ${WECHAT_APP_ID:your-app-id}
-  app-secret: ${WECHAT_APP_SECRET:your-app-secret}
-  redirect-uri: ${WECHAT_REDIRECT_URL:http://localhost:8080/api/oauth/wechat/callback}
-
-qq:
-  app-id: ${QQ_APP_ID:your-app-id}
-  app-key: ${QQ_APP_KEY:your-app-key}
-  redirect-uri: ${QQ_REDIRECT_URL:http://localhost:8080/api/oauth/qq/callback}
+    access-key: ${ALI_ACCESS_KEY}
+    secret-key: ${ALI_SECRET_KEY}
+    sign-name: "bage财务系统"
+    template-code: "SMS_498740321"

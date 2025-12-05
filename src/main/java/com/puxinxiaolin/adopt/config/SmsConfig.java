@@ -9,15 +9,9 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "aliyun.sms")
 public class SmsConfig {
     
-    private String accessKeyId;
-    private String accessKeySecret;
+    private String accessKey;
+    private String secretKey;
     private String signName;
-    private TemplateCode templateCode = new TemplateCode();
-
-    @Data
-    public static class TemplateCode {
-        private String register;
-        private String login;
-        private String resetPassword;
-    }
+    private String templateCode;
+    
 }

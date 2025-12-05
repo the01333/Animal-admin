@@ -6,14 +6,15 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.puxinxiaolin.adopt.common.ResultCode;
 import com.puxinxiaolin.adopt.constants.DateConstant;
-import com.puxinxiaolin.adopt.constants.MessageConstants;
+import com.puxinxiaolin.adopt.constants.MessageConstant;
 import com.puxinxiaolin.adopt.entity.dto.ContentDTO;
 import com.puxinxiaolin.adopt.entity.dto.ContentQueryDTO;
+import com.puxinxiaolin.adopt.entity.dto.ContentUserQueryDTO;
 import com.puxinxiaolin.adopt.entity.entity.*;
 import com.puxinxiaolin.adopt.entity.vo.ContentCategoryVO;
 import com.puxinxiaolin.adopt.entity.vo.ContentVO;
 import com.puxinxiaolin.adopt.enums.ContentCategoryEnum;
-import com.puxinxiaolin.adopt.exception.BusinessException;
+import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.*;
 import com.puxinxiaolin.adopt.service.ContentService;
 import lombok.RequiredArgsConstructor;
@@ -23,14 +24,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.function.Function;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ContentServiceImpl implements ContentService {
-
     private final GuideMapper guideMapper;
     private final StoryMapper storyMapper;
     private final GuideLikeMapper guideLikeMapper;
@@ -117,12 +122,12 @@ public class ContentServiceImpl implements ContentService {
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             affected = guideMapper.deleteById(id);
             if (affected == 0) {
-                throw new BusinessException(ResultCode.NOT_FOUND.getCode(), MessageConstants.GUIDE_NOT_FOUND);
+                throw new BizException(ResultCode.NOT_FOUND.getCode(), MessageConstant.GUIDE_NOT_FOUND);
             }
         } else {
             affected = storyMapper.deleteById(id);
             if (affected == 0) {
-                throw new BusinessException(ResultCode.NOT_FOUND.getCode(), MessageConstants.STORY_NOT_FOUND);
+                throw new BizException(ResultCode.NOT_FOUND.getCode(), MessageConstant.STORY_NOT_FOUND);
             }
         }
     }
@@ -135,13 +140,9 @@ public class ContentServiceImpl implements ContentService {
     private List<ContentVO> loadGuideContent(ContentQueryDTO queryDTO) {
         LambdaQueryWrapper<Guide> wrapper = new LambdaQueryWrapper<>();
         if (StrUtil.isNotBlank(queryDTO.getKeyword())) {
-            wrapper.and(w -> w.like(Guide::getCategory, queryDTO.getKeyword())
-                    // TODO: 后续看是否需要对摘要进行模糊查询
-//                    .or()
-//                    .like(Guide::getExcerpt, queryDTO.getKeyword()))
-            );
+            wrapper.and(w -> w.like(Guide::getCategory, queryDTO.getKeyword()));
         }
-        
+
         List<Guide> guides = guideMapper.selectList(wrapper);
         return guides.stream()
                 .map(guide -> toContentVO(guide, null))
@@ -151,13 +152,9 @@ public class ContentServiceImpl implements ContentService {
     private List<ContentVO> loadStoryContent(ContentQueryDTO queryDTO) {
         LambdaQueryWrapper<Story> wrapper = new LambdaQueryWrapper<>();
         if (StrUtil.isNotBlank(queryDTO.getKeyword())) {
-            wrapper.and(w -> w.like(Story::getTitle, queryDTO.getKeyword())
-                    // TODO: 后续看是否需要对摘要进行模糊查询
-//                    .or()
-//                    .like(Story::getExcerpt, queryDTO.getKeyword())
-            );
+            wrapper.and(w -> w.like(Story::getTitle, queryDTO.getKeyword()));
         }
-        
+
         List<Story> stories = storyMapper.selectList(wrapper);
         return stories.stream()
                 .map(story -> toContentVO(story, null))
@@ -167,7 +164,7 @@ public class ContentServiceImpl implements ContentService {
     private Guide applyGuideFields(ContentDTO dto, Guide source) {
         String guideCategory = StrUtil.emptyToDefault(dto.getGuideCategory(), null);
         if (StrUtil.isBlank(guideCategory)) {
-            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "指南分类不能为空");
+            throw new BizException(ResultCode.PARAM_ERROR.getCode(), "指南分类不能为空");
         }
 
         Guide guide = source != null ? source : new Guide();
@@ -188,7 +185,7 @@ public class ContentServiceImpl implements ContentService {
 
     private Story applyStoryFields(ContentDTO dto, Story source) {
         if (StrUtil.isBlank(dto.getAuthor())) {
-            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "故事作者不能为空");
+            throw new BizException(ResultCode.PARAM_ERROR.getCode(), "故事作者不能为空");
         }
 
         Story story = source != null ? source : new Story();
@@ -387,10 +384,212 @@ public class ContentServiceImpl implements ContentService {
         return storyFavoriteMapper.checkUserFavorited(userId, id) > 0;
     }
 
+    @Override
+    public Page<ContentVO> queryUserLikedContent(ContentUserQueryDTO queryDTO, Long userId) {
+        ensureUserLoggedIn(userId);
+        long current = normalizeCurrent(queryDTO.getCurrent());
+        long size = normalizeSize(queryDTO.getSize());
+
+        List<ContentVO> merged = new ArrayList<>();
+        if (shouldIncludeGuide(queryDTO.getCategory())) {
+            merged.addAll(loadUserGuideLikes(userId));
+        }
+        if (shouldIncludeStory(queryDTO.getCategory())) {
+            merged.addAll(loadUserStoryLikes(userId));
+        }
+
+        sortByRelationTime(merged);
+        return buildPage(merged, current, size);
+    }
+
+    @Override
+    public Page<ContentVO> queryUserFavoritedContent(ContentUserQueryDTO queryDTO, Long userId) {
+        ensureUserLoggedIn(userId);
+        long current = normalizeCurrent(queryDTO.getCurrent());
+        long size = normalizeSize(queryDTO.getSize());
+
+        List<ContentVO> merged = new ArrayList<>();
+        if (shouldIncludeGuide(queryDTO.getCategory())) {
+            merged.addAll(loadUserGuideFavorites(userId));
+        }
+        if (shouldIncludeStory(queryDTO.getCategory())) {
+            merged.addAll(loadUserStoryFavorites(userId));
+        }
+
+        sortByRelationTime(merged);
+        return buildPage(merged, current, size);
+    }
+
+    private void ensureUserLoggedIn(Long userId) {
+        if (userId == null) {
+            throw new BizException(ResultCode.UNAUTHORIZED.getCode(), "请先登录");
+        }
+    }
+
+    private long normalizeCurrent(Long current) {
+        return current == null || current <= 0 ? 1L : current;
+    }
+
+    private long normalizeSize(Long size) {
+        return size == null || size <= 0 ? 10L : size;
+    }
+
+    private boolean shouldIncludeGuide(String category) {
+        return StrUtil.isBlank(category) || ContentCategoryEnum.GUIDE.name().equalsIgnoreCase(category);
+    }
+
+    private boolean shouldIncludeStory(String category) {
+        return StrUtil.isBlank(category) || ContentCategoryEnum.STORY.name().equalsIgnoreCase(category);
+    }
+
+    private void sortByRelationTime(List<ContentVO> items) {
+        items.sort(Comparator
+                .comparing(ContentVO::getRelationTime, Comparator.nullsLast(LocalDateTime::compareTo)).reversed()
+                .thenComparing(ContentVO::getPublishTime, Comparator.nullsLast(LocalDateTime::compareTo)).reversed());
+    }
+
+    private Page<ContentVO> buildPage(List<ContentVO> merged, long current, long size) {
+        Page<ContentVO> page = new Page<>(current, size);
+        long total = merged.size();
+        page.setTotal(total);
+
+        long fromIndex = Math.min((current - 1) * size, total);
+        long toIndex = Math.min(fromIndex + size, total);
+        if (fromIndex >= toIndex) {
+            page.setRecords(Collections.emptyList());
+        } else {
+            page.setRecords(merged.subList((int) fromIndex, (int) toIndex));
+        }
+        return page;
+    }
+
+    private List<ContentVO> loadUserGuideLikes(Long userId) {
+        LambdaQueryWrapper<GuideLike> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(GuideLike::getUserId, userId).orderByDesc(GuideLike::getCreatedAt);
+        List<GuideLike> likes = guideLikeMapper.selectList(wrapper);
+        if (likes.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Set<Long> guideIds = extractIds(likes, GuideLike::getGuideId);
+        if (guideIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<Long, Guide> guideMap = guideMapper.selectBatchIds(guideIds).stream()
+                .collect(Collectors.toMap(Guide::getId, guide -> guide));
+
+        List<ContentVO> result = new ArrayList<>();
+        for (GuideLike like : likes) {
+            Guide guide = guideMap.get(like.getGuideId());
+            if (guide == null) {
+                continue;
+            }
+            ContentVO vo = toContentVO(guide, null);
+            vo.setLiked(Boolean.TRUE);
+            vo.setRelationTime(like.getCreatedAt());
+            result.add(vo);
+        }
+        return result;
+    }
+
+    private List<ContentVO> loadUserStoryLikes(Long userId) {
+        LambdaQueryWrapper<StoryLike> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(StoryLike::getUserId, userId).orderByDesc(StoryLike::getCreatedAt);
+        List<StoryLike> likes = storyLikeMapper.selectList(wrapper);
+        if (likes.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Set<Long> storyIds = extractIds(likes, StoryLike::getStoryId);
+        if (storyIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Map<Long, Story> storyMap = storyMapper.selectBatchIds(storyIds).stream()
+                .collect(Collectors.toMap(Story::getId, story -> story));
+
+        List<ContentVO> result = new ArrayList<>();
+        for (StoryLike like : likes) {
+            Story story = storyMap.get(like.getStoryId());
+            if (story == null) {
+                continue;
+            }
+            ContentVO vo = toContentVO(story, null);
+            vo.setLiked(Boolean.TRUE);
+            vo.setRelationTime(like.getCreatedAt());
+            result.add(vo);
+        }
+        return result;
+    }
+
+    private List<ContentVO> loadUserGuideFavorites(Long userId) {
+        LambdaQueryWrapper<GuideFavorite> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(GuideFavorite::getUserId, userId).orderByDesc(GuideFavorite::getCreatedAt);
+        List<GuideFavorite> favorites = guideFavoriteMapper.selectList(wrapper);
+        if (favorites.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Set<Long> guideIds = extractIds(favorites, GuideFavorite::getGuideId);
+        if (guideIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Map<Long, Guide> guideMap = guideMapper.selectBatchIds(guideIds).stream()
+                .collect(Collectors.toMap(Guide::getId, guide -> guide));
+
+        List<ContentVO> result = new ArrayList<>();
+        for (GuideFavorite favorite : favorites) {
+            Guide guide = guideMap.get(favorite.getGuideId());
+            if (guide == null) {
+                continue;
+            }
+            ContentVO vo = toContentVO(guide, null);
+            vo.setFavorited(Boolean.TRUE);
+            vo.setRelationTime(favorite.getCreatedAt());
+            result.add(vo);
+        }
+        return result;
+    }
+
+    private List<ContentVO> loadUserStoryFavorites(Long userId) {
+        LambdaQueryWrapper<StoryFavorite> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(StoryFavorite::getUserId, userId).orderByDesc(StoryFavorite::getCreatedAt);
+        List<StoryFavorite> favorites = storyFavoriteMapper.selectList(wrapper);
+        if (favorites.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Set<Long> storyIds = extractIds(favorites, StoryFavorite::getStoryId);
+        if (storyIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Map<Long, Story> storyMap = storyMapper.selectBatchIds(storyIds).stream()
+                .collect(Collectors.toMap(Story::getId, story -> story));
+
+        List<ContentVO> result = new ArrayList<>();
+        for (StoryFavorite favorite : favorites) {
+            Story story = storyMap.get(favorite.getStoryId());
+            if (story == null) {
+                continue;
+            }
+            ContentVO vo = toContentVO(story, null);
+            vo.setFavorited(Boolean.TRUE);
+            vo.setRelationTime(favorite.getCreatedAt());
+            result.add(vo);
+        }
+        return result;
+    }
+    
+    private <T> Set<Long> extractIds(List<T> relations, Function<T, Long> idGetter) {
+        return relations.stream()
+                .map(idGetter)
+                .collect(Collectors.toSet());
+    }
+
     private Guide requireGuide(Long id) {
         Guide guide = guideMapper.selectById(id);
         if (guide == null) {
-            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), MessageConstants.GUIDE_NOT_FOUND);
+            throw new BizException(ResultCode.NOT_FOUND.getCode(), MessageConstant.GUIDE_NOT_FOUND);
         }
         return guide;
     }
@@ -398,7 +597,7 @@ public class ContentServiceImpl implements ContentService {
     private Story requireStory(Long id) {
         Story story = storyMapper.selectById(id);
         if (story == null) {
-            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), MessageConstants.STORY_NOT_FOUND);
+            throw new BizException(ResultCode.NOT_FOUND.getCode(), MessageConstant.STORY_NOT_FOUND);
         }
         return story;
     }

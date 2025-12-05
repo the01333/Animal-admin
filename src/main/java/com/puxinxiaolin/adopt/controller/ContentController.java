@@ -6,6 +6,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.puxinxiaolin.adopt.common.Result;
 import com.puxinxiaolin.adopt.entity.dto.ContentDTO;
 import com.puxinxiaolin.adopt.entity.dto.ContentQueryDTO;
+import com.puxinxiaolin.adopt.entity.dto.ContentUserQueryDTO;
 import com.puxinxiaolin.adopt.entity.vo.ContentCategoryVO;
 import com.puxinxiaolin.adopt.entity.vo.ContentVO;
 import com.puxinxiaolin.adopt.service.ContentService;
@@ -152,5 +153,23 @@ public class ContentController {
                                               @PathVariable("id") Long id) {
         Long userId = StpUtil.getLoginIdAsLong();
         return Result.success(contentService.isContentFavorited(category, id, userId));
+    }
+
+    /**
+     * 查询当前用户点赞的文章（指南/故事）
+     */
+    @GetMapping("/like/my")
+    public Result<Page<ContentVO>> queryMyLikedContent(@Valid ContentUserQueryDTO queryDTO) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        return Result.success(contentService.queryUserLikedContent(queryDTO, userId));
+    }
+
+    /**
+     * 查询当前用户收藏的文章（指南/故事）
+     */
+    @GetMapping("/favorite/my")
+    public Result<Page<ContentVO>> queryMyFavoritedContent(@Valid ContentUserQueryDTO queryDTO) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        return Result.success(contentService.queryUserFavoritedContent(queryDTO, userId));
     }
 }

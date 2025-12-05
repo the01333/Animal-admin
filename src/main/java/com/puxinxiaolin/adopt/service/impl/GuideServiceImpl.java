@@ -172,7 +172,7 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
 
     @Override
     public List<String> getAllCategories() {
-        // 查询所有指南，提取不重复的分类
+        // 查询所有指南, 提取不重复的分类
         List<Guide> guides = this.list();
         return guides.stream()
                 .map(Guide::getCategory)

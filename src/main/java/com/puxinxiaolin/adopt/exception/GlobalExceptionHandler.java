@@ -24,8 +24,8 @@ public class GlobalExceptionHandler {
     /**
      * 业务异常处理
      */
-    @ExceptionHandler(BusinessException.class)
-    public Result<?> handleBusinessException(BusinessException e) {
+    @ExceptionHandler(BizException.class)
+    public Result<?> handleBusinessException(BizException e) {
         log.error("业务异常: {}", e.getMessage());
         return Result.error(e.getCode(), e.getMessage());
     }
