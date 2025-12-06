@@ -25,25 +25,17 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 public class DictServiceImpl implements DictService {
-
     private final PetMapper petMapper;
     private final RedisTemplate<String, Object> redisTemplate;
-
-    // 缓存key
-    private static final String CACHE_KEY_ALL = RedisConstant.DICT_ALL;
-    private static final String CACHE_KEY_PET_CATEGORY = RedisConstant.DICT_PET_CATEGORY;
-    private static final String CACHE_KEY_GENDER = RedisConstant.DICT_GENDER;
-    private static final String CACHE_KEY_ADOPTION_STATUS = RedisConstant.DICT_ADOPTION_STATUS;
-    private static final String CACHE_KEY_HEALTH_STATUS = RedisConstant.DICT_HEALTH_STATUS;
-
-    // 缓存过期时间：7天
+    
+    // 缓存过期时间
     private static final long CACHE_EXPIRE_DAYS = 7;
 
     @Override
     public Map<String, Object> getAllDictData() {
         // 1. 尝试从缓存获取
         @SuppressWarnings("unchecked")
-        Map<String, Object> cachedData = (Map<String, Object>) redisTemplate.opsForValue().get(CACHE_KEY_ALL);
+        Map<String, Object> cachedData = (Map<String, Object>) redisTemplate.opsForValue().get(RedisConstant.DICT_ALL);
 
         if (cachedData != null) {
             log.debug("从缓存获取所有字典数据");
@@ -60,7 +52,7 @@ public class DictServiceImpl implements DictService {
         result.put("healthStatuses", getHealthStatuses());
 
         // 3. 写入缓存
-        redisTemplate.opsForValue().set(CACHE_KEY_ALL, result, CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
+        redisTemplate.opsForValue().set(RedisConstant.DICT_ALL, result, CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
         log.debug("所有字典数据已缓存");
 
         return result;
@@ -70,15 +62,15 @@ public class DictServiceImpl implements DictService {
     public Map<String, String> getPetCategories() {
         // 1. 尝试从缓存获取（使用Hash结构）
         try {
-            Map<Object, Object> cachedData = redisTemplate.opsForHash().entries(CACHE_KEY_PET_CATEGORY);
+            Map<Object, Object> cachedData = redisTemplate.opsForHash().entries(RedisConstant.DICT_PET_CATEGORY);
             if (!cachedData.isEmpty()) {
                 log.debug("从缓存获取宠物类型字典");
                 return convertToStringMap(cachedData);
             }
         } catch (Exception e) {
             // 如果缓存中存储的是旧格式（String）, 则清除并重新生成
-            log.warn("缓存格式错误, 清除缓存: {}", CACHE_KEY_PET_CATEGORY);
-            redisTemplate.delete(CACHE_KEY_PET_CATEGORY);
+            log.warn("缓存格式错误, 清除缓存: {}", RedisConstant.DICT_PET_CATEGORY);
+            redisTemplate.delete(RedisConstant.DICT_PET_CATEGORY);
         }
 
         // 2. 从数据库查询
@@ -93,8 +85,8 @@ public class DictServiceImpl implements DictService {
         
         // 4. 写入缓存（使用Hash结构）
         if (!result.isEmpty()) {
-            redisTemplate.opsForHash().putAll(CACHE_KEY_PET_CATEGORY, result);
-            redisTemplate.expire(CACHE_KEY_PET_CATEGORY, CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
+            redisTemplate.opsForHash().putAll(RedisConstant.DICT_PET_CATEGORY, result);
+            redisTemplate.expire(RedisConstant.DICT_PET_CATEGORY, CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
             log.debug("宠物类型字典已缓存, 数量: {}", result.size());
         }
 
@@ -105,15 +97,15 @@ public class DictServiceImpl implements DictService {
     public Map<Integer, String> getGenders() {
         // 1. 尝试从缓存获取（使用Hash结构）
         try {
-            Map<Object, Object> cachedData = redisTemplate.opsForHash().entries(CACHE_KEY_GENDER);
+            Map<Object, Object> cachedData = redisTemplate.opsForHash().entries(RedisConstant.DICT_GENDER);
             if (!cachedData.isEmpty()) {
                 log.debug("从缓存获取性别字典");
                 return convertToIntegerMap(cachedData);
             }
         } catch (Exception e) {
             // 如果缓存中存储的是旧格式（String）, 则清除并重新生成
-            log.warn("缓存格式错误, 清除缓存: {}", CACHE_KEY_GENDER);
-            redisTemplate.delete(CACHE_KEY_GENDER);
+            log.warn("缓存格式错误, 清除缓存: {}", RedisConstant.DICT_GENDER);
+            redisTemplate.delete(RedisConstant.DICT_GENDER);
         }
 
         // 2. 性别是固定的, 直接构建
@@ -123,8 +115,8 @@ public class DictServiceImpl implements DictService {
         result.put("2", "母");
 
         // 3. 写入缓存（使用Hash结构）
-        redisTemplate.opsForHash().putAll(CACHE_KEY_GENDER, result);
-        redisTemplate.expire(CACHE_KEY_GENDER, CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
+        redisTemplate.opsForHash().putAll(RedisConstant.DICT_GENDER, result);
+        redisTemplate.expire(RedisConstant.DICT_GENDER, CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
         log.debug("性别字典已缓存");
 
         // 转换为Integer Map返回
@@ -139,15 +131,15 @@ public class DictServiceImpl implements DictService {
     public Map<String, String> getAdoptionStatuses() {
         // 1. 尝试从缓存获取（使用Hash结构）
         try {
-            Map<Object, Object> cachedData = redisTemplate.opsForHash().entries(CACHE_KEY_ADOPTION_STATUS);
+            Map<Object, Object> cachedData = redisTemplate.opsForHash().entries(RedisConstant.DICT_ADOPTION_STATUS);
             if (!cachedData.isEmpty()) {
                 log.debug("从缓存获取领养状态字典");
                 return convertToStringMap(cachedData);
             }
         } catch (Exception e) {
             // 如果缓存中存储的是旧格式（String）, 则清除并重新生成
-            log.warn("缓存格式错误, 清除缓存: {}", CACHE_KEY_ADOPTION_STATUS);
-            redisTemplate.delete(CACHE_KEY_ADOPTION_STATUS);
+            log.warn("缓存格式错误, 清除缓存: {}", RedisConstant.DICT_ADOPTION_STATUS);
+            redisTemplate.delete(RedisConstant.DICT_ADOPTION_STATUS);
         }
 
         // 2. 从数据库查询
@@ -162,8 +154,8 @@ public class DictServiceImpl implements DictService {
 
         // 4. 写入缓存（使用Hash结构）
         if (!result.isEmpty()) {
-            redisTemplate.opsForHash().putAll(CACHE_KEY_ADOPTION_STATUS, result);
-            redisTemplate.expire(CACHE_KEY_ADOPTION_STATUS, CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
+            redisTemplate.opsForHash().putAll(RedisConstant.DICT_ADOPTION_STATUS, result);
+            redisTemplate.expire(RedisConstant.DICT_ADOPTION_STATUS, CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
             log.debug("领养状态字典已缓存, 数量: {}", result.size());
         }
 
@@ -174,15 +166,15 @@ public class DictServiceImpl implements DictService {
     public Map<String, String> getHealthStatuses() {
         // 1. 尝试从缓存获取（使用Hash结构）
         try {
-            Map<Object, Object> cachedData = redisTemplate.opsForHash().entries(CACHE_KEY_HEALTH_STATUS);
+            Map<Object, Object> cachedData = redisTemplate.opsForHash().entries(RedisConstant.DICT_HEALTH_STATUS);
             if (!cachedData.isEmpty()) {
                 log.debug("从缓存获取健康状态字典");
                 return convertToStringMap(cachedData);
             }
         } catch (Exception e) {
             // 如果缓存中存储的是旧格式（String）, 则清除并重新生成
-            log.warn("缓存格式错误, 清除缓存: {}", CACHE_KEY_HEALTH_STATUS);
-            redisTemplate.delete(CACHE_KEY_HEALTH_STATUS);
+            log.warn("缓存格式错误, 清除缓存: {}", RedisConstant.DICT_HEALTH_STATUS);
+            redisTemplate.delete(RedisConstant.DICT_HEALTH_STATUS);
         }
 
         // 2. 健康状态是固定的, 直接构建
@@ -193,8 +185,8 @@ public class DictServiceImpl implements DictService {
         result.put("recovering", "康复中");
 
         // 3. 写入缓存（使用Hash结构）
-        redisTemplate.opsForHash().putAll(CACHE_KEY_HEALTH_STATUS, result);
-        redisTemplate.expire(CACHE_KEY_HEALTH_STATUS, CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
+        redisTemplate.opsForHash().putAll(RedisConstant.DICT_HEALTH_STATUS, result);
+        redisTemplate.expire(RedisConstant.DICT_HEALTH_STATUS, CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
         log.debug("健康状态字典已缓存");
 
         return result;
@@ -204,11 +196,11 @@ public class DictServiceImpl implements DictService {
     public void refreshCache() {
         log.info("刷新所有字典缓存");
 
-        redisTemplate.delete(CACHE_KEY_ALL);
-        redisTemplate.delete(CACHE_KEY_PET_CATEGORY);
-        redisTemplate.delete(CACHE_KEY_GENDER);
-        redisTemplate.delete(CACHE_KEY_ADOPTION_STATUS);
-        redisTemplate.delete(CACHE_KEY_HEALTH_STATUS);
+        redisTemplate.delete(RedisConstant.DICT_ALL);
+        redisTemplate.delete(RedisConstant.DICT_PET_CATEGORY);
+        redisTemplate.delete(RedisConstant.DICT_GENDER);
+        redisTemplate.delete(RedisConstant.DICT_ADOPTION_STATUS);
+        redisTemplate.delete(RedisConstant.DICT_HEALTH_STATUS);
     }
 
     /**

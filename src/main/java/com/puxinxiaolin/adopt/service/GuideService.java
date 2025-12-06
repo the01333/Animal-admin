@@ -19,7 +19,7 @@ public interface GuideService extends IService<Guide> {
     /**
      * 根据ID获取指南详情（需要传入用户ID用于检查点赞状态）
      */
-    GuideVO getGuideDetail(Long id, Long userId);
+    GuideVO getGuideDetail(Long id);
     
     /**
      * 根据分类获取指南列表
@@ -34,32 +34,32 @@ public interface GuideService extends IService<Guide> {
     /**
      * 点赞指南
      */
-    void likeGuide(Long guideId, Long userId);
+    void likeGuide(Long guideId);
     
     /**
      * 取消点赞指南
      */
-    void unlikeGuide(Long guideId, Long userId);
+    void unlikeGuide(Long guideId);
     
     /**
      * 收藏指南
      */
-    void favoriteGuide(Long guideId, Long userId);
+    void favoriteGuide(Long guideId);
     
     /**
      * 取消收藏指南
      */
-    void unfavoriteGuide(Long guideId, Long userId);
+    void unfavoriteGuide(Long guideId);
     
     /**
      * 检查用户是否已点赞指南
      */
-    boolean isGuideLiked(Long guideId, Long userId);
+    boolean isGuideLiked(Long guideId);
     
     /**
      * 检查用户是否已收藏指南
      */
-    boolean isGuideFavorited(Long guideId, Long userId);
+    boolean isGuideFavorited(Long guideId);
     
     /**
      * 获取所有指南分类

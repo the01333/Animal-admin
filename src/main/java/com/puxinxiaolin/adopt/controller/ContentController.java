@@ -2,7 +2,6 @@ package com.puxinxiaolin.adopt.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.annotation.SaMode;
-import cn.dev33.satoken.stp.StpUtil;
 import com.puxinxiaolin.adopt.common.Result;
 import com.puxinxiaolin.adopt.entity.dto.ContentDTO;
 import com.puxinxiaolin.adopt.entity.dto.ContentQueryDTO;
@@ -43,8 +42,7 @@ public class ContentController {
     @GetMapping("/{category}/{id}")
     public Result<ContentVO> getContentDetail(@PathVariable("category") String category,
                                               @PathVariable("id") Long id) {
-        Long userId = StpUtil.isLogin() ? StpUtil.getLoginIdAsLong() : null;
-        return Result.success(contentService.getContentDetail(category, id, userId));
+        return Result.success(contentService.getContentDetail(category, id));
     }
 
     /**
@@ -53,9 +51,7 @@ public class ContentController {
     @PostMapping
     @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
     public Result<ContentVO> createContent(@Valid @RequestBody ContentDTO dto) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        
-        ContentVO vo = contentService.createContent(dto, userId);
+        ContentVO vo = contentService.createContent(dto);
         return Result.success("创建成功", vo);
     }
 
@@ -97,8 +93,7 @@ public class ContentController {
     @PostMapping("/{category}/{id}/like")
     public Result<Boolean> likeContent(@PathVariable("category") String category,
                                        @PathVariable("id") Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        contentService.likeContent(category, id, userId);
+        contentService.likeContent(category, id);
         return Result.success(true);
     }
 
@@ -108,8 +103,7 @@ public class ContentController {
     @DeleteMapping("/{category}/{id}/like")
     public Result<Boolean> unlikeContent(@PathVariable("category") String category,
                                          @PathVariable("id") Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        contentService.unlikeContent(category, id, userId);
+        contentService.unlikeContent(category, id);
         return Result.success(true);
     }
 
@@ -119,8 +113,7 @@ public class ContentController {
     @PostMapping("/{category}/{id}/favorite")
     public Result<Boolean> favoriteContent(@PathVariable("category") String category,
                                            @PathVariable("id") Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        contentService.favoriteContent(category, id, userId);
+        contentService.favoriteContent(category, id);
         return Result.success(true);
     }
 
@@ -130,8 +123,7 @@ public class ContentController {
     @DeleteMapping("/{category}/{id}/favorite")
     public Result<Boolean> unfavoriteContent(@PathVariable("category") String category,
                                              @PathVariable("id") Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        contentService.unfavoriteContent(category, id, userId);
+        contentService.unfavoriteContent(category, id);
         return Result.success(true);
     }
 
@@ -141,8 +133,7 @@ public class ContentController {
     @GetMapping("/{category}/{id}/like/check")
     public Result<Boolean> isContentLiked(@PathVariable("category") String category,
                                           @PathVariable("id") Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        return Result.success(contentService.isContentLiked(category, id, userId));
+        return Result.success(contentService.isContentLiked(category, id));
     }
 
     /**
@@ -151,8 +142,7 @@ public class ContentController {
     @GetMapping("/{category}/{id}/favorite/check")
     public Result<Boolean> isContentFavorited(@PathVariable("category") String category,
                                               @PathVariable("id") Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        return Result.success(contentService.isContentFavorited(category, id, userId));
+        return Result.success(contentService.isContentFavorited(category, id));
     }
 
     /**
@@ -160,8 +150,7 @@ public class ContentController {
      */
     @GetMapping("/like/my")
     public Result<Page<ContentVO>> queryMyLikedContent(@Valid ContentUserQueryDTO queryDTO) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        return Result.success(contentService.queryUserLikedContent(queryDTO, userId));
+        return Result.success(contentService.queryUserLikedContent(queryDTO));
     }
 
     /**
@@ -169,7 +158,6 @@ public class ContentController {
      */
     @GetMapping("/favorite/my")
     public Result<Page<ContentVO>> queryMyFavoritedContent(@Valid ContentUserQueryDTO queryDTO) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        return Result.success(contentService.queryUserFavoritedContent(queryDTO, userId));
+        return Result.success(contentService.queryUserFavoritedContent(queryDTO));
     }
 }

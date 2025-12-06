@@ -5,10 +5,15 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.puxinxiaolin.adopt.common.ResultCode;
 import com.puxinxiaolin.adopt.entity.dto.LoginDTO;
 import com.puxinxiaolin.adopt.entity.dto.RegisterDTO;
+import com.puxinxiaolin.adopt.entity.dto.EmailCodeLoginDTO;
+import com.puxinxiaolin.adopt.entity.dto.PhoneCodeLoginDTO;
+import com.puxinxiaolin.adopt.entity.dto.ChangePasswordDTO;
+import com.puxinxiaolin.adopt.entity.dto.UpdateUserStatusDTO;
 import com.puxinxiaolin.adopt.entity.entity.User;
 import com.puxinxiaolin.adopt.entity.vo.LoginVO;
 import com.puxinxiaolin.adopt.entity.vo.UserVO;
@@ -22,6 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -68,19 +76,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public LoginVO loginByEmailCode(String email, String code, String purpose) {
-        log.info("邮箱验证码登录: {}", email);
-        if (!verificationCodeService.verifyEmailCode(email, code, purpose)) {
+    public LoginVO loginByEmailCode(EmailCodeLoginDTO dto) {
+        log.info("邮箱验证码登录: {}", dto.getEmail());
+        if (!verificationCodeService.verifyEmailCode(dto.getEmail(), dto.getCode(), dto.getPurpose())) {
             throw new BizException(ResultCode.BAD_REQUEST.getCode(), "验证码错误或已过期");
         }
         
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(User::getEmail, email);
+        wrapper.eq(User::getEmail, dto.getEmail());
         User user = this.getOne(wrapper);
         if (user == null) {
             user = new User();
-            user.setUsername(email);
-            user.setEmail(email);
+            user.setUsername(dto.getEmail());
+            user.setEmail(dto.getEmail());
             user.setRole("user");
             user.setStatus(1);
             this.save(user);
@@ -97,18 +105,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public LoginVO loginByPhoneCode(String phone, String code, String purpose) {
-        log.info("手机验证码登录: {}", phone);
-        if (!verificationCodeService.verifyPhoneCode(phone, code, purpose)) {
+    public LoginVO loginByPhoneCode(PhoneCodeLoginDTO dto) {
+        log.info("手机验证码登录: {}", dto.getPhone());
+        if (!verificationCodeService.verifyPhoneCode(dto.getPhone(), dto.getCode(), dto.getPurpose())) {
             throw new BizException(ResultCode.BAD_REQUEST.getCode(), "验证码错误或已过期");
         }
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(User::getPhone, phone);
+        wrapper.eq(User::getPhone, dto.getPhone());
         User user = this.getOne(wrapper);
         if (user == null) {
             user = new User();
-            user.setUsername(phone);
-            user.setPhone(phone);
+            user.setUsername(dto.getPhone());
+            user.setPhone(dto.getPhone());
             user.setRole("user");
             user.setStatus(1);
             this.save(user);
@@ -188,7 +196,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateUserInfo(Long userId, UserVO userVO) {
+    public boolean updateCurrentUserInfo(UserVO userVO) {
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("更新用户信息, 用户ID: {}", userId);
         
         User user = this.getById(userId);
@@ -232,7 +241,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean changePassword(Long userId, String oldPassword, String newPassword) {
+    public boolean changePassword(ChangePasswordDTO dto) {
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("修改密码, 用户ID: {}", userId);
         
         User user = this.getById(userId);
@@ -243,13 +253,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         boolean hasExistingPassword = StrUtil.isNotBlank(user.getPassword());
 
         if (hasExistingPassword) {
-            if (StrUtil.isBlank(oldPassword) || !BCrypt.checkpw(oldPassword, user.getPassword())) {
+            if (StrUtil.isBlank(dto.getOldPassword()) || !BCrypt.checkpw(dto.getOldPassword(), user.getPassword())) {
                 throw new BizException(ResultCode.PASSWORD_ERROR);
             }
         }
 
         // 更新密码
-        user.setPassword(BCrypt.hashpw(newPassword));
+        user.setPassword(BCrypt.hashpw(dto.getNewPassword()));
         return this.updateById(user);
     }
     
@@ -267,7 +277,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String uploadAvatar(Long userId, MultipartFile file) {
+    public String uploadAvatar(MultipartFile file) {
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("上传用户头像, 用户ID: {}", userId);
         
         if (file == null || file.isEmpty()) {
@@ -303,6 +314,98 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             log.error("上传用户头像失败, 用户ID: {}", userId, e);
             throw new BizException(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "上传头像失败");
         }
+    }
+
+    /**
+     * 分页获取用户列表
+     *
+     * @param current
+     * @param size
+     * @param keyword
+     * @param role
+     * @return
+     */
+    @Override
+    public Page<UserVO> listPage(Long current, Long size, String keyword, String role) {
+        Page<User> page = new Page<>(current, size);
+        
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        if (StrUtil.isNotBlank(keyword)) {
+            wrapper.and(w -> w.like(User::getUsername, keyword)
+                    .or().like(User::getNickname, keyword)
+                    .or().like(User::getPhone, keyword)
+                    .or().like(User::getEmail, keyword));
+        }
+        if (StrUtil.isNotBlank(role)) {
+            wrapper.eq(User::getRole, role);
+        }
+        wrapper.orderByDesc(User::getCreateTime);
+
+        Page<User> userPage = this.page(page, wrapper);
+        Page<UserVO> result = new Page<>(userPage.getCurrent(), userPage.getSize(), userPage.getTotal());
+        result.setRecords(BeanUtil.copyToList(userPage.getRecords(), UserVO.class));
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> verifyToken() {
+        try {
+            Long userId = StpUtil.getLoginIdAsLong();
+            User user = this.getById(userId);
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("valid", true);
+            data.put("userId", userId);
+            data.put("username", user != null ? user.getUsername() : null);
+            data.put("role", user != null ? user.getRole() : null);
+
+            return data;
+        } catch (Exception e) {
+            log.warn("Token验证失败: {}", e.getMessage());
+//            Map<String, Object> data = new HashMap<>();
+//            data.put("valid", false);
+            throw new BizException(ResultCode.UNAUTHORIZED.getCode(), "Token已过期或无效");
+        }
+    }
+
+    @Override
+    public Map<String, Object> refreshToken() {
+        try {
+            Long userId = StpUtil.getLoginIdAsLong();
+            StpUtil.checkLogin();
+            long tokenTimeout = StpUtil.getTokenTimeout();
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("success", true);
+            data.put("userId", userId);
+            data.put("tokenTimeout", tokenTimeout);
+            data.put("message", "Token已续约");
+            
+            log.debug("Token已续约, userId: {}, 剩余有效期: {}秒", userId, tokenTimeout);
+            return data;
+        } catch (Exception e) {
+            log.warn("Token续约失败: {}", e.getMessage());
+            throw new BizException(ResultCode.UNAUTHORIZED.getCode(), "Token续约失败");
+        }
+    }
+
+    @Override
+    public boolean isAdmin() {
+        Long userId = StpUtil.getLoginIdAsLong();
+        User user = this.getById(userId);
+        return user != null && StrUtil.isNotBlank(user.getRole()) &&
+                ("super_admin".equals(user.getRole()) || "admin".equals(user.getRole()) || "application_auditor".equals(user.getRole()));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUserStatus(Long id, UpdateUserStatusDTO dto) {
+        User user = this.getById(id);
+        if (user == null) {
+            throw new BizException(ResultCode.USER_NOT_FOUND);
+        }
+        user.setStatus(dto.getStatus());
+        this.updateById(user);
     }
 
     private UserVO buildUserVO(User user) {

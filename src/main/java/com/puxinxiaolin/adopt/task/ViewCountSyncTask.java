@@ -6,8 +6,8 @@ import com.puxinxiaolin.adopt.enums.ContentCategoryEnum;
 import com.puxinxiaolin.adopt.mapper.GuideMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.mapper.StoryMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -23,15 +23,12 @@ import java.util.Set;
  */
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class ViewCountSyncTask {
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-    @Autowired
-    private PetMapper petMapper;
-    @Autowired
-    private GuideMapper guideMapper;
-    @Autowired
-    private StoryMapper storyMapper;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final PetMapper petMapper;
+    private final GuideMapper guideMapper;
+    private final StoryMapper storyMapper;
 
     /**
      * 同步浏览量到 DB

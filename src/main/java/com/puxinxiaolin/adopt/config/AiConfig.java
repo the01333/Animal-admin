@@ -41,18 +41,14 @@ public class AiConfig {
     public ChatClient chatClient(AlibabaOpenAiChatModel chatModel) {
         return ChatClient.builder(chatModel)
                 .defaultSystem(SYSTEM_PROMPT)
+                // Function Call
                 .defaultTools(aiToolService)
                 .defaultAdvisors(
                         new SimpleLoggerAdvisor()
-                        // TODO: 基于 cassandra 的记忆化存储
+                        // TODO [YCcLin 2025/11/21]: 基于 cassandra 的记忆化存储
                 ).build();
                 
     }
-    
-//    @Bean
-//    public ChatClient chatClient(ChatClient.Builder builder) {
-//        return builder.defaultSystem(SYSTEM_PROMPT).build();
-//    }
 
     /**
      * <strong>解决兼容问题</strong> <br />

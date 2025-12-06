@@ -10,12 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * 认证拦截器
- * 用于验证用户登录状态, 保护需要登录的接口
- * 
- * 规则：
- * - GET 请求（查看操作）：全部放行, 不需要登录
- * - POST、PUT、DELETE 请求（操作类）：需要登录验证
+ * 认证拦截器 - 用于验证用户登录状态
  */
 @Slf4j
 @Component

@@ -1,11 +1,13 @@
 package com.puxinxiaolin.adopt.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.entity.dto.CertificationPageQueryDTO;
 import com.puxinxiaolin.adopt.entity.entity.User;
 import com.puxinxiaolin.adopt.entity.entity.UserCertification;
 import com.puxinxiaolin.adopt.entity.vo.CertificationInfoVO;
@@ -37,7 +39,8 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
     private final UserService userService;
     
     @Override
-    public CertificationInfoVO getCertificationInfo(Long userId) {
+    public CertificationInfoVO getCertificationInfo() {
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("获取用户认证信息, 用户ID: {}", userId);
         
         LambdaQueryWrapper<UserCertification> wrapper = new LambdaQueryWrapper<>();
@@ -66,7 +69,8 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
     
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void submitCertification(Long userId, String idCard, MultipartFile idCardFront, MultipartFile idCardBack) {
+    public void submitCertification(String idCard, MultipartFile idCardFront, MultipartFile idCardBack) {
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("提交用户认证, 用户ID: {}", userId);
         
         if (idCardFront == null || idCardFront.isEmpty()) {
@@ -117,25 +121,25 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
     }
 
     @Override
-    public Page<UserCertificationAdminVO> queryAdminCertifications(Page<UserCertification> page, String status, String keyword) {
+    public Page<UserCertificationAdminVO> queryAdminCertifications(CertificationPageQueryDTO queryDTO) {
+        Page<UserCertification> page = new Page<>(queryDTO.getCurrent(), queryDTO.getSize());
         LambdaQueryWrapper<UserCertification> wrapper = new LambdaQueryWrapper<>();
-        if (StrUtil.isNotBlank(status)) {
-            wrapper.eq(UserCertification::getStatus, status.toLowerCase());
+        if (StrUtil.isNotBlank(queryDTO.getStatus())) {
+            wrapper.eq(UserCertification::getStatus, queryDTO.getStatus().toLowerCase());
         }
-        if (StrUtil.isNotBlank(keyword)) {
-            // FIXME: 通过 t_user 表匹配手机号, 再过滤筛选出 user_id
+        if (StrUtil.isNotBlank(queryDTO.getKeyword())) {
             LambdaQueryWrapper<User> filterWrapper = new LambdaQueryWrapper<User>()
-                    .like(User::getPhone, keyword);
+                    .like(User::getPhone, queryDTO.getKeyword());
             List<User> filterUsers = userService.list(filterWrapper);
             if (CollUtil.isNotEmpty(filterUsers)) {
                 Set<Long> targetUserIds = filterUsers.stream()
                         .map(User::getId)
                         .collect(Collectors.toSet());
 
-                wrapper.and(w -> w.like(UserCertification::getIdCard, keyword)
+                wrapper.and(w -> w.like(UserCertification::getIdCard, queryDTO.getKeyword())
                         .or().in(UserCertification::getUserId, targetUserIds));
             } else {
-                wrapper.like(UserCertification::getIdCard, keyword);
+                wrapper.like(UserCertification::getIdCard, queryDTO.getKeyword());
             }
         }
         wrapper.orderByDesc(UserCertification::getCreateTime);
@@ -190,7 +194,8 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void reviewCertification(Long id, String status, String rejectReason, Long reviewerId) {
+    public void reviewCertification(Long id, String status, String rejectReason) {
+        Long reviewerId = StpUtil.getLoginIdAsLong();
         UserCertification certification = this.getById(id);
         if (certification == null) {
             throw new BizException(ResultCode.BAD_REQUEST.getCode(), "认证记录不存在");

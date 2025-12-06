@@ -1,5 +1,6 @@
 package com.puxinxiaolin.adopt.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -77,7 +78,8 @@ public class ContentServiceImpl implements ContentService {
     }
 
     @Override
-    public ContentVO getContentDetail(String category, Long id, Long userId) {
+    public ContentVO getContentDetail(String category, Long id) {
+        Long userId = StpUtil.isLogin() ? StpUtil.getLoginIdAsLong() : null;
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(category);
         viewCountService.incrementContentView(contentCategoryEnum, id);
         return switch (contentCategoryEnum) {
@@ -88,7 +90,7 @@ public class ContentServiceImpl implements ContentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ContentVO createContent(ContentDTO dto, Long userId) {
+    public ContentVO createContent(ContentDTO dto) {
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(dto.getCategory());
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             Guide guide = applyGuideFields(dto, null);
@@ -279,7 +281,8 @@ public class ContentServiceImpl implements ContentService {
     }
 
     @Override
-    public void likeContent(String category, Long id, Long userId) {
+    public void likeContent(String category, Long id) {
+        Long userId = StpUtil.getLoginIdAsLong();
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(category);
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             requireGuide(id);
@@ -305,7 +308,8 @@ public class ContentServiceImpl implements ContentService {
     }
 
     @Override
-    public void unlikeContent(String category, Long id, Long userId) {
+    public void unlikeContent(String category, Long id) {
+        Long userId = StpUtil.getLoginIdAsLong();
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(category);
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             LambdaQueryWrapper<GuideLike> wrapper = new LambdaQueryWrapper<>();
@@ -325,7 +329,8 @@ public class ContentServiceImpl implements ContentService {
     }
 
     @Override
-    public void favoriteContent(String category, Long id, Long userId) {
+    public void favoriteContent(String category, Long id) {
+        Long userId = StpUtil.getLoginIdAsLong();
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(category);
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             requireGuide(id);
@@ -351,7 +356,8 @@ public class ContentServiceImpl implements ContentService {
     }
 
     @Override
-    public void unfavoriteContent(String category, Long id, Long userId) {
+    public void unfavoriteContent(String category, Long id) {
+        Long userId = StpUtil.getLoginIdAsLong();
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(category);
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             LambdaQueryWrapper<GuideFavorite> wrapper = new LambdaQueryWrapper<>();
@@ -371,7 +377,8 @@ public class ContentServiceImpl implements ContentService {
     }
 
     @Override
-    public boolean isContentLiked(String category, Long id, Long userId) {
+    public boolean isContentLiked(String category, Long id) {
+        Long userId = StpUtil.getLoginIdAsLong();
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(category);
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             return guideLikeMapper.checkUserLiked(userId, id) > 0;
@@ -380,7 +387,8 @@ public class ContentServiceImpl implements ContentService {
     }
 
     @Override
-    public boolean isContentFavorited(String category, Long id, Long userId) {
+    public boolean isContentFavorited(String category, Long id) {
+        Long userId = StpUtil.getLoginIdAsLong();
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(category);
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             return guideFavoriteMapper.checkUserFavorited(userId, id) > 0;
@@ -389,7 +397,8 @@ public class ContentServiceImpl implements ContentService {
     }
 
     @Override
-    public Page<ContentVO> queryUserLikedContent(ContentUserQueryDTO queryDTO, Long userId) {
+    public Page<ContentVO> queryUserLikedContent(ContentUserQueryDTO queryDTO) {
+        Long userId = StpUtil.getLoginIdAsLong();
         ensureUserLoggedIn(userId);
         long current = normalizeCurrent(queryDTO.getCurrent());
         long size = normalizeSize(queryDTO.getSize());
@@ -407,7 +416,8 @@ public class ContentServiceImpl implements ContentService {
     }
 
     @Override
-    public Page<ContentVO> queryUserFavoritedContent(ContentUserQueryDTO queryDTO, Long userId) {
+    public Page<ContentVO> queryUserFavoritedContent(ContentUserQueryDTO queryDTO) {
+        Long userId = StpUtil.getLoginIdAsLong();
         ensureUserLoggedIn(userId);
         long current = normalizeCurrent(queryDTO.getCurrent());
         long size = normalizeSize(queryDTO.getSize());

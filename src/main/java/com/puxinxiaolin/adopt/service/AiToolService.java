@@ -4,7 +4,6 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.puxinxiaolin.adopt.entity.dto.ContentQueryDTO;
 import com.puxinxiaolin.adopt.entity.dto.PetQueryDTO;
-import com.puxinxiaolin.adopt.entity.entity.Pet;
 import com.puxinxiaolin.adopt.entity.vo.ContentVO;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
 import com.puxinxiaolin.adopt.enums.ContentCategoryEnum;
@@ -13,11 +12,7 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -54,8 +49,8 @@ public class AiToolService {
         query.setAdoptionStatus(adoptionStatus);
         
         // personality 为自由文本, 前端数据结构为 Pet.personality 文本包含
-        Page<Pet> page = new Page<>(1, limit == null ? 10 : limit);
-        Page<PetVO> result = petService.queryPetPage(page, query);
+        query.setSize(Long.valueOf(limit));
+        Page<PetVO> result = petService.queryPetPage(query);
         
         List<PetVO> records = result.getRecords();
         if (personality != null && !personality.isEmpty()) {
@@ -67,7 +62,7 @@ public class AiToolService {
     }
 
     @Tool(description = "根据分类/关键词查询内容列表（指南/故事）")
-    public java.util.List<ContentVO> searchArticles(
+    public List<ContentVO> searchArticles(
             @ToolParam(description = "文章分类", required = false) String category,
             @ToolParam(description = "关键词(标题/摘要)", required = false) String keyword,
             @ToolParam(description = "状态(0草稿/1发布/2下架)", required = false) Integer status,
@@ -76,7 +71,7 @@ public class AiToolService {
     }
 
     @Tool(description = "根据图片URL简单识别动物类别(占位),再查询可领养宠物")
-    public java.util.List<PetVO> recognizeAndSearchPets(
+    public List<PetVO> recognizeAndSearchPets(
             @ToolParam(description = "图片URL", required = true) String imageUrl,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         String lower = imageUrl == null ? "" : imageUrl.toLowerCase();
@@ -87,7 +82,7 @@ public class AiToolService {
     }
 
     @Tool(description = "返回领养须知相关文章摘要")
-    public java.util.List<ContentVO> adoptionPolicy(
+    public List<ContentVO> adoptionPolicy(
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         return queryContent(ContentCategoryEnum.GUIDE.name(), "须知", limit == null ? 5 : limit);
     }
@@ -97,7 +92,7 @@ public class AiToolService {
      * 用于处理"我性格内向/外向, 适合养什么宠物？"等问题
      */
     @Tool(description = "根据用户性格特征推荐最适合的宠物")
-    public java.util.List<PetVO> recommendPetsByPersonality(
+    public List<PetVO> recommendPetsByPersonality(
             @ToolParam(description = "用户性格描述, 如：内向、外向、忙碌、有耐心等", required = true) String userPersonality,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         // 性格映射到宠物性格
@@ -110,7 +105,7 @@ public class AiToolService {
      * 用于处理"我住在公寓/有院子, 适合养什么宠物？"等问题
      */
     @Tool(description = "根据用户生活方式推荐合适的宠物")
-    public java.util.List<PetVO> recommendPetsByLifestyle(
+    public List<PetVO> recommendPetsByLifestyle(
             @ToolParam(description = "生活方式描述, 如：公寓、有院子、经常出差、有小孩等", required = true) String lifestyle,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         String personality = mapLifestyleToPetPersonality(lifestyle);
@@ -122,7 +117,7 @@ public class AiToolService {
      * 用于处理"怎样照顾小猫/小狗？"等问题
      */
     @Tool(description = "获取特定宠物类别的护理指南")
-    public java.util.List<ContentVO> getPetCareGuide(
+    public List<ContentVO> getPetCareGuide(
             @ToolParam(description = "宠物类别, 如：cat/dog/rabbit等", required = true) String petCategory,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         return queryContent(ContentCategoryEnum.GUIDE.name(), petCategory, limit);
@@ -133,7 +128,7 @@ public class AiToolService {
      * 用于处理"新手养宠要注意什么？"等问题
      */
     @Tool(description = "获取新手养宠的入门指南")
-    public java.util.List<ContentVO> getBeginnerGuide(
+    public List<ContentVO> getBeginnerGuide(
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         return queryContent(ContentCategoryEnum.GUIDE.name(), "新手", limit);
     }
@@ -143,7 +138,7 @@ public class AiToolService {
      * 用于处理"怎样训练宠物？"等问题
      */
     @Tool(description = "获取宠物训练和教育指南")
-    public java.util.List<ContentVO> getTrainingGuide(
+    public List<ContentVO> getTrainingGuide(
             @ToolParam(description = "宠物类别或训练主题, 如：dog/cat/行为纠正等", required = false) String topic,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         return queryContent(ContentCategoryEnum.GUIDE.name(), topic, limit);

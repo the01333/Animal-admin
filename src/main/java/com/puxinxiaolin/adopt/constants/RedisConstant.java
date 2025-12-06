@@ -86,6 +86,14 @@ public class RedisConstant {
     public static final String VERIFICATION_CODE_PREFIX = "verification:code:";
     public static final String USER_TOKEN_PREFIX = "user:token:";
 
+    // =========================== 访问统计相关 ================================
+    /**
+     * 每日 UV 记录 key
+     * 格式: visit:uv:{yyyy-MM-dd}:{userId}
+     */
+    public static final String VISIT_UV_PREFIX = "visit:uv:";
+
+    
     // =========================== 字典相关 ================================
     public static final String DICT_ALL = "dict:all";
     public static final String DICT_PET_CATEGORY = "dict:pet_category";
@@ -93,6 +101,7 @@ public class RedisConstant {
     public static final String DICT_ADOPTION_STATUS = "dict:adoption_status";
     public static final String DICT_HEALTH_STATUS = "dict:health_status";
 
+    
     // =========================== 工具方法 ================================
 
     /**

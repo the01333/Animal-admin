@@ -14,6 +14,8 @@ import com.puxinxiaolin.adopt.enums.PetCategoryEnum;
 import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.service.PetService;
+import com.puxinxiaolin.adopt.service.DictService;
+import com.puxinxiaolin.adopt.service.FileUploadService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -22,8 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * 宠物服务实现类
@@ -36,10 +43,19 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
     private final ViewCountService viewCountService;
     private final RedisTemplate<String, Object> redisTemplate;
     private final OssUrlService ossUrlService;
+    private final DictService dictService;
+    private final FileUploadService fileUploadService;
 
     @Override
-    public Page<PetVO> queryPetPage(Page<Pet> page, PetQueryDTO queryDTO) {
+    public Map<String, String> getPetCategories() {
+        return dictService.getPetCategories();
+    }
+
+    @Override
+    public Page<PetVO> queryPetPage(PetQueryDTO queryDTO) {
         log.info("分页查询宠物列表, 查询条件: {}", queryDTO);
+
+        Page<Pet> page = new Page<>(queryDTO.getCurrent(), queryDTO.getSize());
 
         LambdaQueryWrapper<Pet> wrapper = new LambdaQueryWrapper<>();
 
@@ -184,12 +200,15 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public PetVO createPet(PetDTO petDTO, Long userId) {
+    public PetVO createPet(PetDTO petDTO) {
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("创建宠物, 用户ID: {}", userId);
         Pet pet = BeanUtil.copyProperties(petDTO, Pet.class);
         pet.setCreateBy(userId);
         pet.setCreateTime(java.time.LocalDateTime.now());
         this.save(pet);
+        // 新增宠物后刷新字典缓存，确保新类别可用
+        dictService.refreshCache();
 
         PetVO petVO = BeanUtil.copyProperties(pet, PetVO.class);
         ossUrlService.normalizePetVO(petVO);
@@ -202,7 +221,44 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         log.info("更新宠物, ID: {}", id);
         Pet pet = BeanUtil.copyProperties(petDTO, Pet.class);
         pet.setId(id);
-        return this.updateById(pet);
+        boolean updated = this.updateById(pet);
+        if (updated) {
+            dictService.refreshCache();
+        }
+        return updated;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deletePet(Long id) {
+        log.info("删除宠物, ID: {}", id);
+        this.removeById(id);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void batchDeletePet(List<Long> ids) {
+        log.info("批量删除宠物, 数量: {}", ids.size());
+        this.removeByIds(ids);
+    }
+
+    @Override
+    public List<PetVO> getRecommendedPets(Integer limit) {
+        if (limit == null) {
+            limit = 6;
+        }
+
+        PetQueryDTO dto = buildRecommendedQuery(limit);
+        Page<PetVO> page = this.queryPetPage(dto);
+        return page.getRecords();
+    }
+
+    private PetQueryDTO buildRecommendedQuery(Integer limit) {
+        PetQueryDTO queryDTO = new PetQueryDTO();
+        queryDTO.setSize(Long.valueOf(limit));
+        queryDTO.setAdoptionStatus("available");
+        queryDTO.setShelfStatus(1);
+        return queryDTO;
     }
 
     /**
@@ -272,6 +328,50 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         pet.setAdoptionStatus(adoptionStatus);
         pet.setAdoptedBy(adoptedBy);
         return this.updateById(pet);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String uploadPetImage(Long id, MultipartFile file) {
+        Pet pet = this.getById(id);
+        if (pet == null) {
+            throw new BizException(ResultCode.PET_NOT_FOUND);
+        }
+        String imageUrl = fileUploadService.uploadFile(file, "pet-images");
+        return imageUrl;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String uploadPetCover(Long id, MultipartFile file) {
+        Pet pet = this.getById(id);
+        if (pet == null) {
+            throw new BizException(ResultCode.PET_NOT_FOUND);
+        }
+        String coverUrl = fileUploadService.uploadFile(file, "pet-covers");
+        return coverUrl;
+    }
+
+    @Override
+    public List<String> getRandomPetImages(Integer limit) {
+        int realLimit = (limit == null || limit <= 0) ? 6 : limit;
+        List<Pet> pets = this.list();
+        List<String> allImages = new ArrayList<>();
+        for (Pet pet : pets) {
+            if (StrUtil.isNotBlank(pet.getCoverImage())) {
+                allImages.add(pet.getCoverImage());
+            }
+        }
+        if (allImages.isEmpty()) {
+            return new ArrayList<>();
+        }
+        Collections.shuffle(allImages, new Random());
+        List<String> selected = allImages.size() <= realLimit ? allImages : allImages.subList(0, realLimit);
+        List<String> normalized = new ArrayList<>();
+        for (String url : selected) {
+            normalized.add(ossUrlService.normalizeUrl(url));
+        }
+        return normalized;
     }
 }
 

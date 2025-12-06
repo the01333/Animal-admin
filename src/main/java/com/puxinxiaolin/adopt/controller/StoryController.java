@@ -1,6 +1,5 @@
 package com.puxinxiaolin.adopt.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.puxinxiaolin.adopt.common.Result;
 import com.puxinxiaolin.adopt.constants.MessageConstant;
 import com.puxinxiaolin.adopt.entity.vo.StoryVO;
@@ -35,8 +34,8 @@ public class StoryController {
      * 根据ID获取故事详情
      */
     @GetMapping("/{id}")
-    public Result<StoryVO> getStoryDetail(@PathVariable Long id, @RequestParam(required = false) Long userId) {
-        StoryVO story = storyService.getStoryDetail(id, userId);
+    public Result<StoryVO> getStoryDetail(@PathVariable Long id) {
+        StoryVO story = storyService.getStoryDetail(id);
         if (story == null) {
             return Result.error(MessageConstant.STORY_NOT_FOUND);
         }
@@ -49,8 +48,7 @@ public class StoryController {
      */
     @PostMapping("/{id}/like")
     public Result<Boolean> likeStory(@PathVariable Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        storyService.likeStory(id, userId);
+        storyService.likeStory(id);
         return Result.success(true);
     }
 
@@ -59,8 +57,7 @@ public class StoryController {
      */
     @DeleteMapping("/{id}/like")
     public Result<Boolean> unlikeStory(@PathVariable Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        storyService.unlikeStory(id, userId);
+        storyService.unlikeStory(id);
         return Result.success(true);
     }
 
@@ -69,8 +66,7 @@ public class StoryController {
      */
     @PostMapping("/{id}/favorite")
     public Result<Boolean> favoriteStory(@PathVariable Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        storyService.favoriteStory(id, userId);
+        storyService.favoriteStory(id);
         return Result.success(true);
     }
 
@@ -79,8 +75,7 @@ public class StoryController {
      */
     @DeleteMapping("/{id}/favorite")
     public Result<Boolean> unfavoriteStory(@PathVariable Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        storyService.unfavoriteStory(id, userId);
+        storyService.unfavoriteStory(id);
         return Result.success(true);
     }
 
@@ -89,9 +84,7 @@ public class StoryController {
      */
     @GetMapping("/{id}/like/check")
     public Result<Boolean> isStoryLiked(@PathVariable Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        boolean liked = storyService.isStoryLiked(id, userId);
-        return Result.success(liked);
+        return Result.success(storyService.isStoryLiked(id));
     }
 
     /**
@@ -99,9 +92,7 @@ public class StoryController {
      */
     @GetMapping("/{id}/favorite/check")
     public Result<Boolean> isStoryFavorited(@PathVariable Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        boolean favorited = storyService.isStoryFavorited(id, userId);
-        return Result.success(favorited);
+        return Result.success(storyService.isStoryFavorited(id));
     }
 
     /**
@@ -109,7 +100,7 @@ public class StoryController {
      */
     @GetMapping("/{id}/like/count")
     public Result<Long> getStoryLikeCount(@PathVariable Long id) {
-        StoryVO story = storyService.getStoryDetail(id, null);
+        StoryVO story = storyService.getStoryDetail(id);
         if (story == null) {
             return Result.error(MessageConstant.STORY_NOT_FOUND);
         }
@@ -121,7 +112,7 @@ public class StoryController {
      */
     @GetMapping("/{id}/favorite/count")
     public Result<Long> getStoryFavoriteCount(@PathVariable Long id) {
-        StoryVO story = storyService.getStoryDetail(id, null);
+        StoryVO story = storyService.getStoryDetail(id);
         if (story == null) {
             return Result.error(MessageConstant.STORY_NOT_FOUND);
         }

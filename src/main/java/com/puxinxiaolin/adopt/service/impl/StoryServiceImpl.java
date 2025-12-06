@@ -1,5 +1,6 @@
 package com.puxinxiaolin.adopt.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.puxinxiaolin.adopt.constants.DateConstant;
 import com.puxinxiaolin.adopt.entity.entity.Story;
 import com.puxinxiaolin.adopt.entity.entity.StoryFavorite;
@@ -44,7 +45,8 @@ public class StoryServiceImpl extends ServiceImpl<StoryMapper, Story> implements
     }
 
     @Override
-    public StoryVO getStoryDetail(Long id, Long userId) {
+    public StoryVO getStoryDetail(Long id) {
+        Long userId = StpUtil.isLogin() ? StpUtil.getLoginIdAsLong() : null;
         Story story = this.getById(id);
         if (story == null) {
             return null;
@@ -53,7 +55,8 @@ public class StoryServiceImpl extends ServiceImpl<StoryMapper, Story> implements
     }
 
     @Override
-    public void likeStory(Long storyId, Long userId) {
+    public void likeStory(Long storyId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         // 检查是否已经点赞
         int count = storyLikeMapper.checkUserLiked(userId, storyId);
         if (count == 0) {
@@ -72,7 +75,8 @@ public class StoryServiceImpl extends ServiceImpl<StoryMapper, Story> implements
     }
 
     @Override
-    public void unlikeStory(Long storyId, Long userId) {
+    public void unlikeStory(Long storyId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         LambdaQueryWrapper<StoryLike> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(StoryLike::getUserId, userId)
                 .eq(StoryLike::getStoryId, storyId);
@@ -89,7 +93,8 @@ public class StoryServiceImpl extends ServiceImpl<StoryMapper, Story> implements
     }
 
     @Override
-    public void favoriteStory(Long storyId, Long userId) {
+    public void favoriteStory(Long storyId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         // 检查是否已经收藏
         int count = storyFavoriteMapper.checkUserFavorited(userId, storyId);
         if (count == 0) {
@@ -101,7 +106,8 @@ public class StoryServiceImpl extends ServiceImpl<StoryMapper, Story> implements
     }
 
     @Override
-    public void unfavoriteStory(Long storyId, Long userId) {
+    public void unfavoriteStory(Long storyId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         LambdaQueryWrapper<StoryFavorite> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(StoryFavorite::getUserId, userId)
                 .eq(StoryFavorite::getStoryId, storyId);
@@ -109,13 +115,15 @@ public class StoryServiceImpl extends ServiceImpl<StoryMapper, Story> implements
     }
 
     @Override
-    public boolean isStoryLiked(Long storyId, Long userId) {
+    public boolean isStoryLiked(Long storyId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         int count = storyLikeMapper.checkUserLiked(userId, storyId);
         return count > 0;
     }
 
     @Override
-    public boolean isStoryFavorited(Long storyId, Long userId) {
+    public boolean isStoryFavorited(Long storyId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         int count = storyFavoriteMapper.checkUserFavorited(userId, storyId);
         return count > 0;
     }

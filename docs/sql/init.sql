@@ -411,6 +411,18 @@ ALTER TABLE `t_user_certification`
 ALTER TABLE t_pet ADD COLUMN adopted_by BIGINT COMMENT '领养者ID' AFTER adoption_status;
 CREATE INDEX idx_adopted_by ON t_pet(adopted_by);
 
+
+-- 每日 uv 记录表：按用户每日唯一访问计数
+CREATE TABLE IF NOT EXISTS `t_visit_log` (
+                                             `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                                             `user_id` BIGINT NOT NULL COMMENT '用户ID',
+                                             `visit_date` DATE NOT NULL COMMENT '访问日期（按天唯一）',
+                                             `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                             PRIMARY KEY (`id`),
+                                             UNIQUE KEY `uk_user_date` (`user_id`, `visit_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='每日 uv 记录表';
+
+
 -- =============================================================
 -- 初始化数据（来自现网导出）
 -- =============================================================

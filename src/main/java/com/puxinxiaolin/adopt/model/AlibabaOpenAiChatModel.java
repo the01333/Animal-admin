@@ -296,7 +296,6 @@ public class AlibabaOpenAiChatModel extends AbstractToolCallSupport implements C
                 logger.warn("Audio parameters are not supported for streaming requests. Removing audio parameters.");
                 throw new IllegalArgumentException("Audio parameters are not supported for streaming requests.");
             }
-
             Flux<OpenAiApi.ChatCompletionChunk> completionChunks = this.openAiApi.chatCompletionStream(request,
                     getAdditionalHttpHeaders(prompt));
 

@@ -1,12 +1,13 @@
 package com.puxinxiaolin.adopt.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.entity.entity.VerificationCode;
 import com.puxinxiaolin.adopt.mapper.VerificationCodeMapper;
 import com.puxinxiaolin.adopt.service.VerificationCodeService;
+import com.puxinxiaolin.adopt.utils.EmailSendUtils;
 import com.puxinxiaolin.adopt.utils.SmsSenderUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -15,8 +16,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.puxinxiaolin.adopt.utils.EmailSendUtils;
 
 /**
  * 验证码服务实现类
@@ -39,6 +38,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
         try {
             // 生成验证码
             String code = RandomUtil.randomNumbers(CODE_LENGTH);
+            log.info("邮箱验证码: {}", code);
             
             // 保存验证码到数据库
             VerificationCode verificationCode = new VerificationCode();
@@ -67,6 +67,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
         try {
             // 生成验证码
             String code = RandomUtil.randomNumbers(CODE_LENGTH);
+            log.info("手机验证码: {}", code);
             
             // 保存验证码到数据库
             VerificationCode verificationCode = new VerificationCode();
