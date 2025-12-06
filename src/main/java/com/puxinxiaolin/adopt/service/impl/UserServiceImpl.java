@@ -35,7 +35,6 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
-
     private final VerificationCodeService verificationCodeService;
     private final FileUploadService fileUploadService;
     

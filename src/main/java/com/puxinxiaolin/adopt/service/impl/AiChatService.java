@@ -1,7 +1,5 @@
 package com.puxinxiaolin.adopt.service.impl;
 
-import com.puxinxiaolin.adopt.service.AiToolService;
-import com.puxinxiaolin.adopt.service.ConversationService;
 import com.puxinxiaolin.adopt.service.SessionMemoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,103 +14,17 @@ import reactor.core.publisher.Flux;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AiChatService {
 
     private final ChatClient chatClient;
-    private final AiToolService aiToolService;
-    private final ConversationService conversationService;
     private final SessionMemoryService sessionMemoryService;
-
-    /**
-     * 单轮对话（不使用会话记忆）
-     */
-    public String chat(String content) {
-        String system = buildSystemPrompt();
-        Message user = new UserMessage(content == null ? "" : content);
-        Prompt prompt = new Prompt(List.of(new SystemMessage(system), user));
-
-        return chatClient.prompt(prompt)
-                .tools(aiToolService)
-                .call()
-                .content();
-    }
-
-    /**
-     * 多轮对话（使用会话记忆）
-     *
-     * @param sessionId 会话ID
-     * @param content   用户输入内容
-     * @param userId    用户ID
-     * @return AI回复内容
-     */
-    public String chatWithMemory(String sessionId, String content, Long userId) {
-        log.info("多轮对话, 会话ID: {}, 用户ID: {}", sessionId, userId);
-
-        // 获取会话历史
-        List<Message> conversationHistory = conversationService.getConversationHistory(sessionId);
-
-        // 构建消息列表
-        List<Message> messages = new ArrayList<>();
-        messages.add(new SystemMessage(buildSystemPrompt()));
-
-        // 添加历史消息
-        messages.addAll(conversationHistory);
-
-        // 添加当前用户消息
-        Message userMessage = new UserMessage(content == null ? "" : content);
-        messages.add(userMessage);
-
-        // 调用 AI
-        Prompt prompt = new Prompt(messages);
-        String reply = chatClient.prompt(prompt)
-                .tools(aiToolService)
-                .call()
-                .content();
-
-        // 保存用户消息和 AI 回复到数据库
-        conversationService.saveMessage(sessionId, userId, "user", content, null, null, null);
-        conversationService.saveMessage(sessionId, userId, "assistant", reply, null, null, null);
-
-        return reply;
-    }
-
-    /**
-     * 多轮对话（带工具调用信息）
-     */
-    public String chatWithMemoryAndTools(String sessionId, String content, Long userId,
-                                         String toolName, String toolParams, String toolResult) {
-        log.info("多轮对话（带工具调用）, 会话ID: {}, 工具: {}", sessionId, toolName);
-
-        // 获取会话历史
-        List<Message> conversationHistory = conversationService.getConversationHistory(sessionId);
-
-        // 构建消息列表
-        List<Message> messages = new ArrayList<>();
-        messages.add(new SystemMessage(buildSystemPrompt()));
-        messages.addAll(conversationHistory);
-        messages.add(new UserMessage(content == null ? "" : content));
-
-        // 调用AI
-        Prompt prompt = new Prompt(messages);
-        String reply = chatClient.prompt(prompt)
-                .tools(aiToolService)
-                .call()
-                .content();
-
-        // 保存消息（包含工具调用信息）
-        conversationService.saveMessage(sessionId, userId, "user", content,
-                toolName, toolParams, toolResult);
-        conversationService.saveMessage(sessionId, userId, "assistant", reply, null, null, null);
-
-        return reply;
-    }
-
-    /**
-     * 流式单轮对话（不使用会话记忆）
-     */
+    
     public Flux<String> chatStream(String content) {
         String system = buildSystemPrompt();
         Message user = new UserMessage(content == null ? "" : content);
