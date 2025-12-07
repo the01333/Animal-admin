@@ -8,9 +8,11 @@ import com.puxinxiaolin.adopt.entity.vo.PetCategoryStatsVO;
 import com.puxinxiaolin.adopt.entity.vo.StatsVO;
 import com.puxinxiaolin.adopt.entity.vo.VisitTrendVO;
 import com.puxinxiaolin.adopt.service.StatsService;
+import com.puxinxiaolin.adopt.task.ViewCountSyncTask;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,6 +30,7 @@ import java.util.List;
 public class StatsController {
 
     private final StatsService statsService;
+    private final ViewCountSyncTask viewCountSyncTask;
 
     /**
      * 获取仪表板数据
@@ -59,5 +62,16 @@ public class StatsController {
     @GetMapping("/visit-trend")
     public Result<List<VisitTrendVO>> getVisitTrend(@RequestParam(defaultValue = "7") int days) {
         return Result.success(statsService.getVisitTrendStats(days));
+    }
+
+    /**
+     * 手动触发浏览次数同步任务
+     * 仅管理员在系统工具页中手动执行
+     */
+    @PostMapping("/view-count/sync")
+    public Result<Void> manualSyncViewCount() {
+        log.info("手动触发浏览次数同步任务");
+        viewCountSyncTask.manualSync();
+        return Result.success();
     }
 }

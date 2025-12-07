@@ -10,7 +10,7 @@ import lombok.Data;
 public class ContentUserQueryDTO extends PageInfo {
 
     /**
-     * GUIDE 或 STORY，null 表示全部
+     * GUIDE 或 STORY, null 表示全部
      */
     private String category;
 }

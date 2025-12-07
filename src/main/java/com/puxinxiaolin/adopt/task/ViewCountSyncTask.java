@@ -135,7 +135,7 @@ public class ViewCountSyncTask {
                     continue;
                 }
 
-                ContentCategoryEnum category = ContentCategoryEnum.fromCode(parts[0]);
+                ContentCategoryEnum category = ContentCategoryEnum.getByCode(parts[0]);
                 Long contentId = Long.parseLong(parts[1]);
 
                 Map<Object, Object> statMap = redisTemplate.opsForHash().entries(key);
@@ -212,12 +212,20 @@ public class ViewCountSyncTask {
         }
     }
 
+    /**
+     * 格式化增量, 正数前面需要加 +
+     *
+     * @param delta
+     * @return
+     */
     private String formatDelta(int delta) {
         return delta > 0 ? "+" + delta : String.valueOf(delta);
     }
 
     /**
      * 手动触发同步（用于测试或紧急情况）
+     * <p>
+     * TODO: 可以同于前端后台中的系统设置
      */
     public void manualSync() {
         log.info("手动触发浏览次数同步");

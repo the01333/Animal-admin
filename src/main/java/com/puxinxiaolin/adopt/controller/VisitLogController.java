@@ -22,7 +22,7 @@ public class VisitLogController {
     private final StatsService statsService;
 
     /**
-     * 登录后记录当日 UV（同一用户当日只写一次，Redis + DB 幂等）
+     * 登录后记录当日 UV（同一用户当日只写一次, Redis + DB 幂等）
      */
     @SaCheckLogin
     @GetMapping("/track")

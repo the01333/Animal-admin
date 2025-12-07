@@ -5,10 +5,12 @@ import com.puxinxiaolin.adopt.constants.DateConstant;
 import com.puxinxiaolin.adopt.entity.entity.Story;
 import com.puxinxiaolin.adopt.entity.entity.StoryFavorite;
 import com.puxinxiaolin.adopt.entity.entity.StoryLike;
+import com.puxinxiaolin.adopt.entity.vo.DictItemVO;
 import com.puxinxiaolin.adopt.entity.vo.StoryVO;
 import com.puxinxiaolin.adopt.mapper.StoryFavoriteMapper;
 import com.puxinxiaolin.adopt.mapper.StoryLikeMapper;
 import com.puxinxiaolin.adopt.mapper.StoryMapper;
+import com.puxinxiaolin.adopt.service.DictService;
 import com.puxinxiaolin.adopt.service.StoryService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -34,6 +36,8 @@ public class StoryServiceImpl extends ServiceImpl<StoryMapper, Story> implements
     private StoryFavoriteMapper storyFavoriteMapper;
     @Autowired
     private OssUrlService ossUrlService;
+    @Autowired
+    private DictService dictService;
 
     @Override
     public List<StoryVO> getAllStories() {
@@ -175,19 +179,26 @@ public class StoryServiceImpl extends ServiceImpl<StoryMapper, Story> implements
 
     @Override
     public List<String> getAllCategories() {
-        // 查询所有故事, 提取不重复的标签
+        // 1. 优先从通用字典中读取故事标签（story_tag）
+        List<DictItemVO> dictItems = dictService.listDictItems("story_tag");
+        if (dictItems != null && !dictItems.isEmpty()) {
+            return dictItems.stream()
+                    .map(DictItemVO::getDictKey)
+                    .filter(tag -> tag != null && !tag.isEmpty())
+                    .distinct()
+                    .collect(Collectors.toList());
+        }
+
+        // 2. 字典为空时, 回退到从故事表中提取不重复标签
         List<Story> stories = this.list();
         log.info("获取故事分类, 总故事数: {}", stories.size());
 
         List<String> categories = stories.stream()
                 .map(Story::getTags)
                 .filter(tags -> tags != null && !tags.isEmpty())
-                .flatMap(tags -> {
-                    // 将逗号分隔的字符串解析为列表
-                    return Arrays.stream(tags.split(","))
-                            .map(String::trim)
-                            .filter(tag -> !tag.isEmpty());
-                })
+                .flatMap(tags -> Arrays.stream(tags.split(","))
+                        .map(String::trim)
+                        .filter(tag -> !tag.isEmpty()))
                 .distinct()
                 .collect(Collectors.toList());
 

@@ -5,10 +5,12 @@ import com.puxinxiaolin.adopt.constants.DateConstant;
 import com.puxinxiaolin.adopt.entity.entity.Guide;
 import com.puxinxiaolin.adopt.entity.entity.GuideFavorite;
 import com.puxinxiaolin.adopt.entity.entity.GuideLike;
+import com.puxinxiaolin.adopt.entity.vo.DictItemVO;
 import com.puxinxiaolin.adopt.entity.vo.GuideVO;
 import com.puxinxiaolin.adopt.mapper.GuideFavoriteMapper;
 import com.puxinxiaolin.adopt.mapper.GuideLikeMapper;
 import com.puxinxiaolin.adopt.mapper.GuideMapper;
+import com.puxinxiaolin.adopt.service.DictService;
 import com.puxinxiaolin.adopt.service.GuideService;
 import com.puxinxiaolin.adopt.service.impl.OssUrlService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -30,6 +32,8 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
     private GuideFavoriteMapper guideFavoriteMapper;
     @Autowired
     private OssUrlService ossUrlService;
+    @Autowired
+    private DictService dictService;
 
     @Override
     public List<GuideVO> getAllGuides() {
@@ -191,10 +195,21 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
 
     @Override
     public List<String> getAllCategories() {
-        // 查询所有指南, 提取不重复的分类
+        // 1. 优先从通用字典读取指南分类（guide_category）
+        List<DictItemVO> dictItems = dictService.listDictItems("guide_category");
+        if (dictItems != null && !dictItems.isEmpty()) {
+            return dictItems.stream()
+                    .map(DictItemVO::getDictKey)
+                    .filter(category -> category != null && !category.isEmpty())
+                    .distinct()
+                    .collect(Collectors.toList());
+        }
+
+        // 2. 字典为空时, 回退到从指南表中提取不重复分类
         List<Guide> guides = this.list();
         return guides.stream()
                 .map(Guide::getCategory)
+                .filter(category -> category != null && !category.isEmpty())
                 .distinct()
                 .collect(Collectors.toList());
     }

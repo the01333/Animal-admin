@@ -4,10 +4,11 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.constants.DateConstant;
 import com.puxinxiaolin.adopt.entity.dto.AdoptionApplicationDTO;
 import com.puxinxiaolin.adopt.entity.dto.AdoptionApplicationPageQueryDTO;
 import com.puxinxiaolin.adopt.entity.dto.AdoptionReviewDTO;
@@ -30,14 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -47,9 +41,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicationMapper, AdoptionApplication>
-        implements AdoptionApplicationService {
-
+public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicationMapper, AdoptionApplication> implements AdoptionApplicationService {
     private final PetService petService;
     private final PetMapper petMapper;
     private final UserService userService;
@@ -191,7 +183,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         }
 
         // 验证状态参数
-        ApplicationStatusEnum targetStatus = ApplicationStatusEnum.fromCode(status.toLowerCase(Locale.ROOT));
+        ApplicationStatusEnum targetStatus = ApplicationStatusEnum.getByCode(status.toLowerCase(Locale.ROOT));
         if (targetStatus == null || targetStatus == ApplicationStatusEnum.PENDING) {
             throw new BizException(ResultCode.BAD_REQUEST.getCode(), "无效的审核状态");
         }
@@ -267,8 +259,9 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
      * 格式: AP + YYYYMMDD + 4位序号
      */
     private String generateApplicationNo() {
-        String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String dateStr = LocalDateTime.now().format(DateConstant.YMD);
         String randomStr = IdUtil.randomUUID().substring(0, 4).toUpperCase();
+        
         return "AP" + dateStr + randomStr;
     }
 
@@ -318,7 +311,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
             String status = application.getStatus();
             vo.setStatus(StrUtil.isBlank(status) ? null : status.toUpperCase(Locale.ROOT));
             if (StrUtil.isNotBlank(status)) {
-                ApplicationStatusEnum statusEnum = ApplicationStatusEnum.fromCode(status.toLowerCase(Locale.ROOT));
+                ApplicationStatusEnum statusEnum = ApplicationStatusEnum.getByCode(status.toLowerCase(Locale.ROOT));
                 vo.setStatusText(statusEnum != null ? statusEnum.getDesc() : status);
             } else {
                 vo.setStatusText("未知");
@@ -347,11 +340,11 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
                 vo.setPetName(pet.getName());
                 vo.setPetCoverImage(pet.getCoverImage());
                 vo.setPetCategory(pet.getCategory());
-                PetCategoryEnum categoryEnum = PetCategoryEnum.fromCode(pet.getCategory());
+                PetCategoryEnum categoryEnum = PetCategoryEnum.getByCode(pet.getCategory());
                 vo.setPetCategoryText(categoryEnum != null ? categoryEnum.getDesc() : pet.getCategory());
                 vo.setPetGender(pet.getGender());
                 vo.setPetAdoptionStatus(pet.getAdoptionStatus());
-                AdoptionStatusEnum adoptionStatusEnum = AdoptionStatusEnum.fromCode(pet.getAdoptionStatus());
+                AdoptionStatusEnum adoptionStatusEnum = AdoptionStatusEnum.getByCode(pet.getAdoptionStatus());
                 vo.setPetAdoptionStatusText(adoptionStatusEnum != null ? adoptionStatusEnum.getDesc() : pet.getAdoptionStatus());
             }
 

@@ -53,7 +53,7 @@ public class StatsServiceImpl implements StatsService {
         try {
             LocalDate today = LocalDate.now();
             String redisKey = RedisConstant.VISIT_UV_PREFIX + today + ":" + userId;
-            // 如果当日已记录过，直接返回
+            // 如果当日已记录过, 直接返回
             if (redisTemplate.hasKey(redisKey)) {
                 return;
             }
@@ -63,10 +63,10 @@ public class StatsServiceImpl implements StatsService {
             log.setVisitDate(today);
             visitLogMapper.insert(log);
 
-            // 写入Redis防重复，过期时间 2 天（覆盖跨时区或延迟场景）
+            // 写入Redis防重复, 过期时间 2 天（覆盖跨时区或延迟场景）
             redisTemplate.opsForValue().set(redisKey, 1, 2, TimeUnit.DAYS);
         } catch (DuplicateKeyException e) {
-            // 已存在当日记录，忽略
+            // 已存在当日记录, 忽略
         } catch (Exception e) {
             log.error("记录访问失败 userId={}", userId, e);
         }

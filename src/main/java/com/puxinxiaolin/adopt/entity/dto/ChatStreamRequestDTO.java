@@ -9,7 +9,7 @@ import lombok.Data;
 public class ChatStreamRequestDTO {
 
     /**
-     * 会话 ID，可为空表示新会话
+     * 会话 ID, 可为空表示新会话
      */
     private String sessionId;
 

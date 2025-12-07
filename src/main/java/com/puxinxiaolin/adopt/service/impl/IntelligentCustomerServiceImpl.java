@@ -22,7 +22,7 @@ import reactor.core.publisher.Flux;
 import java.time.Duration;
 
 /**
- * 智能客服业务门面实现，承接限流、会话创建、消息保存等逻辑
+ * 智能客服业务门面实现, 承接限流、会话创建、消息保存等逻辑
  */
 @Slf4j
 @Service

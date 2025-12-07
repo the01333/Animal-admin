@@ -18,6 +18,7 @@ import com.puxinxiaolin.adopt.enums.ContentCategoryEnum;
 import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.*;
 import com.puxinxiaolin.adopt.service.ContentService;
+import com.puxinxiaolin.adopt.service.DictService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,7 @@ public class ContentServiceImpl implements ContentService {
     private final StoryFavoriteMapper storyFavoriteMapper;
     private final OssUrlService ossUrlService;
     private final ViewCountService viewCountService;
+    private final DictService dictService;
 
     private static final List<ContentCategoryVO> CATEGORY_OPTIONS = List.of(
             new ContentCategoryVO(ContentCategoryEnum.GUIDE.name(), ContentCategoryEnum.GUIDE.getLabel()),
@@ -80,7 +82,7 @@ public class ContentServiceImpl implements ContentService {
     @Override
     public ContentVO getContentDetail(String category, Long id) {
         Long userId = StpUtil.isLogin() ? StpUtil.getLoginIdAsLong() : null;
-        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(category);
+        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
         viewCountService.incrementContentView(contentCategoryEnum, id);
         return switch (contentCategoryEnum) {
             case GUIDE -> toContentVO(requireGuide(id), userId);
@@ -91,13 +93,21 @@ public class ContentServiceImpl implements ContentService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ContentVO createContent(ContentDTO dto) {
-        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(dto.getCategory());
+        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(dto.getCategory());
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             Guide guide = applyGuideFields(dto, null);
+            // 同步指南子分类到通用字典
+            if (StrUtil.isNotBlank(dto.getGuideCategory())) {
+                dictService.ensureDictItems("guide_category", Collections.singletonList(dto.getGuideCategory()));
+            }
             guideMapper.insert(guide);
             return toContentVO(guide, null);
         }
         Story story = applyStoryFields(dto, null);
+        // 同步故事标签到通用字典
+        if (CollUtil.isNotEmpty(dto.getTags())) {
+            dictService.ensureDictItems("story_tag", dto.getTags());
+        }
         storyMapper.insert(story);
         return toContentVO(story, null);
     }
@@ -105,13 +115,19 @@ public class ContentServiceImpl implements ContentService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ContentVO updateContent(Long id, ContentDTO dto) {
-        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(dto.getCategory());
+        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(dto.getCategory());
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             Guide guide = applyGuideFields(dto, requireGuide(id));
+            if (StrUtil.isNotBlank(dto.getGuideCategory())) {
+                dictService.ensureDictItems("guide_category", Collections.singletonList(dto.getGuideCategory()));
+            }
             guideMapper.updateById(guide);
             return toContentVO(guide, null);
         }
         Story story = applyStoryFields(dto, requireStory(id));
+        if (CollUtil.isNotEmpty(dto.getTags())) {
+            dictService.ensureDictItems("story_tag", dto.getTags());
+        }
         storyMapper.updateById(story);
         return toContentVO(story, null);
     }
@@ -119,7 +135,7 @@ public class ContentServiceImpl implements ContentService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteContent(String category, Long id) {
-        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(category);
+        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
         int affected;
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             affected = guideMapper.deleteById(id);
@@ -136,7 +152,30 @@ public class ContentServiceImpl implements ContentService {
 
     @Override
     public List<ContentCategoryVO> listCategories() {
-        return CATEGORY_OPTIONS;
+        Map<String, String> dict = dictService.getArticleCategories();
+        if (dict == null || dict.isEmpty()) {
+            return CATEGORY_OPTIONS;
+        }
+
+        List<ContentCategoryVO> result = dict.entrySet().stream()
+                .map(e -> new ContentCategoryVO(e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
+
+        // 确保 GUIDE / STORY 至少存在（防止被误删导致前端出错）
+        ensureDefaultCategory(result, ContentCategoryEnum.GUIDE);
+        ensureDefaultCategory(result, ContentCategoryEnum.STORY);
+
+        // 按 value 排序，避免顺序抖动
+        result.sort(Comparator.comparing(ContentCategoryVO::getValue));
+        return result;
+    }
+
+    private void ensureDefaultCategory(List<ContentCategoryVO> list, ContentCategoryEnum categoryEnum) {
+        boolean exists = list.stream()
+                .anyMatch(vo -> categoryEnum.name().equalsIgnoreCase(vo.getValue()));
+        if (!exists) {
+            list.add(new ContentCategoryVO(categoryEnum.name(), categoryEnum.getLabel()));
+        }
     }
 
     private List<ContentVO> loadGuideContent(ContentQueryDTO queryDTO) {
@@ -283,7 +322,7 @@ public class ContentServiceImpl implements ContentService {
     @Override
     public void likeContent(String category, Long id) {
         Long userId = StpUtil.getLoginIdAsLong();
-        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(category);
+        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             requireGuide(id);
             if (guideLikeMapper.checkUserLiked(userId, id) == 0) {
@@ -310,7 +349,7 @@ public class ContentServiceImpl implements ContentService {
     @Override
     public void unlikeContent(String category, Long id) {
         Long userId = StpUtil.getLoginIdAsLong();
-        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(category);
+        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             LambdaQueryWrapper<GuideLike> wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(GuideLike::getGuideId, id).eq(GuideLike::getUserId, userId);
@@ -331,7 +370,7 @@ public class ContentServiceImpl implements ContentService {
     @Override
     public void favoriteContent(String category, Long id) {
         Long userId = StpUtil.getLoginIdAsLong();
-        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(category);
+        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             requireGuide(id);
             if (guideFavoriteMapper.checkUserFavorited(userId, id) == 0) {
@@ -358,7 +397,7 @@ public class ContentServiceImpl implements ContentService {
     @Override
     public void unfavoriteContent(String category, Long id) {
         Long userId = StpUtil.getLoginIdAsLong();
-        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(category);
+        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             LambdaQueryWrapper<GuideFavorite> wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(GuideFavorite::getGuideId, id).eq(GuideFavorite::getUserId, userId);
@@ -379,7 +418,7 @@ public class ContentServiceImpl implements ContentService {
     @Override
     public boolean isContentLiked(String category, Long id) {
         Long userId = StpUtil.getLoginIdAsLong();
-        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(category);
+        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             return guideLikeMapper.checkUserLiked(userId, id) > 0;
         }
@@ -389,7 +428,7 @@ public class ContentServiceImpl implements ContentService {
     @Override
     public boolean isContentFavorited(String category, Long id) {
         Long userId = StpUtil.getLoginIdAsLong();
-        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.fromCode(category);
+        ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             return guideFavoriteMapper.checkUserFavorited(userId, id) > 0;
         }

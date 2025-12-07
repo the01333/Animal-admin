@@ -13,6 +13,8 @@ import com.puxinxiaolin.adopt.enums.AdoptionStatusEnum;
 import com.puxinxiaolin.adopt.enums.PetCategoryEnum;
 import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
+import com.puxinxiaolin.adopt.mapper.DictItemMapper;
+import com.puxinxiaolin.adopt.entity.entity.DictItem;
 import com.puxinxiaolin.adopt.service.PetService;
 import com.puxinxiaolin.adopt.service.DictService;
 import com.puxinxiaolin.adopt.service.FileUploadService;
@@ -29,8 +31,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * 宠物服务实现类
@@ -45,6 +49,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
     private final OssUrlService ossUrlService;
     private final DictService dictService;
     private final FileUploadService fileUploadService;
+    private final DictItemMapper dictItemMapper;
 
     @Override
     public Map<String, String> getPetCategories() {
@@ -117,9 +122,9 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         for (PetVO p : vos) {
             Long pid = p.getId();
 
-            PetCategoryEnum categoryEnum = PetCategoryEnum.fromCode(p.getCategory());
+            PetCategoryEnum categoryEnum = PetCategoryEnum.getByCode(p.getCategory());
             p.setCategoryText(categoryEnum != null ? categoryEnum.getDesc() : p.getCategory());
-            AdoptionStatusEnum adoptionStatusEnum = AdoptionStatusEnum.fromCode(p.getAdoptionStatus());
+            AdoptionStatusEnum adoptionStatusEnum = AdoptionStatusEnum.getByCode(p.getAdoptionStatus());
             p.setAdoptionStatusText(adoptionStatusEnum != null ? adoptionStatusEnum.getDesc() : p.getAdoptionStatus());
 
             String likeKey = RedisConstant.buildPetLikeCountKey(pid);
@@ -170,9 +175,9 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
 //        viewCountService.incrementPetView(id);
 
         PetVO vo = BeanUtil.copyProperties(pet, PetVO.class);
-        PetCategoryEnum categoryEnum = PetCategoryEnum.fromCode(pet.getCategory());
+        PetCategoryEnum categoryEnum = PetCategoryEnum.getByCode(pet.getCategory());
         vo.setCategoryText(categoryEnum != null ? categoryEnum.getDesc() : pet.getCategory());
-        AdoptionStatusEnum adoptionStatusEnum = AdoptionStatusEnum.fromCode(pet.getAdoptionStatus());
+        AdoptionStatusEnum adoptionStatusEnum = AdoptionStatusEnum.getByCode(pet.getAdoptionStatus());
         vo.setAdoptionStatusText(adoptionStatusEnum != null ? adoptionStatusEnum.getDesc() : pet.getAdoptionStatus());
         // 读取增量并合并显示
         int inc = viewCountService.getPetViewIncrement(id);
@@ -207,7 +212,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         pet.setCreateBy(userId);
         pet.setCreateTime(java.time.LocalDateTime.now());
         this.save(pet);
-        // 新增宠物后刷新字典缓存，确保新类别可用
+        // 新增宠物后刷新字典缓存, 确保新类别可用
         dictService.refreshCache();
 
         PetVO petVO = BeanUtil.copyProperties(pet, PetVO.class);
@@ -232,14 +237,43 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
     @Transactional(rollbackFor = Exception.class)
     public void deletePet(Long id) {
         log.info("删除宠物, ID: {}", id);
+        Pet pet = this.getById(id);
+        if (pet == null) {
+            return;
+        }
+
+        String category = pet.getCategory();
         this.removeById(id);
+
+        // 删除后自动清理不再使用的宠物类别
+        cleanupUnusedCategories(category);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void batchDeletePet(List<Long> ids) {
         log.info("批量删除宠物, 数量: {}", ids.size());
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+
+        // 查询将要删除的宠物以获取其类别
+        List<Pet> pets = this.listByIds(ids);
+        if (pets == null || pets.isEmpty()) {
+            return;
+        }
+
+        Set<String> categories = new HashSet<>();
+        for (Pet pet : pets) {
+            if (pet != null && StrUtil.isNotBlank(pet.getCategory())) {
+                categories.add(pet.getCategory());
+            }
+        }
+
         this.removeByIds(ids);
+
+        // 删除后自动清理不再使用的宠物类别
+        cleanupUnusedCategories(categories.toArray(new String[0]));
     }
 
     @Override
@@ -259,6 +293,51 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         queryDTO.setAdoptionStatus("available");
         queryDTO.setShelfStatus(1);
         return queryDTO;
+    }
+
+    /**
+     * 自动清理已无宠物使用的类别，将对应 pet_category 字典项禁用并刷新字典缓存
+     */
+    private void cleanupUnusedCategories(String... categories) {
+        if (categories == null || categories.length == 0) {
+            return;
+        }
+
+        Set<String> uniqueCategories = new HashSet<>();
+        for (String c : categories) {
+            if (StrUtil.isNotBlank(c)) {
+                uniqueCategories.add(c);
+            }
+        }
+        if (uniqueCategories.isEmpty()) {
+            return;
+        }
+
+        boolean dictChanged = false;
+        for (String category : uniqueCategories) {
+            // 检查 t_pet 中是否还有该类别
+            LambdaQueryWrapper<Pet> countWrapper = new LambdaQueryWrapper<>();
+            countWrapper.eq(Pet::getCategory, category);
+            long remainCount = this.count(countWrapper);
+            if (remainCount > 0) {
+                continue;
+            }
+
+            // 将通用字典中对应的 pet_category 条目逻辑删除
+            LambdaQueryWrapper<DictItem> dictWrapper = new LambdaQueryWrapper<>();
+            dictWrapper.eq(DictItem::getDictType, "pet_category")
+                    .eq(DictItem::getDictKey, category)
+                    .eq(DictItem::getStatus, 1);
+            int deletedCount = dictItemMapper.delete(dictWrapper);
+            if (deletedCount > 0) {
+                dictChanged = true;
+                log.info("宠物类别 {} 已无宠物使用, 自动删除对应字典项", category);
+            }
+        }
+
+        if (dictChanged) {
+            dictService.refreshCache();
+        }
     }
 
     /**

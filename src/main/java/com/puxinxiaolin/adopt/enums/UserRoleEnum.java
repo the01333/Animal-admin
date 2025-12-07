@@ -40,7 +40,7 @@ public enum UserRoleEnum {
     /**
      * 根据code获取枚举
      */
-    public static UserRoleEnum fromCode(String code) {
+    public static UserRoleEnum getByCode(String code) {
         for (UserRoleEnum role : UserRoleEnum.values()) {
             if (role.getCode().equals(code)) {
                 return role;

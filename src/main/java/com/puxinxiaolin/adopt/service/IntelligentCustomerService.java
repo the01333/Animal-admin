@@ -6,7 +6,7 @@ import com.puxinxiaolin.adopt.entity.dto.ChatStreamResult;
 import com.puxinxiaolin.adopt.entity.dto.SaveMessageDTO;
 
 /**
- * 智能客服业务门面，承接限流、会话创建、消息保存等逻辑
+ * 智能客服业务门面, 承接限流、会话创建、消息保存等逻辑
  */
 public interface IntelligentCustomerService {
 

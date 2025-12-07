@@ -100,6 +100,7 @@ public class RedisConstant {
     public static final String DICT_GENDER = "dict:gender";
     public static final String DICT_ADOPTION_STATUS = "dict:adoption_status";
     public static final String DICT_HEALTH_STATUS = "dict:health_status";
+    public static final String DICT_ARTICLE_CATEGORY = "dict:article_category";
 
     
     // =========================== 工具方法 ================================

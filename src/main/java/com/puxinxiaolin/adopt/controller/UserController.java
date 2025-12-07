@@ -4,11 +4,7 @@ import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.annotation.SaMode;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.puxinxiaolin.adopt.common.Result;
-import com.puxinxiaolin.adopt.entity.dto.ChangePasswordDTO;
-import com.puxinxiaolin.adopt.entity.dto.EmailCodeLoginDTO;
-import com.puxinxiaolin.adopt.entity.dto.LoginDTO;
-import com.puxinxiaolin.adopt.entity.dto.PhoneCodeLoginDTO;
-import com.puxinxiaolin.adopt.entity.dto.RegisterDTO;
+import com.puxinxiaolin.adopt.entity.dto.*;
 import com.puxinxiaolin.adopt.entity.vo.LoginVO;
 import com.puxinxiaolin.adopt.entity.vo.UserVO;
 import com.puxinxiaolin.adopt.service.UserService;
@@ -19,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -144,7 +141,7 @@ public class UserController {
     @PostMapping("/avatar/upload")
     public Result<Map<String, String>> uploadAvatar(@RequestParam("avatar") MultipartFile file) {
         String avatarUrl = userService.uploadAvatar(file);
-        Map<String, String> data = new java.util.HashMap<>();
+        Map<String, String> data = new HashMap<>();
         data.put("avatar", avatarUrl);
         return Result.success("头像上传成功", data);
     }
@@ -196,9 +193,19 @@ public class UserController {
      */
     @PutMapping("/{id}/status")
     @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
-    public Result<String> updateUserStatus(@PathVariable Long id, @Valid @RequestBody com.puxinxiaolin.adopt.entity.dto.UpdateUserStatusDTO dto) {
+    public Result<String> updateUserStatus(@PathVariable Long id, @Valid @RequestBody UpdateUserStatusDTO dto) {
         userService.updateUserStatus(id, dto);
         return Result.success("状态更新成功", null);
+    }
+
+    /**
+     * 管理员编辑用户信息/角色/状态
+     */
+    @PutMapping("/{id}/admin")
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    public Result<String> adminUpdateUser(@PathVariable Long id, @Valid @RequestBody AdminUpdateUserDTO dto) {
+        userService.adminUpdateUser(id, dto);
+        return Result.success("更新成功", null);
     }
 }
 

@@ -13,7 +13,7 @@ public class PhoneCodeLoginDTO {
     private String code;
 
     /**
-     * 业务用途标识，可选
+     * 业务用途标识, 可选
      */
     private String purpose = "login";
 }

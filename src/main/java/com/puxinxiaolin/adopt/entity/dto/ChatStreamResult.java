@@ -5,7 +5,7 @@ import lombok.Data;
 import reactor.core.publisher.Flux;
 
 /**
- * 流式对话结果，包含会话ID与流式内容
+ * 流式对话结果, 包含会话ID与流式内容
  */
 @Data
 @AllArgsConstructor

@@ -39,7 +39,7 @@ public enum AdoptionStatusEnum {
     /**
      * 根据code获取枚举
      */
-    public static AdoptionStatusEnum fromCode(String code) {
+    public static AdoptionStatusEnum getByCode(String code) {
         for (AdoptionStatusEnum status : AdoptionStatusEnum.values()) {
             if (status.getCode().equals(code)) {
                 return status;

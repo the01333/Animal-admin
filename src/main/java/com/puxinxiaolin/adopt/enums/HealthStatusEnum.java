@@ -31,7 +31,7 @@ public enum HealthStatusEnum {
     /**
      * 根据code获取枚举
      */
-    public static HealthStatusEnum fromCode(String code) {
+    public static HealthStatusEnum getByCode(String code) {
         for (HealthStatusEnum status : HealthStatusEnum.values()) {
             if (status.getCode().equals(code)) {
                 return status;

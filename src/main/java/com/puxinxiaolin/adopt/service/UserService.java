@@ -1,6 +1,7 @@
 package com.puxinxiaolin.adopt.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.puxinxiaolin.adopt.entity.dto.AdminUpdateUserDTO;
 import com.puxinxiaolin.adopt.entity.dto.LoginDTO;
 import com.puxinxiaolin.adopt.entity.dto.RegisterDTO;
 import com.puxinxiaolin.adopt.entity.dto.EmailCodeLoginDTO;
@@ -119,4 +120,9 @@ public interface UserService extends IService<User> {
      * 更新用户状态
      */
     void updateUserStatus(Long id, UpdateUserStatusDTO dto);
+
+    /**
+     * 管理员编辑用户信息/角色/状态
+     */
+    void adminUpdateUser(Long id, AdminUpdateUserDTO dto);
 }
