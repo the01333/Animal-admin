@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class VisitTrendVO {
 
     /**
-     * 日期（格式：yyyy-MM-dd）
+     * 日期（格式: yyyy-MM-dd）
      */
     private String date;
 

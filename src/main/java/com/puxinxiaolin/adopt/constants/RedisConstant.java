@@ -68,17 +68,17 @@ public class RedisConstant {
     public static final String CONTENT_VIEW_LIMIT_PREFIX = "content:view:limit:";
 
     /**
-     * Hash 字段名称：浏览次数
+     * Hash 字段名称: 浏览次数
      */
     public static final String CONTENT_STAT_FIELD_VIEW = "viewCount";
 
     /**
-     * Hash 字段名称：点赞次数
+     * Hash 字段名称: 点赞次数
      */
     public static final String CONTENT_STAT_FIELD_LIKE = "likeCount";
 
     /**
-     * Hash 字段名称：收藏次数
+     * Hash 字段名称: 收藏次数
      */
     public static final String CONTENT_STAT_FIELD_FAVORITE = "favoriteCount";
 

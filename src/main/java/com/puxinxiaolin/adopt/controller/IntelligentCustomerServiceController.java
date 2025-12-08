@@ -52,7 +52,7 @@ public class IntelligentCustomerServiceController {
      * <p>
      * 认证由拦截器处理, 这里直接从上下文获取用户 ID
      * <p>
-     * 通过自定义会话存储服务确保：<p>
+     * 通过自定义会话存储服务确保: <p>
      * 1. 用户隔离 - 不同用户的对话完全分离 <p>
      * 2. 持久化 - 对话历史保存到 Cassandra <p>
      * 3. 缓存加速 - 使用 Redis 缓存热数据

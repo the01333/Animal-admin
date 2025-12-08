@@ -87,7 +87,7 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
             guideLike.setGuideId(guideId);
             guideLikeMapper.insert(guideLike);
 
-            // 注意：指南表中没有likes字段, 只有likeCount通过查询t_guide_like表计算
+            // 注意: 指南表中没有likes字段, 只有likeCount通过查询t_guide_like表计算
             // 所以这里不需要更新指南表
         }
     }
@@ -102,7 +102,7 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
                 .eq(GuideLike::getGuideId, guideId);
         guideLikeMapper.delete(wrapper);
 
-        // 注意：指南表中没有likes字段, 只有likeCount通过查询t_guide_like表计算
+        // 注意: 指南表中没有likes字段, 只有likeCount通过查询t_guide_like表计算
         // 所以这里不需要更新指南表
     }
 

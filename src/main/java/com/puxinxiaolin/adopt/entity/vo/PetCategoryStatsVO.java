@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class PetCategoryStatsVO {
 
     /**
-     * 分类编码（例如：CAT、DOG、RABBIT、BIRD、OTHER）
+     * 分类编码（例如: CAT、DOG、RABBIT、BIRD、OTHER）
      */
     private String category;
 

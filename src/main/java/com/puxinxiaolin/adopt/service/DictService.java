@@ -105,8 +105,8 @@ public interface DictService {
     Long createPetCategoryAuto(String label);
 
     /**
-     * 确保指定类型下存在给定键的字典项（不存在则创建，存在则忽略）
-     * 主要用于业务在运行时自动补充字典，例如指南分类、故事标签等
+     * 确保指定类型下存在给定键的字典项（不存在则创建, 存在则忽略）
+     * 主要用于业务在运行时自动补充字典, 例如指南分类、故事标签等
      *
      * @param dictType 字典类型
      * @param dictKeys 需要确保存在的字典键列表

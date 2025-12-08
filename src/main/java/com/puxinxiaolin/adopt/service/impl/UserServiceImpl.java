@@ -555,7 +555,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                         .eq(User::getRole, UserRoleEnum.SUPER_ADMIN.getCode())
                         .ne(User::getId, id));
                 if (superAdminCount > 0) {
-                    throw new BizException(ResultCode.BAD_REQUEST.getCode(), "系统中已存在超级管理员，无法创建第二个超级管理员");
+                    throw new BizException(ResultCode.BAD_REQUEST.getCode(), "系统中已存在超级管理员, 无法创建第二个超级管理员");
                 }
             }
 
@@ -564,7 +564,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         this.updateById(user);
 
-        // 如果通过管理员编辑将用户禁用，强制该用户所有会话下线
+        // 如果通过管理员编辑将用户禁用, 强制该用户所有会话下线
         if (disabled) {
             try {
                 StpUtil.logout(user.getId());

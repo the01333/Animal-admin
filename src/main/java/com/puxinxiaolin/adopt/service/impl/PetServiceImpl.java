@@ -296,7 +296,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
     }
 
     /**
-     * 自动清理已无宠物使用的类别，将对应 pet_category 字典项禁用并刷新字典缓存
+     * 自动清理已无宠物使用的类别, 将对应 pet_category 字典项禁用并刷新字典缓存
      */
     private void cleanupUnusedCategories(String... categories) {
         if (categories == null || categories.length == 0) {

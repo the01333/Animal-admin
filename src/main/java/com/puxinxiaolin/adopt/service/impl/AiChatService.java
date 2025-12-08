@@ -38,7 +38,7 @@ public class AiChatService {
     /**
      * 流式多轮对话（使用会话记忆）
      * 
-     * 核心特性：
+     * 核心特性: 
      * 1. 用户隔离 - 不同用户的对话完全分离
      * 2. 持久化 - 对话历史保存到 Cassandra
      * 3. 缓存加速 - 使用 Redis 缓存热数据
@@ -75,7 +75,7 @@ public class AiChatService {
         return chatClient.prompt(prompt)
                 .stream()
                 .content();
-                // 注意：完整的AI回复内容由前端收集后通过 /save-message 接口保存
+                // 注意: 完整的AI回复内容由前端收集后通过 /save-message 接口保存
     }
 
     /**
@@ -118,11 +118,11 @@ public class AiChatService {
                 - 鼓励负责任的宠物领养
                 
                 【工具使用指南】
-                当用户询问以下内容时, 请调用相应工具：
+                当用户询问以下内容时, 请调用相应工具: 
                 
                 1. 【宠物推荐查询】- 用户问"有什么推荐的宠物吗？"、"我想要一只活泼的小狗"等
                    → 调用 searchPets 工具, 根据用户描述的性格特征、偏好进行查询
-                   → 参数说明：
+                   → 参数说明: 
                      - category: 宠物类别（cat/dog/rabbit等）
                      - personality: 性格关键词（活泼/温顺/独立/亲人等）
                      - adoptionStatus: 领养状态（available=可领养）
@@ -165,7 +165,7 @@ public class AiChatService {
                 【格式要求】
                 - 使用换行符分段, 每个段落之间空一行
                 - 对于列表项, 每项单独一行
-                - 对于宠物推荐, 格式必须为：
+                - 对于宠物推荐, 格式必须为: 
                   🐾 **宠物名字 - 品种**
                   性格描述...
                   适合...

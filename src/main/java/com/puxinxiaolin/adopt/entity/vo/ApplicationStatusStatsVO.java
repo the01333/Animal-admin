@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class ApplicationStatusStatsVO {
 
     /**
-     * 状态编码（例如：PENDING、APPROVED、REJECTED、CANCELLED）
+     * 状态编码（例如: PENDING、APPROVED、REJECTED、CANCELLED）
      */
     private String status;
 

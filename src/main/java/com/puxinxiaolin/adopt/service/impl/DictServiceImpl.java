@@ -376,7 +376,7 @@ public class DictServiceImpl implements DictService {
         }
 
         if (inserted) {
-            // 有新增项时，刷新缓存，确保下次读取能拿到最新字典
+            // 有新增项时, 刷新缓存, 确保下次读取能拿到最新字典
             refreshCache();
         }
     }

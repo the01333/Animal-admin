@@ -47,7 +47,7 @@ public class RedisConfig {
     private ObjectMapper createObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
 
-        // 设置可见性：允许访问所有字段
+        // 设置可见性: 允许访问所有字段
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
 
         // 启用默认类型, 用于序列化时保存类型信息, 这样反序列化时可以还原为正确的类型

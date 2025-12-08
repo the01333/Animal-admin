@@ -93,7 +93,7 @@ public class AiToolService {
      */
     @Tool(description = "根据用户性格特征推荐最适合的宠物")
     public List<PetVO> recommendPetsByPersonality(
-            @ToolParam(description = "用户性格描述, 如：内向、外向、忙碌、有耐心等", required = true) String userPersonality,
+            @ToolParam(description = "用户性格描述, 如: 内向、外向、忙碌、有耐心等", required = true) String userPersonality,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         // 性格映射到宠物性格
         String petPersonality = mapUserPersonalityToPetPersonality(userPersonality);
@@ -106,7 +106,7 @@ public class AiToolService {
      */
     @Tool(description = "根据用户生活方式推荐合适的宠物")
     public List<PetVO> recommendPetsByLifestyle(
-            @ToolParam(description = "生活方式描述, 如：公寓、有院子、经常出差、有小孩等", required = true) String lifestyle,
+            @ToolParam(description = "生活方式描述, 如: 公寓、有院子、经常出差、有小孩等", required = true) String lifestyle,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         String personality = mapLifestyleToPetPersonality(lifestyle);
         return searchPets(null, personality, "available", limit == null ? 8 : limit);
@@ -118,7 +118,7 @@ public class AiToolService {
      */
     @Tool(description = "获取特定宠物类别的护理指南")
     public List<ContentVO> getPetCareGuide(
-            @ToolParam(description = "宠物类别, 如：cat/dog/rabbit等", required = true) String petCategory,
+            @ToolParam(description = "宠物类别, 如: cat/dog/rabbit等", required = true) String petCategory,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         return queryContent(ContentCategoryEnum.GUIDE.name(), petCategory, limit);
     }
@@ -139,7 +139,7 @@ public class AiToolService {
      */
     @Tool(description = "获取宠物训练和教育指南")
     public List<ContentVO> getTrainingGuide(
-            @ToolParam(description = "宠物类别或训练主题, 如：dog/cat/行为纠正等", required = false) String topic,
+            @ToolParam(description = "宠物类别或训练主题, 如: dog/cat/行为纠正等", required = false) String topic,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         return queryContent(ContentCategoryEnum.GUIDE.name(), topic, limit);
     }
@@ -150,7 +150,7 @@ public class AiToolService {
      */
     @Tool(description = "获取宠物健康和医疗相关的信息")
     public List<ContentVO> getHealthGuide(
-            @ToolParam(description = "健康话题, 如：疫苗、驱虫、常见病等", required = false) String topic,
+            @ToolParam(description = "健康话题, 如: 疫苗、驱虫、常见病等", required = false) String topic,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         String keyword = topic == null ? "健康" : topic;
         return queryContent(ContentCategoryEnum.GUIDE.name(), keyword, limit);
@@ -167,7 +167,7 @@ public class AiToolService {
     }
 
     /**
-     * 性格映射：用户性格 → 宠物性格
+     * 性格映射: 用户性格 → 宠物性格
      */
     private String mapUserPersonalityToPetPersonality(String userPersonality) {
         if (userPersonality == null) return null;
@@ -198,7 +198,7 @@ public class AiToolService {
     }
 
     /**
-     * 生活方式映射：生活方式 → 宠物性格
+     * 生活方式映射: 生活方式 → 宠物性格
      */
     private String mapLifestyleToPetPersonality(String lifestyle) {
         if (lifestyle == null) return null;

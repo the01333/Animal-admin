@@ -112,7 +112,7 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
     @Override
     public boolean isLiked(Long petId) {
         Long userId = StpUtil.getLoginIdAsLong();
-        // 注意：MyBatis Plus 会自动添加 deleted=0 条件, 所以这里不需要额外指定
+        // 注意: MyBatis Plus 会自动添加 deleted=0 条件, 所以这里不需要额外指定
         LambdaQueryWrapper<PetLike> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PetLike::getUserId, userId)
                 .eq(PetLike::getPetId, petId);

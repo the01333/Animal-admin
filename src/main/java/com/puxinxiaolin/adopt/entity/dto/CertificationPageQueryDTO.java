@@ -10,7 +10,7 @@ import lombok.Data;
 public class CertificationPageQueryDTO extends PageInfo {
 
     /**
-     * 认证状态：pending/approved/rejected
+     * 认证状态: pending/approved/rejected
      */
     private String status;
 

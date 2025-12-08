@@ -10,8 +10,8 @@ import com.puxinxiaolin.adopt.entity.dto.AdoptionReviewDTO;
 import com.puxinxiaolin.adopt.entity.vo.AdoptionApplicationVO;
 import com.puxinxiaolin.adopt.service.AdoptionApplicationService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,10 +22,10 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 @RestController
 @RequestMapping({"/adoption", "/application"})
-@RequiredArgsConstructor
 public class AdoptionApplicationController {
     
-    private final AdoptionApplicationService adoptionApplicationService;
+    @Autowired
+    private AdoptionApplicationService adoptionApplicationService;
 
     /**
      * 提交领养申请

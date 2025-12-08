@@ -14,7 +14,7 @@ public class ContentDTO {
     private Long id;
 
     /**
-     * 内容类型：GUIDE 或 STORY
+     * 内容类型: GUIDE 或 STORY
      */
     @NotBlank(message = "分类不能为空")
     private String category;

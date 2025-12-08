@@ -14,7 +14,7 @@ public class SaveMessageDTO {
     private String sessionId;
 
     /**
-     * 角色：user/assistant
+     * 角色: user/assistant
      */
     private String role;
 

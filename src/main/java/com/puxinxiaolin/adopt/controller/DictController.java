@@ -31,7 +31,7 @@ public class DictController {
 
     /**
      * 获取所有字典数据（一次性获取, 带缓存）
-     * 查询策略：先走Redis缓存, 缓存未命中则查询数据库
+     * 查询策略: 先走Redis缓存, 缓存未命中则查询数据库
      */
     @GetMapping("/all")
     public Result<Map<String, Object>> getAllDictData() {

@@ -107,7 +107,7 @@ public class UserController {
      * 用户在线时调用此接口, 自动续约Token的活跃时间
      * 类似Redisson的分布式锁续约机制
      * <p>
-     * 工作原理：
+     * 工作原理: 
      * 1. 用户每次操作时调用此接口
      * 2. 后端刷新Token的活跃时间
      * 3. 确保用户在线时Token永不过期

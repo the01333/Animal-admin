@@ -18,7 +18,7 @@ import java.util.UUID;
 /**
  * Cassandra 对话历史表
  * <p>
- * 表结构：
+ * 表结构: 
  * - session_id: 会话ID（分区键）
  * - timestamp: 消息时间戳（聚类键, 用于排序）
  * - message_id: 消息ID（聚类键, 确保唯一性）

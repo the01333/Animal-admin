@@ -107,7 +107,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     @Override
     public boolean isFavorite(Long petId) {
         Long userId = StpUtil.getLoginIdAsLong();
-        // 注意：MyBatis Plus 会自动添加 deleted=0 条件, 所以这里不需要额外指定
+        // 注意: MyBatis Plus 会自动添加 deleted=0 条件, 所以这里不需要额外指定
         LambdaQueryWrapper<Favorite> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Favorite::getUserId, userId)
                 .eq(Favorite::getPetId, petId);

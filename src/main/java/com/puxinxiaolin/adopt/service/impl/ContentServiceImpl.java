@@ -165,7 +165,7 @@ public class ContentServiceImpl implements ContentService {
         ensureDefaultCategory(result, ContentCategoryEnum.GUIDE);
         ensureDefaultCategory(result, ContentCategoryEnum.STORY);
 
-        // 按 value 排序，避免顺序抖动
+        // 按 value 排序, 避免顺序抖动
         result.sort(Comparator.comparing(ContentCategoryVO::getValue));
         return result;
     }

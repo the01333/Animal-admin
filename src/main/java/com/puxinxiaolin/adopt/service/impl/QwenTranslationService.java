@@ -47,19 +47,19 @@ public class QwenTranslationService implements TranslationService {
 
         String system = """
                 你是一个专业的术语翻译助手。
-                任务：将给定的中文宠物类别翻译成适合作为代码/数据库键使用的英文标识。
-                要求：
+                任务: 将给定的中文宠物类别翻译成适合作为代码/数据库键使用的英文标识。
+                要求: 
                 1. 只输出小写英文。
                 2. 只包含字母、数字和下划线。
                 3. 单词之间使用下划线分隔。
-                4. 不要输出任何解释、标点或其他多余内容，只输出转换后的标识本身。
-                示例：
+                4. 不要输出任何解释、标点或其他多余内容, 只输出转换后的标识本身。
+                示例: 
                 松鼠 -> squirrel
                 金毛 -> golden_retriever
                 英短 -> british_shorthair
                 """;
 
-        String user = "中文宠物类别：" + trimmed;
+        String user = "中文宠物类别: " + trimmed;
 
         try {
             Map<String, Object> request = new HashMap<>();
@@ -100,7 +100,7 @@ public class QwenTranslationService implements TranslationService {
             }
 
             String key = raw.trim().toLowerCase(Locale.ROOT);
-            // 只保留 [a-z0-9_]，其他全部替换为下划线
+            // 只保留 [a-z0-9_], 其他全部替换为下划线
             key = key.replaceAll("[^a-z0-9_]+", "_");
             key = key.replaceAll("^_+|_+$", "");
             if (key.isEmpty()) {
