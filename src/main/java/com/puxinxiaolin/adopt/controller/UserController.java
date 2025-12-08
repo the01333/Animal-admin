@@ -182,7 +182,7 @@ public class UserController {
      * 删除用户（管理员）
      */
     @DeleteMapping("/{id}")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    @SaCheckRole("super_admin")
     public Result<String> deleteUser(@PathVariable Long id) {
         userService.removeById(id);
         return Result.success("删除成功", null);
@@ -192,7 +192,7 @@ public class UserController {
      * 更新用户状态（管理员）
      */
     @PutMapping("/{id}/status")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    @SaCheckRole("super_admin")
     public Result<String> updateUserStatus(@PathVariable Long id, @Valid @RequestBody UpdateUserStatusDTO dto) {
         userService.updateUserStatus(id, dto);
         return Result.success("状态更新成功", null);
@@ -202,7 +202,7 @@ public class UserController {
      * 管理员编辑用户信息/角色/状态
      */
     @PutMapping("/{id}/admin")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    @SaCheckRole("super_admin")
     public Result<String> adminUpdateUser(@PathVariable Long id, @Valid @RequestBody AdminUpdateUserDTO dto) {
         userService.adminUpdateUser(id, dto);
         return Result.success("更新成功", null);

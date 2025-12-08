@@ -86,6 +86,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getEmail, dto.getEmail());
         User user = this.getOne(wrapper);
+        if (user != null && user.getStatus() != null && user.getStatus() == 0) {
+            throw new BizException(ResultCode.USER_DISABLED);
+        }
         if (user == null) {
             user = new User();
             user.setUsername(dto.getEmail());
@@ -114,6 +117,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getPhone, dto.getPhone());
         User user = this.getOne(wrapper);
+        if (user != null && user.getStatus() != null && user.getStatus() == 0) {
+            throw new BizException(ResultCode.USER_DISABLED);
+        }
         if (user == null) {
             user = new User();
             user.setUsername(dto.getPhone());
@@ -391,7 +397,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             User user = this.getById(userId);
 
             Map<String, Object> data = new HashMap<>();
-            data.put("valid", true);
+            boolean enabled = user != null && (user.getStatus() == null || user.getStatus() == 1);
+            data.put("valid", enabled);
             data.put("userId", userId);
             data.put("username", user != null ? user.getUsername() : null);
             data.put("role", user != null ? user.getRole() : null);
@@ -441,7 +448,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Long userId = StpUtil.getLoginIdAsLong();
         User user = this.getById(userId);
         return user != null && StrUtil.isNotBlank(user.getRole()) &&
-                ("super_admin".equals(user.getRole()) || "admin".equals(user.getRole()) || "application_auditor".equals(user.getRole()));
+                ("super_admin".equals(user.getRole()) || "admin".equals(user.getRole()));
     }
 
     /**
@@ -457,8 +464,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             throw new BizException(ResultCode.USER_NOT_FOUND);
         }
-        user.setStatus(dto.getStatus());
+
+        Integer oldStatus = user.getStatus();
+        Integer newStatus = dto.getStatus();
+
+        // 只有从「非禁用」变为「禁用」时才需要强制下线
+        boolean needKick = (newStatus != null && newStatus == 0
+                && (oldStatus == null || oldStatus != 0));
+
+        user.setStatus(newStatus);
         this.updateById(user);
+
+        if (needKick) {
+            try {
+                StpUtil.logout(user.getId());
+                log.info("用户已被禁用并强制下线, userId={}", user.getId());
+            } catch (Exception e) {
+                log.warn("禁用用户时强制下线失败, userId={}, err={}", user.getId(), e.getMessage());
+            }
+        }
     }
 
     /**
@@ -504,6 +528,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             user.setEmail(dto.getEmail());
         }
 
+        Integer oldStatus = user.getStatus();
+        boolean disabled = false;
+
         if (StrUtil.isNotBlank(dto.getNickname())) {
             user.setNickname(dto.getNickname());
         }
@@ -512,16 +539,40 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         if (dto.getStatus() != null) {
             user.setStatus(dto.getStatus());
+            // 只有从非禁用 -> 禁用时才需要强制下线
+            disabled = (dto.getStatus() == 0
+                    && (oldStatus == null || oldStatus != 0));
         }
         if (StrUtil.isNotBlank(dto.getRole())) {
             UserRoleEnum roleEnum = UserRoleEnum.getByCode(dto.getRole());
             if (roleEnum == null) {
                 throw new BizException(ResultCode.BAD_REQUEST.getCode(), "角色编码无效");
             }
+
+            // 限制系统中最多只有一个超级管理员
+            if (roleEnum == UserRoleEnum.SUPER_ADMIN) {
+                long superAdminCount = this.count(new LambdaQueryWrapper<User>()
+                        .eq(User::getRole, UserRoleEnum.SUPER_ADMIN.getCode())
+                        .ne(User::getId, id));
+                if (superAdminCount > 0) {
+                    throw new BizException(ResultCode.BAD_REQUEST.getCode(), "系统中已存在超级管理员，无法创建第二个超级管理员");
+                }
+            }
+
             user.setRole(roleEnum.getCode());
         }
 
         this.updateById(user);
+
+        // 如果通过管理员编辑将用户禁用，强制该用户所有会话下线
+        if (disabled) {
+            try {
+                StpUtil.logout(user.getId());
+                log.info("管理员编辑用户后将其禁用并强制下线, userId={}", user.getId());
+            } catch (Exception e) {
+                log.warn("管理员编辑用户禁用时强制下线失败, userId={}, err={}", user.getId(), e.getMessage());
+            }
+        }
     }
 
     /**
