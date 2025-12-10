@@ -87,8 +87,8 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
     /**
      * 构建会话 VO
      *
-     * @param session           会话实体
-     * @param excludeAdminUser  是否排除 user 角色为 admin/super_admin 的会话
+     * @param session          会话实体
+     * @param excludeAdminUser 是否排除 user 角色为 admin/super_admin 的会话
      */
     private CustomerServiceSessionVO buildSessionVO(CustomerServiceSession session, boolean excludeAdminUser) {
         if (session == null) {
@@ -110,7 +110,7 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
                 log.warn("查询用户在线状态失败, userId={}", session.getUserId(), e);
             }
         }
-        
+
         CustomerServiceSessionVO.CustomerServiceSessionVOBuilder builder = CustomerServiceSessionVO.builder()
                 .id(session.getId())
                 .userId(session.getUserId())
@@ -121,12 +121,10 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
                 .unreadForUser(session.getUnreadForUser())
                 .unreadForAgent(session.getUnreadForAgent())
                 .online(online);
-
         if (user != null) {
             builder.userNickname(user.getNickname());
             builder.userAvatar(user.getAvatar());
         }
-
         return builder.build();
     }
 }

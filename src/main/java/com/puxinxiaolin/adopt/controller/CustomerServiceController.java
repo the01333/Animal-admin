@@ -213,7 +213,6 @@ public class CustomerServiceController {
             int unreadForUser = session.getUnreadForUser() == null ? 0 : session.getUnreadForUser();
             session.setUnreadForUser(unreadForUser + 1);
         }
-
         customerServiceSessionService.updateById(session);
 
         // 构建返回 VO

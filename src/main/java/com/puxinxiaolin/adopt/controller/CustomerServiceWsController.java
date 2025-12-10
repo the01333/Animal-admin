@@ -14,8 +14,8 @@ import com.puxinxiaolin.adopt.mapper.ChatMessageMapper;
 import com.puxinxiaolin.adopt.service.CustomerServiceLongPollingService;
 import com.puxinxiaolin.adopt.service.CustomerServiceSessionService;
 import com.puxinxiaolin.adopt.service.UserService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -26,25 +26,30 @@ import java.util.Objects;
 
 /**
  * 人工客服 WebSocket STOMP 控制器
- *
- * 约定:
- * - 客户端发送:
- *   - /app/cs/chat      -> CsWsChatMessageDTO
- *   - /app/cs/read-ack  -> CsWsReadAckDTO
- * - 服务端推送:
- *   - /user/queue/cs/chat   -> CustomerServiceMessageVO
- *   - /user/queue/cs/unread -> CsWsUnreadDTO
+ * <p>
+ * 约定: <br />
+ * - 客户端发送: <br />
+ * - /app/cs/chat      -> CsWsChatMessageDTO <br />
+ * - /app/cs/read-ack  -> CsWsReadAckDTO
+ * <p>
+ * - 服务端推送: <br />
+ * - /user/queue/cs/chat   -> CustomerServiceMessageVO <br />
+ * - /user/queue/cs/unread -> CsWsUnreadDTO
  */
 @Slf4j
 @Controller
-@RequiredArgsConstructor
 public class CustomerServiceWsController {
 
-    private final CustomerServiceSessionService customerServiceSessionService;
-    private final ChatMessageMapper chatMessageMapper;
-    private final SimpMessagingTemplate messagingTemplate;
-    private final CustomerServiceLongPollingService customerServiceLongPollingService;
-    private final UserService userService;
+    @Autowired
+    private CustomerServiceSessionService customerServiceSessionService;
+    @Autowired
+    private ChatMessageMapper chatMessageMapper;
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+    @Autowired
+    private CustomerServiceLongPollingService customerServiceLongPollingService;
+    @Autowired
+    private UserService userService;
 
     /**
      * 处理聊天消息
@@ -81,7 +86,7 @@ public class CustomerServiceWsController {
         msg.setContent(dto.getContent());
         msg.setSenderId(currentUserId);
 
-        Long receiverId;
+        Long receiverId = null;
         if (session.getUserId() != null && currentUserId.equals(session.getUserId())) {
             receiverId = session.getAgentId();
         } else {
@@ -96,13 +101,12 @@ public class CustomerServiceWsController {
         session.setLastTime(java.time.LocalDateTime.now());
 
         if (session.getUserId() != null && currentUserId.equals(session.getUserId())) {
-            Integer unreadForAgent = session.getUnreadForAgent() == null ? 0 : session.getUnreadForAgent();
+            int unreadForAgent = session.getUnreadForAgent() == null ? 0 : session.getUnreadForAgent();
             session.setUnreadForAgent(unreadForAgent + 1);
         } else {
-            Integer unreadForUser = session.getUnreadForUser() == null ? 0 : session.getUnreadForUser();
+            int unreadForUser = session.getUnreadForUser() == null ? 0 : session.getUnreadForUser();
             session.setUnreadForUser(unreadForUser + 1);
         }
-
         customerServiceSessionService.updateById(session);
 
         CustomerServiceMessageVO.CustomerServiceMessageVOBuilder builder = CustomerServiceMessageVO.builder()
