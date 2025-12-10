@@ -59,6 +59,7 @@ public class CustomerServiceLongPollingServiceImpl implements CustomerServiceLon
         if (list == null || list.isEmpty()) {
             return;
         }
+        
         for (DeferredResult<Result<List<CustomerServiceMessageVO>>> deferred : list) {
             try {
                 if (!deferred.isSetOrExpired()) {

@@ -171,9 +171,6 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
             viewCountService.incrementPetViewWithLimit(id, userId);
         }
 
-        // TODO: 看情况是否需要封装一个全局用户上下文并使用这个防刷的方法
-//        viewCountService.incrementPetView(id);
-
         PetVO vo = BeanUtil.copyProperties(pet, PetVO.class);
         PetCategoryEnum categoryEnum = PetCategoryEnum.getByCode(pet.getCategory());
         vo.setCategoryText(categoryEnum != null ? categoryEnum.getDesc() : pet.getCategory());

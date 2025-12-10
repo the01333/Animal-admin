@@ -1,6 +1,5 @@
 package com.puxinxiaolin.adopt.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.puxinxiaolin.adopt.common.ResultCode;
 import com.puxinxiaolin.adopt.entity.dto.CsSendMessageDTO;
 import com.puxinxiaolin.adopt.entity.dto.CsWsChatMessageDTO;
@@ -8,11 +7,13 @@ import com.puxinxiaolin.adopt.entity.dto.CsWsReadAckDTO;
 import com.puxinxiaolin.adopt.entity.dto.CsWsUnreadDTO;
 import com.puxinxiaolin.adopt.entity.entity.ChatMessage;
 import com.puxinxiaolin.adopt.entity.entity.CustomerServiceSession;
+import com.puxinxiaolin.adopt.entity.entity.User;
 import com.puxinxiaolin.adopt.entity.vo.CustomerServiceMessageVO;
 import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.ChatMessageMapper;
 import com.puxinxiaolin.adopt.service.CustomerServiceLongPollingService;
 import com.puxinxiaolin.adopt.service.CustomerServiceSessionService;
+import com.puxinxiaolin.adopt.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -20,6 +21,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
 import java.util.Objects;
 
 /**
@@ -42,13 +44,14 @@ public class CustomerServiceWsController {
     private final ChatMessageMapper chatMessageMapper;
     private final SimpMessagingTemplate messagingTemplate;
     private final CustomerServiceLongPollingService customerServiceLongPollingService;
+    private final UserService userService;
 
     /**
      * 处理聊天消息
      */
     @MessageMapping("/cs/chat")
-    public void handleChat(@Payload CsWsChatMessageDTO payload) {
-        Long currentUserId = StpUtil.getLoginIdAsLong();
+    public void handleChat(@Payload CsWsChatMessageDTO payload, Principal principal) {
+        Long currentUserId = resolveCurrentUserId(principal);
         log.info("[WS] 收到聊天消息, sessionId={}, userId={}", payload.getSessionId(), currentUserId);
 
         if (payload.getSessionId() == null || payload.getSessionId() <= 0) {
@@ -60,7 +63,7 @@ public class CustomerServiceWsController {
             throw new BizException(ResultCode.NOT_FOUND, "会话不存在");
         }
 
-        boolean isAdmin = StpUtil.hasRole("admin") || StpUtil.hasRole("super_admin");
+        boolean isAdmin = isAdminUser(currentUserId);
         if (!isAdmin && !Objects.equals(session.getUserId(), currentUserId)) {
             throw new BizException(ResultCode.FORBIDDEN, "无权发送该会话消息");
         }
@@ -155,8 +158,8 @@ public class CustomerServiceWsController {
      * 处理已读回执
      */
     @MessageMapping("/cs/read-ack")
-    public void handleReadAck(@Payload CsWsReadAckDTO payload) {
-        Long currentUserId = StpUtil.getLoginIdAsLong();
+    public void handleReadAck(@Payload CsWsReadAckDTO payload, Principal principal) {
+        Long currentUserId = resolveCurrentUserId(principal);
         log.info("[WS] 收到已读回执, sessionId={}, readSide={}, userId={}",
                 payload.getSessionId(), payload.getReadSide(), currentUserId);
 
@@ -169,7 +172,7 @@ public class CustomerServiceWsController {
             throw new BizException(ResultCode.NOT_FOUND, "会话不存在");
         }
 
-        boolean isAdmin = StpUtil.hasRole("admin") || StpUtil.hasRole("super_admin");
+        boolean isAdmin = isAdminUser(currentUserId);
         if (!isAdmin && !Objects.equals(session.getUserId(), currentUserId)) {
             throw new BizException(ResultCode.FORBIDDEN, "无权更新该会话未读状态");
         }
@@ -193,5 +196,28 @@ public class CustomerServiceWsController {
                 "/queue/cs/unread",
                 unreadDTO
         );
+    }
+
+    private Long resolveCurrentUserId(Principal principal) {
+        if (principal == null || principal.getName() == null) {
+            throw new BizException(ResultCode.UNAUTHORIZED, "WebSocket 会话未登录");
+        }
+        try {
+            return Long.valueOf(principal.getName());
+        } catch (NumberFormatException e) {
+            throw new BizException(ResultCode.UNAUTHORIZED, "WebSocket 会话用户ID非法");
+        }
+    }
+
+    private boolean isAdminUser(Long userId) {
+        if (userId == null) {
+            return false;
+        }
+        User user = userService.getById(userId);
+        if (user == null || user.getRole() == null) {
+            return false;
+        }
+        String role = user.getRole();
+        return "admin".equals(role) || "super_admin".equals(role);
     }
 }

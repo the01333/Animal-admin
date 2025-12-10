@@ -29,10 +29,10 @@ import java.util.Objects;
 
 @Configuration
 public class AiConfig {
-    
+
     @Autowired
     private AiToolService aiToolService;
-    
+
     private static final String SYSTEM_PROMPT = """
             你是宠物领养系统的客服, 只回答与本系统相关的问题, 不相关的问题直接拒绝。
             """;
@@ -45,9 +45,8 @@ public class AiConfig {
                 .defaultTools(aiToolService)
                 .defaultAdvisors(
                         new SimpleLoggerAdvisor()
-                        // TODO [YCcLin 2025/11/21]: 基于 cassandra 的记忆化存储
                 ).build();
-                
+
     }
 
     /**

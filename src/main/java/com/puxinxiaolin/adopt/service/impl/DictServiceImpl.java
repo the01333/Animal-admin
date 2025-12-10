@@ -95,7 +95,7 @@ public class DictServiceImpl implements DictService {
             }
         }
 
-        // 4. 写入缓存（使用Hash结构）
+        // 4. 写入缓存（使用 Hash 结构）
         if (!result.isEmpty()) {
             redisTemplate.opsForHash().putAll(RedisConstant.DICT_PET_CATEGORY, result);
             redisTemplate.expire(RedisConstant.DICT_PET_CATEGORY, CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
@@ -339,7 +339,7 @@ public class DictServiceImpl implements DictService {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .distinct()
-                .collect(Collectors.toList());
+                .toList();
         if (normalizedKeys.isEmpty()) {
             return;
         }
@@ -348,7 +348,6 @@ public class DictServiceImpl implements DictService {
         LambdaQueryWrapper<DictItem> allWrapper = new LambdaQueryWrapper<>();
         allWrapper.eq(DictItem::getDictType, dictType);
         List<DictItem> existingItems = dictItemMapper.selectList(allWrapper);
-
         Set<String> existingKeys = existingItems.stream()
                 .map(DictItem::getDictKey)
                 .filter(Objects::nonNull)

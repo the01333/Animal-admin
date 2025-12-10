@@ -224,8 +224,6 @@ public class ViewCountSyncTask {
 
     /**
      * 手动触发同步（用于测试或紧急情况）
-     * <p>
-     * TODO: 可以同于前端后台中的系统设置
      */
     public void manualSync() {
         log.info("手动触发浏览次数同步");

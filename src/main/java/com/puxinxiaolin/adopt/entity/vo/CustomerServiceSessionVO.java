@@ -22,23 +22,38 @@ public class CustomerServiceSessionVO implements Serializable {
 
     private Long id;
 
-    /** 用户信息 */
+    /**
+     * 用户信息
+     */
     private Long userId;
     private String userNickname;
     private String userAvatar;
 
-    /** 客服信息 */
+    /**
+     * 客服信息
+     */
     private Long agentId;
     private String agentNickname;
 
-    /** 会话状态: OPEN / CLOSED */
+    /**
+     * 会话状态: OPEN / CLOSED
+     */
     private String status;
 
-    /** 最近一条消息内容及时间 */
+    /**
+     * 最近一条消息内容及时间
+     */
     private String lastMessage;
     private LocalDateTime lastTime;
 
-    /** 未读数 */
+    /**
+     * 未读数
+     */
     private Integer unreadForUser;
     private Integer unreadForAgent;
+
+    /**
+     * 用户当前是否在线（基于 WebSocket 会话）
+     */
+    private Boolean online;
 }

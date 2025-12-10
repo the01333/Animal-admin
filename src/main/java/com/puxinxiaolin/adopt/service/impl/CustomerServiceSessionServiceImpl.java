@@ -13,9 +13,11 @@ import com.puxinxiaolin.adopt.service.CustomerServiceSessionService;
 import com.puxinxiaolin.adopt.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -28,6 +30,7 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
         implements CustomerServiceSessionService {
 
     private final UserService userService;
+    private final SimpUserRegistry simpUserRegistry;
 
     @Override
     public CustomerServiceSessionVO openOrGetCurrentUserSession() {
@@ -65,7 +68,9 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
 
         Page<CustomerServiceSession> page = this.page(new Page<>(current, size), wrapper);
         List<CustomerServiceSessionVO> voList = page.getRecords().stream()
-                .map(this::buildSessionVO)
+                // 管理端列表中不展示管理员/超级管理员自己作为"用户"发起的会话
+                .map(session -> buildSessionVO(session, true))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         Page<CustomerServiceSessionVO> voPage = new Page<>(current, size);
@@ -75,13 +80,37 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
     }
 
     private CustomerServiceSessionVO buildSessionVO(CustomerServiceSession session) {
+        // 默认不过滤管理员账号, 供前台 openOrGetCurrentUserSession 使用
+        return buildSessionVO(session, false);
+    }
+
+    /**
+     * 构建会话 VO
+     *
+     * @param session           会话实体
+     * @param excludeAdminUser  是否排除 user 角色为 admin/super_admin 的会话
+     */
+    private CustomerServiceSessionVO buildSessionVO(CustomerServiceSession session, boolean excludeAdminUser) {
         if (session == null) {
             return null;
         }
         User user = null;
+        boolean online = false;
         if (session.getUserId() != null) {
             user = userService.getById(session.getUserId());
+            if (excludeAdminUser && user != null) {
+                String role = user.getRole();
+                if ("admin".equals(role) || "super_admin".equals(role)) {
+                    return null;
+                }
+            }
+            try {
+                online = simpUserRegistry.getUser(String.valueOf(session.getUserId())) != null;
+            } catch (Exception e) {
+                log.warn("查询用户在线状态失败, userId={}", session.getUserId(), e);
+            }
         }
+        
         CustomerServiceSessionVO.CustomerServiceSessionVOBuilder builder = CustomerServiceSessionVO.builder()
                 .id(session.getId())
                 .userId(session.getUserId())
@@ -90,7 +119,8 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
                 .lastMessage(session.getLastMessage())
                 .lastTime(session.getLastTime())
                 .unreadForUser(session.getUnreadForUser())
-                .unreadForAgent(session.getUnreadForAgent());
+                .unreadForAgent(session.getUnreadForAgent())
+                .online(online);
 
         if (user != null) {
             builder.userNickname(user.getNickname());

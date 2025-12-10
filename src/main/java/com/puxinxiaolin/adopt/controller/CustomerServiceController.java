@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.puxinxiaolin.adopt.common.Result;
 import com.puxinxiaolin.adopt.common.ResultCode;
 import com.puxinxiaolin.adopt.entity.dto.CsSendMessageDTO;
+import com.puxinxiaolin.adopt.entity.dto.CsWsUnreadDTO;
 import com.puxinxiaolin.adopt.entity.entity.ChatMessage;
 import com.puxinxiaolin.adopt.entity.entity.CustomerServiceSession;
 import com.puxinxiaolin.adopt.entity.vo.CustomerServiceMessageVO;
@@ -20,6 +21,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.user.SimpSession;
+import org.springframework.messaging.simp.user.SimpSubscription;
+import org.springframework.messaging.simp.user.SimpUser;
+import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
@@ -30,7 +37,7 @@ import java.util.stream.Collectors;
 
 /**
  * 人工客服控制器
- *
+ * <p>
  * 前台用户: 打开会话、查看自己的消息
  * 后台客服: 查看会话列表、查看会话消息
  */
@@ -44,6 +51,8 @@ public class CustomerServiceController {
     private final CustomerServiceSessionService customerServiceSessionService;
     private final ChatMessageMapper chatMessageMapper;
     private final CustomerServiceLongPollingService customerServiceLongPollingService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final SimpUserRegistry simpUserRegistry;
 
     /**
      * 前台用户: 获取或创建当前用户的人工客服会话
@@ -169,8 +178,7 @@ public class CustomerServiceController {
             throw new BizException(ResultCode.FORBIDDEN, "无权发送该会话消息");
         }
 
-        String messageType = (body.getMessageType() == null || body.getMessageType().isEmpty())
-                ? "text" : body.getMessageType();
+        String messageType = StringUtils.isBlank(body.getMessageType()) ? "text" : body.getMessageType();
 
         // 构造消息实体
         ChatMessage msg = new ChatMessage();
@@ -198,11 +206,11 @@ public class CustomerServiceController {
 
         if (session.getUserId() != null && currentUserId.equals(session.getUserId())) {
             // 用户发消息 -> 客服未读数 +1
-            Integer unreadForAgent = session.getUnreadForAgent() == null ? 0 : session.getUnreadForAgent();
+            int unreadForAgent = session.getUnreadForAgent() == null ? 0 : session.getUnreadForAgent();
             session.setUnreadForAgent(unreadForAgent + 1);
         } else {
             // 客服发消息 -> 用户未读数 +1
-            Integer unreadForUser = session.getUnreadForUser() == null ? 0 : session.getUnreadForUser();
+            int unreadForUser = session.getUnreadForUser() == null ? 0 : session.getUnreadForUser();
             session.setUnreadForUser(unreadForUser + 1);
         }
 
@@ -213,6 +221,33 @@ public class CustomerServiceController {
 
         // 通知所有长轮询等待者有新消息
         customerServiceLongPollingService.publishNewMessage(session.getId(), vo);
+
+        // 通过 WebSocket 推送最新未读汇总给接收方 (用户或客服)，用于驱动前台/后台入口红点
+        if (receiverId != null) {
+            log.info("[WS] 准备推送未读汇总, receiverId={}, unreadForUser={}, unreadForAgent={}",
+                    receiverId, session.getUnreadForUser(), session.getUnreadForAgent());
+
+            // 打印当前在线的 WebSocket 用户及其订阅, 便于排查 convertAndSendToUser 是否能命中
+            for (SimpUser user : simpUserRegistry.getUsers()) {
+                log.info("[WS] 在线用户: name={}, sessionCount={}", user.getName(), user.getSessions().size());
+                for (SimpSession simpSession : user.getSessions()) {
+                    for (SimpSubscription sub : simpSession.getSubscriptions()) {
+                        log.info("[WS]   sessionId={}, destination={}", simpSession.getId(), sub.getDestination());
+                    }
+                }
+            }
+
+            CsWsUnreadDTO unreadDTO = CsWsUnreadDTO.builder()
+                    .unreadForUser(session.getUnreadForUser())
+                    .unreadForAgent(session.getUnreadForAgent())
+                    .build();
+
+            messagingTemplate.convertAndSendToUser(
+                    String.valueOf(receiverId),
+                    "/queue/cs/unread",
+                    unreadDTO
+            );
+        }
 
         return Result.success(vo);
     }
