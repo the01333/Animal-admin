@@ -102,13 +102,13 @@ logging:
     org.springframework.ai: debug
   pattern:
 #    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
-    console: "%clr{%date{yyyy-MM-dd HH:mm:ss}}{cyan} %clr{[%thread]}{blue} %clr{%-5level}{highlightLevel} %clr{%logger{36}}{magenta} %clr{---} %clr{%msg%n}{faint}"
-#    console: "%clr{%date{yyyy-MM-dd HH:mm:ss}}{cyan} %clr{[%thread]}{blue} %clr{%-5level}{highlightLevel} %clr{%logger{36}}{magenta} %clr{---}{cyan} %clr{%msg%n}{faint}"
+#    console: "%clr{%date{yyyy-MM-dd HH:mm:ss}}{cyan} %clr{[%thread]}{blue} %clr{%-5level}{highlightLevel} %clr{%logger{36}}{magenta} %clr{---} %clr{%msg%n}{faint}"
+    console: "%clr{%date{yyyy-MM-dd HH:mm:ss}}{cyan} %clr{[%thread]}{blue} %clr{%-4level}{highlightLevel} %clr{%logger{36}}{magenta}  %clr{%msg%n}{faint}"
 
 minio:
   endpoint: http://localhost:9000
-  access-key: 4KNM4j457fx0WaZdEK9u
-  secret-key: 02Tpd8Hv1p1DbS3Pscul57jK8mZA1dfysOpA1TpG
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
   bucket-name: animal-adopt
   public-base-url: http://localhost:9000
 

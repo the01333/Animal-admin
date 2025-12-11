@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 public class AdoptionReviewDTO {
 
-    /** 审核状态：APPROVED/REJECTED */
+    /** 审核状态: APPROVED/REJECTED */
     @NotBlank(message = "审核状态不能为空")
     private String status;
 

@@ -1,14 +1,18 @@
 package com.puxinxiaolin.adopt.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.puxinxiaolin.adopt.constants.DateConstant;
 import com.puxinxiaolin.adopt.entity.entity.Guide;
 import com.puxinxiaolin.adopt.entity.entity.GuideFavorite;
 import com.puxinxiaolin.adopt.entity.entity.GuideLike;
+import com.puxinxiaolin.adopt.entity.vo.DictItemVO;
 import com.puxinxiaolin.adopt.entity.vo.GuideVO;
 import com.puxinxiaolin.adopt.mapper.GuideFavoriteMapper;
 import com.puxinxiaolin.adopt.mapper.GuideLikeMapper;
 import com.puxinxiaolin.adopt.mapper.GuideMapper;
+import com.puxinxiaolin.adopt.service.DictService;
 import com.puxinxiaolin.adopt.service.GuideService;
+import com.puxinxiaolin.adopt.service.impl.OssUrlService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +32,8 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
     private GuideFavoriteMapper guideFavoriteMapper;
     @Autowired
     private OssUrlService ossUrlService;
+    @Autowired
+    private DictService dictService;
 
     @Override
     public List<GuideVO> getAllGuides() {
@@ -39,7 +45,8 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
     }
 
     @Override
-    public GuideVO getGuideDetail(Long id, Long userId) {
+    public GuideVO getGuideDetail(Long id) {
+        Long userId = StpUtil.isLogin() ? StpUtil.getLoginIdAsLong() : null;
         Guide guide = this.getById(id);
         if (guide == null) {
             return null;
@@ -67,8 +74,11 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
         }
     }
 
-    @Override
-    public void likeGuide(Long guideId, Long userId) {
+    /**
+     * 点赞指南
+     */
+    public void likeGuide(Long guideId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         // 检查是否已经点赞
         int count = guideLikeMapper.checkUserLiked(userId, guideId);
         if (count == 0) {
@@ -77,24 +87,30 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
             guideLike.setGuideId(guideId);
             guideLikeMapper.insert(guideLike);
 
-            // 注意：指南表中没有likes字段, 只有likeCount通过查询t_guide_like表计算
+            // 注意: 指南表中没有likes字段, 只有likeCount通过查询t_guide_like表计算
             // 所以这里不需要更新指南表
         }
     }
 
-    @Override
-    public void unlikeGuide(Long guideId, Long userId) {
+    /**
+     * 取消点赞指南
+     */
+    public void unlikeGuide(Long guideId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         LambdaQueryWrapper<GuideLike> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(GuideLike::getUserId, userId)
                 .eq(GuideLike::getGuideId, guideId);
         guideLikeMapper.delete(wrapper);
 
-        // 注意：指南表中没有likes字段, 只有likeCount通过查询t_guide_like表计算
+        // 注意: 指南表中没有likes字段, 只有likeCount通过查询t_guide_like表计算
         // 所以这里不需要更新指南表
     }
 
-    @Override
-    public void favoriteGuide(Long guideId, Long userId) {
+    /**
+     * 收藏指南
+     */
+    public void favoriteGuide(Long guideId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         // 检查是否已经收藏
         int count = guideFavoriteMapper.checkUserFavorited(userId, guideId);
         if (count == 0) {
@@ -105,8 +121,11 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
         }
     }
 
-    @Override
-    public void unfavoriteGuide(Long guideId, Long userId) {
+    /**
+     * 取消收藏指南
+     */
+    public void unfavoriteGuide(Long guideId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         LambdaQueryWrapper<GuideFavorite> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(GuideFavorite::getUserId, userId)
                 .eq(GuideFavorite::getGuideId, guideId);
@@ -114,13 +133,17 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
     }
 
     @Override
-    public boolean isGuideLiked(Long guideId, Long userId) {
+    public boolean isGuideLiked(Long guideId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         int count = guideLikeMapper.checkUserLiked(userId, guideId);
         return count > 0;
     }
 
-    @Override
-    public boolean isGuideFavorited(Long guideId, Long userId) {
+    /**
+     * 检查用户是否已收藏指南
+     */
+    public boolean isGuideFavorited(Long guideId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         int count = guideFavoriteMapper.checkUserFavorited(userId, guideId);
         return count > 0;
     }
@@ -172,10 +195,21 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
 
     @Override
     public List<String> getAllCategories() {
-        // 查询所有指南, 提取不重复的分类
+        // 1. 优先从通用字典读取指南分类（guide_category）
+        List<DictItemVO> dictItems = dictService.listDictItems("guide_category");
+        if (dictItems != null && !dictItems.isEmpty()) {
+            return dictItems.stream()
+                    .map(DictItemVO::getDictKey)
+                    .filter(category -> category != null && !category.isEmpty())
+                    .distinct()
+                    .collect(Collectors.toList());
+        }
+
+        // 2. 字典为空时, 回退到从指南表中提取不重复分类
         List<Guide> guides = this.list();
         return guides.stream()
                 .map(Guide::getCategory)
+                .filter(category -> category != null && !category.isEmpty())
                 .distinct()
                 .collect(Collectors.toList());
     }

@@ -1,16 +1,23 @@
 package com.puxinxiaolin.adopt.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.constants.DateConstant;
 import com.puxinxiaolin.adopt.entity.dto.AdoptionApplicationDTO;
+import com.puxinxiaolin.adopt.entity.dto.AdoptionApplicationPageQueryDTO;
+import com.puxinxiaolin.adopt.entity.dto.AdoptionReviewDTO;
 import com.puxinxiaolin.adopt.entity.entity.AdoptionApplication;
 import com.puxinxiaolin.adopt.entity.entity.Pet;
 import com.puxinxiaolin.adopt.entity.entity.User;
 import com.puxinxiaolin.adopt.entity.vo.AdoptionApplicationVO;
-import com.puxinxiaolin.adopt.enums.ApplicationStatusEnum;
 import com.puxinxiaolin.adopt.enums.AdoptionStatusEnum;
+import com.puxinxiaolin.adopt.enums.ApplicationStatusEnum;
 import com.puxinxiaolin.adopt.enums.PetCategoryEnum;
 import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.AdoptionApplicationMapper;
@@ -18,23 +25,13 @@ import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.service.AdoptionApplicationService;
 import com.puxinxiaolin.adopt.service.PetService;
 import com.puxinxiaolin.adopt.service.UserService;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -44,16 +41,15 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicationMapper, AdoptionApplication>
-        implements AdoptionApplicationService {
-
+public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicationMapper, AdoptionApplication> implements AdoptionApplicationService {
     private final PetService petService;
     private final PetMapper petMapper;
     private final UserService userService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long submitApplication(AdoptionApplicationDTO applicationDTO, Long userId) {
+    public Long submitApplication(AdoptionApplicationDTO applicationDTO) {
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("用户提交领养申请, 用户ID: {}, 宠物ID: {}", userId, applicationDTO.getPetId());
 
         // 检查宠物是否存在
@@ -68,7 +64,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         }
 
         // 检查用户是否已申请该宠物
-        if (hasApplied(userId, applicationDTO.getPetId())) {
+        if (hasApplied(applicationDTO.getPetId())) {
             throw new BizException(ResultCode.ADOPTION_ALREADY_EXISTS);
         }
 
@@ -96,14 +92,16 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
     }
 
     @Override
-    public Page<AdoptionApplicationVO> queryUserApplications(Page<AdoptionApplication> page, Long userId, String status) {
-        log.info("查询用户领养申请, 用户ID: {}, 状态: {}", userId, status);
+    public Page<AdoptionApplicationVO> queryUserApplications(AdoptionApplicationPageQueryDTO queryDTO) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        log.info("查询用户领养申请, 用户ID: {}, 状态: {}", userId, queryDTO.getStatus());
 
+        Page<AdoptionApplication> page = new Page<>(queryDTO.getCurrent(), queryDTO.getSize());
         LambdaQueryWrapper<AdoptionApplication> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AdoptionApplication::getUserId, userId);
 
-        if (StrUtil.isNotBlank(status)) {
-            wrapper.eq(AdoptionApplication::getStatus, status.toLowerCase(Locale.ROOT));
+        if (StrUtil.isNotBlank(queryDTO.getStatus())) {
+            wrapper.eq(AdoptionApplication::getStatus, queryDTO.getStatus().toLowerCase(Locale.ROOT));
         }
 
         wrapper.orderByDesc(AdoptionApplication::getCreateTime);
@@ -117,19 +115,20 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
     }
 
     @Override
-    public Page<AdoptionApplicationVO> queryAllApplications(Page<AdoptionApplication> page, String status, String keyword) {
-        log.info("查询所有领养申请, 状态: {}, 关键词: {}", status, keyword);
+    public Page<AdoptionApplicationVO> queryAllApplications(AdoptionApplicationPageQueryDTO queryDTO) {
+        log.info("查询所有领养申请, 状态: {}, 关键词: {}", queryDTO.getStatus(), queryDTO.getKeyword());
 
+        Page<AdoptionApplication> page = new Page<>(queryDTO.getCurrent(), queryDTO.getSize());
         LambdaQueryWrapper<AdoptionApplication> wrapper = new LambdaQueryWrapper<>();
-        if (StrUtil.isNotBlank(status)) {
-            wrapper.eq(AdoptionApplication::getStatus, status.toLowerCase(Locale.ROOT));
+        if (StrUtil.isNotBlank(queryDTO.getStatus())) {
+            wrapper.eq(AdoptionApplication::getStatus, queryDTO.getStatus().toLowerCase(Locale.ROOT));
         }
-        if (StrUtil.isNotBlank(keyword)) {
+        if (StrUtil.isNotBlank(queryDTO.getKeyword())) {
             List<User> matchedUsers = userService.lambdaQuery()
-                    .like(User::getUsername, keyword)
-                    .or().like(User::getNickname, keyword)
-                    .or().like(User::getPhone, keyword)
-                    .or().like(User::getEmail, keyword)
+                    .like(User::getUsername, queryDTO.getKeyword())
+                    .or().like(User::getNickname, queryDTO.getKeyword())
+                    .or().like(User::getPhone, queryDTO.getKeyword())
+                    .or().like(User::getEmail, queryDTO.getKeyword())
                     .list();
             Set<Long> matchedUserIds = matchedUsers.stream()
                     .map(User::getId)
@@ -137,10 +136,10 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
                     .collect(Collectors.toSet());
 
             wrapper.and(qw -> {
-                qw.like(AdoptionApplication::getApplicationNo, keyword)
-                        .or().like(AdoptionApplication::getReason, keyword)
-                        .or().like(AdoptionApplication::getContactPhone, keyword)
-                        .or().like(AdoptionApplication::getContactAddress, keyword);
+                qw.like(AdoptionApplication::getApplicationNo, queryDTO.getKeyword())
+                        .or().like(AdoptionApplication::getReason, queryDTO.getKeyword())
+                        .or().like(AdoptionApplication::getContactPhone, queryDTO.getKeyword())
+                        .or().like(AdoptionApplication::getContactAddress, queryDTO.getKeyword());
                 if (!matchedUserIds.isEmpty()) {
                     qw.or().in(AdoptionApplication::getUserId, matchedUserIds);
                 }
@@ -167,7 +166,9 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean reviewApplication(Long id, String status, String reviewComment, Long reviewerId) {
+    public void reviewApplication(Long id, AdoptionReviewDTO reviewDTO) {
+        Long reviewerId = StpUtil.getLoginIdAsLong();
+        String status = reviewDTO.getStatus();
         log.info("审核领养申请, ID: {}, 状态: {}, 审核人: {}", id, status, reviewerId);
 
         // 查询申请
@@ -182,14 +183,14 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         }
 
         // 验证状态参数
-        ApplicationStatusEnum targetStatus = ApplicationStatusEnum.fromCode(status.toLowerCase(Locale.ROOT));
+        ApplicationStatusEnum targetStatus = ApplicationStatusEnum.getByCode(status.toLowerCase(Locale.ROOT));
         if (targetStatus == null || targetStatus == ApplicationStatusEnum.PENDING) {
             throw new BizException(ResultCode.BAD_REQUEST.getCode(), "无效的审核状态");
         }
 
         // 更新申请状态
         application.setStatus(targetStatus.getCode());
-        application.setReviewComment(reviewComment);
+        application.setReviewComment(reviewDTO.getReviewComment());
         application.setReviewerId(reviewerId);
         application.setReviewTime(LocalDateTime.now());
 
@@ -213,12 +214,12 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         }
 
         log.info("领养申请审核完成, 结果: {}", success);
-        return success;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean cancelApplication(Long id, Long userId) {
+    public void cancelApplication(Long id) {
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("撤销领养申请, ID: {}, 用户ID: {}", id, userId);
 
         // 查询申请
@@ -239,11 +240,12 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
 
         // 更新状态为已撤销
         application.setStatus(ApplicationStatusEnum.CANCELLED.getCode());
-        return this.updateById(application);
+        this.updateById(application);
     }
 
     @Override
-    public boolean hasApplied(Long userId, Long petId) {
+    public boolean hasApplied(Long petId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         LambdaQueryWrapper<AdoptionApplication> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AdoptionApplication::getUserId, userId)
                 .eq(AdoptionApplication::getPetId, petId)
@@ -257,11 +259,18 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
      * 格式: AP + YYYYMMDD + 4位序号
      */
     private String generateApplicationNo() {
-        String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String dateStr = LocalDateTime.now().format(DateConstant.YMD);
         String randomStr = IdUtil.randomUUID().substring(0, 4).toUpperCase();
+        
         return "AP" + dateStr + randomStr;
     }
 
+    /**
+     * 组装申请 VO
+     *
+     * @param applications
+     * @return
+     */
     private List<AdoptionApplicationVO> assembleApplicationVOs(List<AdoptionApplication> applications) {
         if (applications == null || applications.isEmpty()) {
             return Collections.emptyList();
@@ -302,7 +311,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
             String status = application.getStatus();
             vo.setStatus(StrUtil.isBlank(status) ? null : status.toUpperCase(Locale.ROOT));
             if (StrUtil.isNotBlank(status)) {
-                ApplicationStatusEnum statusEnum = ApplicationStatusEnum.fromCode(status.toLowerCase(Locale.ROOT));
+                ApplicationStatusEnum statusEnum = ApplicationStatusEnum.getByCode(status.toLowerCase(Locale.ROOT));
                 vo.setStatusText(statusEnum != null ? statusEnum.getDesc() : status);
             } else {
                 vo.setStatusText("未知");
@@ -331,11 +340,11 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
                 vo.setPetName(pet.getName());
                 vo.setPetCoverImage(pet.getCoverImage());
                 vo.setPetCategory(pet.getCategory());
-                PetCategoryEnum categoryEnum = PetCategoryEnum.fromCode(pet.getCategory());
+                PetCategoryEnum categoryEnum = PetCategoryEnum.getByCode(pet.getCategory());
                 vo.setPetCategoryText(categoryEnum != null ? categoryEnum.getDesc() : pet.getCategory());
                 vo.setPetGender(pet.getGender());
                 vo.setPetAdoptionStatus(pet.getAdoptionStatus());
-                AdoptionStatusEnum adoptionStatusEnum = AdoptionStatusEnum.fromCode(pet.getAdoptionStatus());
+                AdoptionStatusEnum adoptionStatusEnum = AdoptionStatusEnum.getByCode(pet.getAdoptionStatus());
                 vo.setPetAdoptionStatusText(adoptionStatusEnum != null ? adoptionStatusEnum.getDesc() : pet.getAdoptionStatus());
             }
 

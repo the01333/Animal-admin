@@ -16,7 +16,7 @@ public enum ContentCategoryEnum {
         this.label = label;
     }
 
-    public static ContentCategoryEnum fromCode(String code) {
+    public static ContentCategoryEnum getByCode(String code) {
         if (code == null) {
             throw new IllegalArgumentException("分类不能为空");
         }

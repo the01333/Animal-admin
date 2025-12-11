@@ -1,5 +1,6 @@
 package com.puxinxiaolin.adopt.service;
 
+import com.puxinxiaolin.adopt.entity.dto.FavoritePageQueryDTO;
 import com.puxinxiaolin.adopt.entity.entity.Favorite;
 import com.puxinxiaolin.adopt.entity.vo.FavoriteVO;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
@@ -13,43 +14,36 @@ public interface FavoriteService extends IService<Favorite> {
     
     /**
      * 添加收藏
-     * @param userId 用户ID
      * @param petId 宠物ID
      * @return 是否成功
      */
-    boolean addFavorite(Long userId, Long petId);
+    boolean addFavorite(Long petId);
     
     /**
      * 取消收藏
-     * @param userId 用户ID
      * @param petId 宠物ID
      * @return 是否成功
      */
-    boolean removeFavorite(Long userId, Long petId);
+    boolean removeFavorite(Long petId);
     
     /**
      * 检查是否已收藏
-     * @param userId 用户ID
      * @param petId 宠物ID
      * @return 是否已收藏
      */
-    boolean isFavorite(Long userId, Long petId);
+    boolean isFavorite(Long petId);
     
     /**
      * 查询用户的收藏列表
-     * @param page 分页参数
-     * @param userId 用户ID
      * @return 收藏分页数据
      */
-    Page<FavoriteVO> queryUserFavorites(Page<Favorite> page, Long userId);
+    Page<FavoriteVO> queryUserFavorites(FavoritePageQueryDTO queryDTO);
     
     /**
      * 查询用户收藏的宠物列表（包含完整宠物信息）
-     * @param page 分页参数
-     * @param userId 用户ID
      * @return 宠物分页数据
      */
-    Page<PetVO> queryUserFavoritePets(Page<PetVO> page, Long userId);
+    Page<PetVO> queryUserFavoritePets(FavoritePageQueryDTO queryDTO);
     
     /**
      * 获取宠物收藏数量（无需认证）

@@ -1,11 +1,13 @@
 package com.puxinxiaolin.adopt.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.entity.dto.CertificationPageQueryDTO;
 import com.puxinxiaolin.adopt.entity.entity.User;
 import com.puxinxiaolin.adopt.entity.entity.UserCertification;
 import com.puxinxiaolin.adopt.entity.vo.CertificationInfoVO;
@@ -32,21 +34,21 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationMapper, UserCertification> implements UserCertificationService {
-
     private final FileUploadService fileUploadService;
     private final UserService userService;
-    
+
     @Override
-    public CertificationInfoVO getCertificationInfo(Long userId) {
+    public CertificationInfoVO getCertificationInfo() {
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("获取用户认证信息, 用户ID: {}", userId);
-        
+
         LambdaQueryWrapper<UserCertification> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserCertification::getUserId, userId)
-               .orderByDesc(UserCertification::getCreateTime)
-               .last("limit 1");
-        
+                .orderByDesc(UserCertification::getCreateTime)
+                .last("limit 1");
+
         UserCertification certification = this.getOne(wrapper);
-        
+
         CertificationInfoVO vo = new CertificationInfoVO();
         if (certification == null) {
             // 如果没有认证记录, 返回未提交状态
@@ -60,36 +62,37 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
                 vo.setRejectReason(null);
             }
         }
-        
+
         return vo;
     }
-    
+
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void submitCertification(Long userId, String idCard, MultipartFile idCardFront, MultipartFile idCardBack) {
+    public void submitCertification(String idCard, MultipartFile idCardFront, MultipartFile idCardBack) {
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("提交用户认证, 用户ID: {}", userId);
-        
+
         if (idCardFront == null || idCardFront.isEmpty()) {
             throw new BizException(ResultCode.BAD_REQUEST.getCode(), "身份证正面照片不能为空");
         }
-        
+
         if (idCardBack == null || idCardBack.isEmpty()) {
             throw new BizException(ResultCode.BAD_REQUEST.getCode(), "身份证反面照片不能为空");
         }
-        
+
         try {
             // 上传身份证照片
             String idCardFrontUrl = fileUploadService.uploadFile(idCardFront, "certification");
             String idCardBackUrl = fileUploadService.uploadFile(idCardBack, "certification");
-            
+
             // 检查是否已有认证记录
             LambdaQueryWrapper<UserCertification> wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(UserCertification::getUserId, userId)
-                   .orderByDesc(UserCertification::getCreateTime)
-                   .last("limit 1");
-            
+                    .orderByDesc(UserCertification::getCreateTime)
+                    .last("limit 1");
+
             UserCertification existingCertification = this.getOne(wrapper);
-            
+
             UserCertification certification = new UserCertification();
             certification.setUserId(userId);
             certification.setIdCard(idCard);
@@ -99,7 +102,7 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
             certification.setRejectReason(null);
             certification.setReviewerId(null);
             certification.setReviewTime(null);
-            
+
             if (existingCertification != null) {
                 // 如果已有记录, 更新状态
                 certification.setId(existingCertification.getId());
@@ -108,7 +111,7 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
                 // 否则新增记录
                 this.save(certification);
             }
-            
+
             log.info("用户认证提交成功, 用户ID: {}", userId);
         } catch (Exception e) {
             log.error("上传认证文件失败", e);
@@ -117,25 +120,25 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
     }
 
     @Override
-    public Page<UserCertificationAdminVO> queryAdminCertifications(Page<UserCertification> page, String status, String keyword) {
+    public Page<UserCertificationAdminVO> queryAdminCertifications(CertificationPageQueryDTO queryDTO) {
+        Page<UserCertification> page = new Page<>(queryDTO.getCurrent(), queryDTO.getSize());
         LambdaQueryWrapper<UserCertification> wrapper = new LambdaQueryWrapper<>();
-        if (StrUtil.isNotBlank(status)) {
-            wrapper.eq(UserCertification::getStatus, status.toLowerCase());
+        if (StrUtil.isNotBlank(queryDTO.getStatus())) {
+            wrapper.eq(UserCertification::getStatus, queryDTO.getStatus().toLowerCase());
         }
-        if (StrUtil.isNotBlank(keyword)) {
-            // FIXME: 通过 t_user 表匹配手机号, 再过滤筛选出 user_id
+        if (StrUtil.isNotBlank(queryDTO.getKeyword())) {
             LambdaQueryWrapper<User> filterWrapper = new LambdaQueryWrapper<User>()
-                    .like(User::getPhone, keyword);
+                    .like(User::getPhone, queryDTO.getKeyword());
             List<User> filterUsers = userService.list(filterWrapper);
             if (CollUtil.isNotEmpty(filterUsers)) {
                 Set<Long> targetUserIds = filterUsers.stream()
                         .map(User::getId)
                         .collect(Collectors.toSet());
 
-                wrapper.and(w -> w.like(UserCertification::getIdCard, keyword)
+                wrapper.and(w -> w.like(UserCertification::getIdCard, queryDTO.getKeyword())
                         .or().in(UserCertification::getUserId, targetUserIds));
             } else {
-                wrapper.like(UserCertification::getIdCard, keyword);
+                wrapper.like(UserCertification::getIdCard, queryDTO.getKeyword());
             }
         }
         wrapper.orderByDesc(UserCertification::getCreateTime);
@@ -190,18 +193,19 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void reviewCertification(Long id, String status, String rejectReason, Long reviewerId) {
+    public void reviewCertification(Long id, String status, String rejectReason) {
+        Long reviewerId = StpUtil.getLoginIdAsLong();
         UserCertification certification = this.getById(id);
         if (certification == null) {
             throw new BizException(ResultCode.BAD_REQUEST.getCode(), "认证记录不存在");
         }
 
-        CertificationStatusEnum currentStatus = CertificationStatusEnum.fromCode(certification.getStatus());
+        CertificationStatusEnum currentStatus = CertificationStatusEnum.getByCode(certification.getStatus());
         if (currentStatus != CertificationStatusEnum.PENDING) {
             throw new BizException(ResultCode.BAD_REQUEST.getCode(), "仅待审核状态可以操作");
         }
 
-        CertificationStatusEnum targetStatus = CertificationStatusEnum.fromCode(status);
+        CertificationStatusEnum targetStatus = CertificationStatusEnum.getByCode(status);
         if (targetStatus == null || targetStatus == CertificationStatusEnum.PENDING) {
             throw new BizException(ResultCode.BAD_REQUEST.getCode(), "无效的审核状态");
         }
@@ -224,8 +228,16 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
         }
     }
 
+    /**
+     * 组装管理端用户认证视图 VO
+     *
+     * @param certification
+     * @param userMap
+     * @return
+     */
     private UserCertificationAdminVO assembleAdminVO(UserCertification certification, java.util.Map<Long, User> userMap) {
         UserCertificationAdminVO vo = new UserCertificationAdminVO();
+
         vo.setId(certification.getId());
         vo.setUserId(certification.getUserId());
         vo.setIdCard(certification.getIdCard());

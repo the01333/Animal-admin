@@ -39,7 +39,7 @@ public enum ApplicationStatusEnum {
     /**
      * 根据code获取枚举
      */
-    public static ApplicationStatusEnum fromCode(String code) {
+    public static ApplicationStatusEnum getByCode(String code) {
         for (ApplicationStatusEnum status : ApplicationStatusEnum.values()) {
             if (status.getCode().equals(code)) {
                 return status;

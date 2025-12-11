@@ -1,6 +1,5 @@
 package com.puxinxiaolin.adopt.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.puxinxiaolin.adopt.common.Result;
 import com.puxinxiaolin.adopt.constants.MessageConstant;
 import com.puxinxiaolin.adopt.entity.vo.GuideVO;
@@ -35,13 +34,12 @@ public class GuideController {
      * 根据ID获取指南详情
      */
     @GetMapping("/{id}")
-    public Result<GuideVO> getGuideDetail(@PathVariable Long id, @RequestParam(required = false) Long userId) {
-        GuideVO guide = guideService.getGuideDetail(id, userId);
+    public Result<GuideVO> getGuideDetail(@PathVariable Long id) {
+        GuideVO guide = guideService.getGuideDetail(id);
         if (guide == null) {
             return Result.error(MessageConstant.GUIDE_NOT_FOUND);
         }
         
-        // 增加浏览次数
         guideService.increaseViews(id);
         return Result.success(guide);
     }
@@ -60,8 +58,7 @@ public class GuideController {
      */
     @PostMapping("/{id}/like")
     public Result<Boolean> likeGuide(@PathVariable Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        guideService.likeGuide(id, userId);
+        guideService.likeGuide(id);
         return Result.success(true);
     }
     
@@ -70,8 +67,7 @@ public class GuideController {
      */
     @DeleteMapping("/{id}/like")
     public Result<Boolean> unlikeGuide(@PathVariable Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        guideService.unlikeGuide(id, userId);
+        guideService.unlikeGuide(id);
         return Result.success(true);
     }
     
@@ -80,8 +76,7 @@ public class GuideController {
      */
     @PostMapping("/{id}/favorite")
     public Result<Boolean> favoriteGuide(@PathVariable Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        guideService.favoriteGuide(id, userId);
+        guideService.favoriteGuide(id);
         return Result.success(true);
     }
     
@@ -90,8 +85,7 @@ public class GuideController {
      */
     @DeleteMapping("/{id}/favorite")
     public Result<Boolean> unfavoriteGuide(@PathVariable Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        guideService.unfavoriteGuide(id, userId);
+        guideService.unfavoriteGuide(id);
         return Result.success(true);
     }
 
@@ -100,7 +94,7 @@ public class GuideController {
      */
     @GetMapping("/{id}/like/count")
     public Result<Long> getGuideLikeCount(@PathVariable Long id) {
-        GuideVO guide = guideService.getGuideDetail(id, null);
+        GuideVO guide = guideService.getGuideDetail(id);
         if (guide == null) {
             return Result.error(MessageConstant.GUIDE_NOT_FOUND);
         }
@@ -112,7 +106,7 @@ public class GuideController {
      */
     @GetMapping("/{id}/favorite/count")
     public Result<Long> getGuideFavoriteCount(@PathVariable Long id) {
-        GuideVO guide = guideService.getGuideDetail(id, null);
+        GuideVO guide = guideService.getGuideDetail(id);
         if (guide == null) {
             return Result.error(MessageConstant.GUIDE_NOT_FOUND);
         }
@@ -124,9 +118,7 @@ public class GuideController {
      */
     @GetMapping("/{id}/like/check")
     public Result<Boolean> isGuideLiked(@PathVariable Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        boolean liked = guideService.isGuideLiked(id, userId);
-        return Result.success(liked);
+        return Result.success(guideService.isGuideLiked(id));
     }
 
     /**
@@ -134,9 +126,7 @@ public class GuideController {
      */
     @GetMapping("/{id}/favorite/check")
     public Result<Boolean> isGuideFavorited(@PathVariable Long id) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        boolean favorited = guideService.isGuideFavorited(id, userId);
-        return Result.success(favorited);
+        return Result.success(guideService.isGuideFavorited(id));
     }
 
     /**

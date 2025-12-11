@@ -17,6 +17,10 @@ public enum UserRoleEnum {
      * 超级管理员
      */
     SUPER_ADMIN("super_admin", "超级管理员"),
+
+    /**
+     * 管理员
+     */
     ADMIN("admin", "管理员"),
 
     /**
@@ -40,7 +44,7 @@ public enum UserRoleEnum {
     /**
      * 根据code获取枚举
      */
-    public static UserRoleEnum fromCode(String code) {
+    public static UserRoleEnum getByCode(String code) {
         for (UserRoleEnum role : UserRoleEnum.values()) {
             if (role.getCode().equals(code)) {
                 return role;

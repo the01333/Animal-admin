@@ -12,7 +12,7 @@ docker run -d --name minio4Animal \
 
 
 配置 MinIO 的 CORS（跨域资源共享）：
-登录 MinIO 控制台（http://192.168.133.228:9001）, 进入 Bucket settings, 然后添加 CORS 配置。
+登录 MinIO 控制台（http://本机IP:9001）, 进入 Bucket settings, 然后添加 CORS 配置。
 
 ```示例 CORS 配置（允许所有来源访问）：
 [
@@ -27,4 +27,4 @@ docker run -d --name minio4Animal \
 ```
 
 通过这个路径访问图片：
-http://192.168.133.228:9000/xxx
+http://本机IP:9000/xxx

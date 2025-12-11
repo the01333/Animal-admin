@@ -14,24 +14,22 @@ public interface UserCertificationService extends IService<UserCertification> {
     
     /**
      * 获取用户认证信息
-     * @param userId 用户ID
      * @return 认证信息
      */
-    CertificationInfoVO getCertificationInfo(Long userId);
+    CertificationInfoVO getCertificationInfo();
     
     /**
      * 提交用户认证
-     * @param userId 用户ID
      * @param idCard 身份证号
      * @param idCardFront 身份证正面
      * @param idCardBack 身份证反面
      */
-    void submitCertification(Long userId, String idCard, MultipartFile idCardFront, MultipartFile idCardBack);
+    void submitCertification(String idCard, MultipartFile idCardFront, MultipartFile idCardBack);
 
     /**
      * 管理端分页查询认证列表
      */
-    Page<UserCertificationAdminVO> queryAdminCertifications(Page<UserCertification> page, String status, String keyword);
+    Page<UserCertificationAdminVO> queryAdminCertifications(com.puxinxiaolin.adopt.entity.dto.CertificationPageQueryDTO queryDTO);
 
     /**
      * 管理端获取认证详情
@@ -41,5 +39,5 @@ public interface UserCertificationService extends IService<UserCertification> {
     /**
      * 管理端审核认证
      */
-    void reviewCertification(Long id, String status, String rejectReason, Long reviewerId);
+    void reviewCertification(Long id, String status, String rejectReason);
 }

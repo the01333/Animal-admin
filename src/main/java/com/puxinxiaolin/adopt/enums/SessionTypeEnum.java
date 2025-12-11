@@ -29,7 +29,7 @@ public enum SessionTypeEnum {
     /**
      * 根据code获取枚举
      */
-    public static SessionTypeEnum fromCode(String code) {
+    public static SessionTypeEnum getByCode(String code) {
         for (SessionTypeEnum type : SessionTypeEnum.values()) {
             if (type.getCode().equals(code)) {
                 return type;

@@ -37,10 +37,11 @@ public class JsonDefaultConfig {
         //忽略不存在的属性
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        //设置全局的时间转化
+        // 设置全局的时间转化
         SimpleDateFormat smt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         objectMapper.setDateFormat(smt);
-        objectMapper.setTimeZone(TimeZone.getTimeZone("GMT+8")); //解决时区差8小时问题
+        // 解决时区差8小时问题
+        objectMapper.setTimeZone(TimeZone.getTimeZone("GMT+8"));
 
         JavaTimeModule javaTimeModule = new JavaTimeModule();
         javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.of("+8"))));

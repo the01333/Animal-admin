@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 /**
  * 会话记忆服务实现
  * <p>
- * 核心特性：
+ * 核心特性: 
  * 1. 用户隔离 - 每个用户的对话完全独立
  * 2. 持久化存储 - 使用 Cassandra 存储对话历史
  * 3. 缓存加速 - 使用 Redis 缓存热数据

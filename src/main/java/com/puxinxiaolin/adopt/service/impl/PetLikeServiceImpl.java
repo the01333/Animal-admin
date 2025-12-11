@@ -1,6 +1,8 @@
 package com.puxinxiaolin.adopt.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
+import com.puxinxiaolin.adopt.entity.dto.PetLikePageQueryDTO;
 import com.puxinxiaolin.adopt.entity.entity.Pet;
 import com.puxinxiaolin.adopt.entity.entity.PetLike;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
@@ -32,7 +34,8 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean likePet(Long userId, Long petId) {
+    public boolean likePet(Long petId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         // 检查是否已点赞
         LambdaQueryWrapper<PetLike> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PetLike::getUserId, userId)
@@ -77,7 +80,8 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean unlikePet(Long userId, Long petId) {
+    public boolean unlikePet(Long petId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         // 查找点赞记录
         LambdaQueryWrapper<PetLike> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PetLike::getUserId, userId)
@@ -106,8 +110,9 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
     }
     
     @Override
-    public boolean isLiked(Long userId, Long petId) {
-        // 注意：MyBatis Plus 会自动添加 deleted=0 条件, 所以这里不需要额外指定
+    public boolean isLiked(Long petId) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        // 注意: MyBatis Plus 会自动添加 deleted=0 条件, 所以这里不需要额外指定
         LambdaQueryWrapper<PetLike> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PetLike::getUserId, userId)
                 .eq(PetLike::getPetId, petId);
@@ -136,12 +141,14 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
     }
 
     @Override
-    public Page<PetVO> queryUserLikedPets(Page<PetVO> page, Long userId) {
+    public Page<PetVO> queryUserLikedPets(PetLikePageQueryDTO queryDTO) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        Page<PetVO> page = new Page<>(queryDTO.getCurrent(), queryDTO.getSize());
         // 查询用户点赞的宠物ID列表
         LambdaQueryWrapper<PetLike> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PetLike::getUserId, userId)
                 .orderByDesc(PetLike::getCreateTime);
-        
+
         Page<PetLike> petLikePage = this.page(new Page<>(page.getCurrent(), page.getSize()), wrapper);
         
         // 转换为 PetVO 列表

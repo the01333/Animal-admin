@@ -1,11 +1,17 @@
 package com.puxinxiaolin.adopt.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.annotation.SaMode;
 import com.puxinxiaolin.adopt.common.Result;
+import com.puxinxiaolin.adopt.entity.dto.DictItemDTO;
+import com.puxinxiaolin.adopt.entity.vo.DictItemVO;
 import com.puxinxiaolin.adopt.service.DictService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,13 +31,12 @@ public class DictController {
 
     /**
      * 获取所有字典数据（一次性获取, 带缓存）
-     * 查询策略：先走Redis缓存, 缓存未命中则查询数据库
+     * 查询策略: 先走Redis缓存, 缓存未命中则查询数据库
      */
     @GetMapping("/all")
     public Result<Map<String, Object>> getAllDictData() {
         log.debug("获取所有字典数据");
-        Map<String, Object> data = dictService.getAllDictData();
-        return Result.success(data);
+        return Result.success(dictService.getAllDictData());
     }
 
     /**
@@ -41,8 +46,7 @@ public class DictController {
     @GetMapping("/petCategories")
     public Result<Map<String, String>> getPetCategories() {
         log.debug("获取宠物类型字典");
-        Map<String, String> data = dictService.getPetCategories();
-        return Result.success(data);
+        return Result.success(dictService.getPetCategories());
     }
 
     /**
@@ -51,8 +55,7 @@ public class DictController {
     @GetMapping("/genders")
     public Result<Map<Integer, String>> getGenders() {
         log.debug("获取性别字典");
-        Map<Integer, String> data = dictService.getGenders();
-        return Result.success(data);
+        return Result.success(dictService.getGenders());
     }
 
     /**
@@ -62,8 +65,7 @@ public class DictController {
     @GetMapping("/adoptionStatuses")
     public Result<Map<String, String>> getAdoptionStatuses() {
         log.debug("获取领养状态字典");
-        Map<String, String> data = dictService.getAdoptionStatuses();
-        return Result.success(data);
+        return Result.success(dictService.getAdoptionStatuses());
     }
 
     /**
@@ -72,8 +74,16 @@ public class DictController {
     @GetMapping("/healthStatuses")
     public Result<Map<String, String>> getHealthStatuses() {
         log.debug("获取健康状态字典");
-        Map<String, String> data = dictService.getHealthStatuses();
-        return Result.success(data);
+        return Result.success(dictService.getHealthStatuses());
+    }
+
+    /**
+     * 获取文章分类选项（带缓存）
+     */
+    @GetMapping("/articleCategories")
+    public Result<Map<String, String>> getArticleCategories() {
+        log.debug("获取文章分类字典");
+        return Result.success(dictService.getArticleCategories());
     }
 
     /**
@@ -85,5 +95,61 @@ public class DictController {
         log.info("手动刷新字典缓存");
         dictService.refreshCache();
         return Result.success();
+    }
+
+    // =================== 字典项管理接口（系统设置使用） ===================
+
+    /**
+     * 按类型查询字典项列表
+     */
+    @GetMapping("/items")
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    public Result<List<DictItemVO>> listDictItems(@RequestParam(value = "dictType", required = false) String dictType) {
+        log.debug("查询字典项列表, dictType={}", dictType);
+        return Result.success(dictService.listDictItems(dictType));
+    }
+
+    /**
+     * 创建字典项
+     */
+    @PostMapping("/items")
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    public Result<Long> createDictItem(@Valid @RequestBody DictItemDTO dto) {
+        log.info("创建字典项, type={}, key={}", dto.getDictType(), dto.getDictKey());
+        return Result.success(dictService.createDictItem(dto));
+    }
+
+    /**
+     * 更新字典项
+     */
+    @PutMapping("/items/{id}")
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    public Result<Void> updateDictItem(@PathVariable("id") Long id, @Valid @RequestBody DictItemDTO dto) {
+        log.info("更新字典项, id={}", id);
+        dictService.updateDictItem(id, dto);
+        return Result.success();
+    }
+
+    /**
+     * 删除字典项
+     */
+    @DeleteMapping("/items/{id}")
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    public Result<Void> deleteDictItem(@PathVariable("id") Long id) {
+        log.info("删除字典项, id={}", id);
+        dictService.deleteDictItem(id);
+        return Result.success();
+    }
+
+    /**
+     * 根据中文名称自动创建宠物类型字典项
+     * 前端只需要传入中文 label, 后端通过 AI 翻译生成英文编码并写入 pet_category
+     */
+    @PostMapping("/items/pet-category/auto")
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    public Result<Long> createPetCategoryAuto(@RequestBody Map<String, String> body) {
+        String label = body.get("label");
+        log.info("根据中文名称自动创建宠物类别, label={}", label);
+        return Result.success(dictService.createPetCategoryAuto(label));
     }
 }

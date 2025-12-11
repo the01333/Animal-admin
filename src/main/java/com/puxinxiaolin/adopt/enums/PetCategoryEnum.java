@@ -26,12 +26,7 @@ public enum PetCategoryEnum {
     /**
      * 兔子
      */
-    RABBIT("rabbit", "兔子"),
-
-    /**
-     * 其他
-     */
-    OTHER("other", "其他");
+    RABBIT("rabbit", "兔子");
 
     private final String code;
     private final String desc;
@@ -44,7 +39,7 @@ public enum PetCategoryEnum {
     /**
      * 根据code获取枚举
      */
-    public static PetCategoryEnum fromCode(String code) {
+    public static PetCategoryEnum getByCode(String code) {
         for (PetCategoryEnum category : PetCategoryEnum.values()) {
             if (category.getCode().equals(code)) {
                 return category;

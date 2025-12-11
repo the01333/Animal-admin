@@ -9,5 +9,7 @@ public class DateConstant {
     public static final DateTimeFormatter Y_M_D = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     
     public static final DateTimeFormatter Y_M = DateTimeFormatter.ofPattern("yyyy-MM");
+    
+    public static final DateTimeFormatter YMD = DateTimeFormatter.ofPattern("yyyyMMdd");
 
 }

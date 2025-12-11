@@ -1,6 +1,9 @@
 package com.puxinxiaolin.adopt.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.constants.RedisConstant;
+import com.puxinxiaolin.adopt.entity.dto.FavoritePageQueryDTO;
 import com.puxinxiaolin.adopt.entity.entity.Favorite;
 import com.puxinxiaolin.adopt.entity.entity.Pet;
 import com.puxinxiaolin.adopt.entity.vo.FavoriteVO;
@@ -10,7 +13,6 @@ import com.puxinxiaolin.adopt.mapper.FavoriteMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.service.FavoriteService;
 import com.puxinxiaolin.adopt.service.PetService;
-import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -36,7 +38,8 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean addFavorite(Long userId, Long petId) {
+    public boolean addFavorite(Long petId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("添加收藏, 用户ID: {}, 宠物ID: {}", userId, petId);
         
         // 检查宠物是否存在
@@ -83,7 +86,8 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean removeFavorite(Long userId, Long petId) {
+    public boolean removeFavorite(Long petId) {
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("取消收藏, 用户ID: {}, 宠物ID: {}", userId, petId);
         
         LambdaQueryWrapper<Favorite> wrapper = new LambdaQueryWrapper<>();
@@ -101,8 +105,9 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     }
     
     @Override
-    public boolean isFavorite(Long userId, Long petId) {
-        // 注意：MyBatis Plus 会自动添加 deleted=0 条件, 所以这里不需要额外指定
+    public boolean isFavorite(Long petId) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        // 注意: MyBatis Plus 会自动添加 deleted=0 条件, 所以这里不需要额外指定
         LambdaQueryWrapper<Favorite> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Favorite::getUserId, userId)
                 .eq(Favorite::getPetId, petId);
@@ -111,7 +116,9 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     }
     
     @Override
-    public Page<FavoriteVO> queryUserFavorites(Page<Favorite> page, Long userId) {
+    public Page<FavoriteVO> queryUserFavorites(FavoritePageQueryDTO queryDTO) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        Page<Favorite> page = new Page<>(queryDTO.getCurrent(), queryDTO.getSize());
         log.info("查询用户收藏列表, 用户ID: {}", userId);
         
         LambdaQueryWrapper<Favorite> wrapper = new LambdaQueryWrapper<>();
@@ -121,12 +128,12 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         Page<Favorite> favoritePage = this.page(page, wrapper);
         Page<FavoriteVO> voPage = new Page<>(favoritePage.getCurrent(), favoritePage.getSize(), favoritePage.getTotal());
         voPage.setRecords(favoritePage.getRecords().stream()
-                .map(fav -> {
+                .map(f -> {
                     FavoriteVO vo = new FavoriteVO();
-                    vo.setId(fav.getId());
-                    vo.setUserId(fav.getUserId());
-                    vo.setPetId(fav.getPetId());
-                    vo.setCreateTime(fav.getCreateTime());
+                    vo.setId(f.getId());
+                    vo.setUserId(f.getUserId());
+                    vo.setPetId(f.getPetId());
+                    vo.setCreateTime(f.getCreateTime());
                     return vo;
                 })
                 .collect(java.util.stream.Collectors.toList()));
@@ -134,7 +141,9 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     }
     
     @Override
-    public Page<PetVO> queryUserFavoritePets(Page<PetVO> page, Long userId) {
+    public Page<PetVO> queryUserFavoritePets(FavoritePageQueryDTO queryDTO) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        Page<PetVO> page = new Page<>(queryDTO.getCurrent(), queryDTO.getSize());
         log.info("查询用户收藏的宠物列表, 用户ID: {}", userId);
         
         // 查询用户收藏的宠物ID列表

@@ -1,12 +1,11 @@
 package com.puxinxiaolin.adopt.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.puxinxiaolin.adopt.common.Result;
-import com.puxinxiaolin.adopt.entity.entity.Favorite;
+import com.puxinxiaolin.adopt.entity.dto.FavoritePageQueryDTO;
 import com.puxinxiaolin.adopt.entity.vo.FavoriteVO;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
 import com.puxinxiaolin.adopt.service.FavoriteService;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -29,8 +28,7 @@ public class FavoriteController {
      */
     @PostMapping("/{petId}")
     public Result<String> addFavorite(@PathVariable Long petId) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        favoriteService.addFavorite(userId, petId);
+        favoriteService.addFavorite(petId);
         return Result.success("收藏成功", null);
     }
     
@@ -39,8 +37,7 @@ public class FavoriteController {
      */
     @DeleteMapping("/{petId}")
     public Result<String> removeFavorite(@PathVariable Long petId) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        favoriteService.removeFavorite(userId, petId);
+        favoriteService.removeFavorite(petId);
         return Result.success("取消收藏成功", null);
     }
     
@@ -58,35 +55,23 @@ public class FavoriteController {
      */
     @GetMapping("/check/{petId}")
     public Result<Boolean> isFavorite(@PathVariable Long petId) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        boolean isFavorite = favoriteService.isFavorite(userId, petId);
-        return Result.success(isFavorite);
+        return Result.success(favoriteService.isFavorite(petId));
     }
     
     /**
      * 查询当前用户的收藏列表
      */
     @GetMapping("/my")
-    public Result<Page<FavoriteVO>> queryMyFavorites(
-            @RequestParam(defaultValue = "1") Long current,
-            @RequestParam(defaultValue = "10") Long size) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        Page<Favorite> page = new Page<>(current, size);
-        Page<FavoriteVO> result = favoriteService.queryUserFavorites(page, userId);
-        return Result.success(result);
+    public Result<Page<FavoriteVO>> queryMyFavorites(@ModelAttribute FavoritePageQueryDTO queryDTO) {
+        return Result.success(favoriteService.queryUserFavorites(queryDTO));
     }
 
     /**
      * 查询当前用户收藏的宠物列表（包含完整宠物信息）
      */
     @GetMapping("/my/pets")
-    public Result<Page<PetVO>> queryMyFavoritePets(
-            @RequestParam(defaultValue = "1") Long current,
-            @RequestParam(defaultValue = "10") Long size) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        Page<PetVO> page = new Page<>(current, size);
-        Page<PetVO> result = favoriteService.queryUserFavoritePets(page, userId);
-        return Result.success(result);
+    public Result<Page<PetVO>> queryMyFavoritePets(@ModelAttribute FavoritePageQueryDTO queryDTO) {
+        return Result.success(favoriteService.queryUserFavoritePets(queryDTO));
     }
 }
 

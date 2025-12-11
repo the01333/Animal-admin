@@ -27,19 +27,17 @@ public interface ContentService {
      *
      * @param category
      * @param id
-     * @param userId
      * @return
      */
-    ContentVO getContentDetail(String category, Long id, Long userId);
+    ContentVO getContentDetail(String category, Long id);
 
     /**
      * 创建文章
      *
      * @param dto
-     * @param userId
      * @return
      */
-    ContentVO createContent(ContentDTO dto, Long userId);
+    ContentVO createContent(ContentDTO dto);
 
     /**
      * 更新文章
@@ -70,72 +68,64 @@ public interface ContentService {
      *
      * @param category
      * @param id
-     * @param userId
      */
-    void likeContent(String category, Long id, Long userId);
+    void likeContent(String category, Long id);
 
     /**
      * 取消点赞
      *
      * @param category
      * @param id
-     * @param userId
      */
-    void unlikeContent(String category, Long id, Long userId);
+    void unlikeContent(String category, Long id);
 
     /**
      * 收藏
      *
      * @param category
      * @param id
-     * @param userId
      */
-    void favoriteContent(String category, Long id, Long userId);
+    void favoriteContent(String category, Long id);
 
     /**
      * 取消收藏
      *
      * @param category
      * @param id
-     * @param userId
      */
-    void unfavoriteContent(String category, Long id, Long userId);
+    void unfavoriteContent(String category, Long id);
 
     /**
      * 是否已点赞
      *
      * @param category
      * @param id
-     * @param userId
      * @return
      */
-    boolean isContentLiked(String category, Long id, Long userId);
+    boolean isContentLiked(String category, Long id);
 
     /**
      * 是否已收藏
      *
      * @param category
      * @param id
-     * @param userId
      * @return
      */
-    boolean isContentFavorited(String category, Long id, Long userId);
+    boolean isContentFavorited(String category, Long id);
 
     /**
      * 查询用户点赞的文章
      *
      * @param queryDTO
-     * @param userId
      * @return
      */
-    Page<ContentVO> queryUserLikedContent(ContentUserQueryDTO queryDTO, Long userId);
+    Page<ContentVO> queryUserLikedContent(ContentUserQueryDTO queryDTO);
 
     /**
      * 查询用户收藏的文章
      *
      * @param queryDTO
-     * @param userId
      * @return
      */
-    Page<ContentVO> queryUserFavoritedContent(ContentUserQueryDTO queryDTO, Long userId);
+    Page<ContentVO> queryUserFavoritedContent(ContentUserQueryDTO queryDTO);
 }

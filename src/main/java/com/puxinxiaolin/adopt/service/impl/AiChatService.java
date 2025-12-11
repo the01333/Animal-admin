@@ -1,7 +1,5 @@
 package com.puxinxiaolin.adopt.service.impl;
 
-import com.puxinxiaolin.adopt.service.AiToolService;
-import com.puxinxiaolin.adopt.service.ConversationService;
 import com.puxinxiaolin.adopt.service.SessionMemoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,103 +14,17 @@ import reactor.core.publisher.Flux;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AiChatService {
 
     private final ChatClient chatClient;
-    private final AiToolService aiToolService;
-    private final ConversationService conversationService;
     private final SessionMemoryService sessionMemoryService;
-
-    /**
-     * 单轮对话（不使用会话记忆）
-     */
-    public String chat(String content) {
-        String system = buildSystemPrompt();
-        Message user = new UserMessage(content == null ? "" : content);
-        Prompt prompt = new Prompt(List.of(new SystemMessage(system), user));
-
-        return chatClient.prompt(prompt)
-                .tools(aiToolService)
-                .call()
-                .content();
-    }
-
-    /**
-     * 多轮对话（使用会话记忆）
-     *
-     * @param sessionId 会话ID
-     * @param content   用户输入内容
-     * @param userId    用户ID
-     * @return AI回复内容
-     */
-    public String chatWithMemory(String sessionId, String content, Long userId) {
-        log.info("多轮对话, 会话ID: {}, 用户ID: {}", sessionId, userId);
-
-        // 获取会话历史
-        List<Message> conversationHistory = conversationService.getConversationHistory(sessionId);
-
-        // 构建消息列表
-        List<Message> messages = new ArrayList<>();
-        messages.add(new SystemMessage(buildSystemPrompt()));
-
-        // 添加历史消息
-        messages.addAll(conversationHistory);
-
-        // 添加当前用户消息
-        Message userMessage = new UserMessage(content == null ? "" : content);
-        messages.add(userMessage);
-
-        // 调用 AI
-        Prompt prompt = new Prompt(messages);
-        String reply = chatClient.prompt(prompt)
-                .tools(aiToolService)
-                .call()
-                .content();
-
-        // 保存用户消息和 AI 回复到数据库
-        conversationService.saveMessage(sessionId, userId, "user", content, null, null, null);
-        conversationService.saveMessage(sessionId, userId, "assistant", reply, null, null, null);
-
-        return reply;
-    }
-
-    /**
-     * 多轮对话（带工具调用信息）
-     */
-    public String chatWithMemoryAndTools(String sessionId, String content, Long userId,
-                                         String toolName, String toolParams, String toolResult) {
-        log.info("多轮对话（带工具调用）, 会话ID: {}, 工具: {}", sessionId, toolName);
-
-        // 获取会话历史
-        List<Message> conversationHistory = conversationService.getConversationHistory(sessionId);
-
-        // 构建消息列表
-        List<Message> messages = new ArrayList<>();
-        messages.add(new SystemMessage(buildSystemPrompt()));
-        messages.addAll(conversationHistory);
-        messages.add(new UserMessage(content == null ? "" : content));
-
-        // 调用AI
-        Prompt prompt = new Prompt(messages);
-        String reply = chatClient.prompt(prompt)
-                .tools(aiToolService)
-                .call()
-                .content();
-
-        // 保存消息（包含工具调用信息）
-        conversationService.saveMessage(sessionId, userId, "user", content,
-                toolName, toolParams, toolResult);
-        conversationService.saveMessage(sessionId, userId, "assistant", reply, null, null, null);
-
-        return reply;
-    }
-
-    /**
-     * 流式单轮对话（不使用会话记忆）
-     */
+    
     public Flux<String> chatStream(String content) {
         String system = buildSystemPrompt();
         Message user = new UserMessage(content == null ? "" : content);
@@ -126,7 +38,7 @@ public class AiChatService {
     /**
      * 流式多轮对话（使用会话记忆）
      * 
-     * 核心特性：
+     * 核心特性: 
      * 1. 用户隔离 - 不同用户的对话完全分离
      * 2. 持久化 - 对话历史保存到 Cassandra
      * 3. 缓存加速 - 使用 Redis 缓存热数据
@@ -163,7 +75,7 @@ public class AiChatService {
         return chatClient.prompt(prompt)
                 .stream()
                 .content();
-                // 注意：完整的AI回复内容由前端收集后通过 /save-message 接口保存
+                // 注意: 完整的AI回复内容由前端收集后通过 /save-message 接口保存
     }
 
     /**
@@ -206,11 +118,11 @@ public class AiChatService {
                 - 鼓励负责任的宠物领养
                 
                 【工具使用指南】
-                当用户询问以下内容时, 请调用相应工具：
+                当用户询问以下内容时, 请调用相应工具: 
                 
                 1. 【宠物推荐查询】- 用户问"有什么推荐的宠物吗？"、"我想要一只活泼的小狗"等
                    → 调用 searchPets 工具, 根据用户描述的性格特征、偏好进行查询
-                   → 参数说明：
+                   → 参数说明: 
                      - category: 宠物类别（cat/dog/rabbit等）
                      - personality: 性格关键词（活泼/温顺/独立/亲人等）
                      - adoptionStatus: 领养状态（available=可领养）
@@ -253,7 +165,7 @@ public class AiChatService {
                 【格式要求】
                 - 使用换行符分段, 每个段落之间空一行
                 - 对于列表项, 每项单独一行
-                - 对于宠物推荐, 格式必须为：
+                - 对于宠物推荐, 格式必须为: 
                   🐾 **宠物名字 - 品种**
                   性格描述...
                   适合...

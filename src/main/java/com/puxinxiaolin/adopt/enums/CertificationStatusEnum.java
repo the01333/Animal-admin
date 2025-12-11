@@ -15,7 +15,7 @@ public enum CertificationStatusEnum {
         this.code = code;
     }
 
-    public static CertificationStatusEnum fromCode(String code) {
+    public static CertificationStatusEnum getByCode(String code) {
         if (code == null) {
             return null;
         }

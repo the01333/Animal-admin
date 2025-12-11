@@ -68,17 +68,17 @@ public class RedisConstant {
     public static final String CONTENT_VIEW_LIMIT_PREFIX = "content:view:limit:";
 
     /**
-     * Hash 字段名称：浏览次数
+     * Hash 字段名称: 浏览次数
      */
     public static final String CONTENT_STAT_FIELD_VIEW = "viewCount";
 
     /**
-     * Hash 字段名称：点赞次数
+     * Hash 字段名称: 点赞次数
      */
     public static final String CONTENT_STAT_FIELD_LIKE = "likeCount";
 
     /**
-     * Hash 字段名称：收藏次数
+     * Hash 字段名称: 收藏次数
      */
     public static final String CONTENT_STAT_FIELD_FAVORITE = "favoriteCount";
 
@@ -86,13 +86,23 @@ public class RedisConstant {
     public static final String VERIFICATION_CODE_PREFIX = "verification:code:";
     public static final String USER_TOKEN_PREFIX = "user:token:";
 
+    // =========================== 访问统计相关 ================================
+    /**
+     * 每日 UV 记录 key
+     * 格式: visit:uv:{yyyy-MM-dd}:{userId}
+     */
+    public static final String VISIT_UV_PREFIX = "visit:uv:";
+
+    
     // =========================== 字典相关 ================================
     public static final String DICT_ALL = "dict:all";
     public static final String DICT_PET_CATEGORY = "dict:pet_category";
     public static final String DICT_GENDER = "dict:gender";
     public static final String DICT_ADOPTION_STATUS = "dict:adoption_status";
     public static final String DICT_HEALTH_STATUS = "dict:health_status";
+    public static final String DICT_ARTICLE_CATEGORY = "dict:article_category";
 
+    
     // =========================== 工具方法 ================================
 
     /**
