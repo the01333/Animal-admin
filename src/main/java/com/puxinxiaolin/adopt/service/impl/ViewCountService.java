@@ -123,7 +123,7 @@ public class ViewCountService {
         }
         if (userId != null) {
             String limitKey = RedisConstant.buildContentViewLimitKey(category, contentId, userId);
-            if (Boolean.TRUE.equals(redisTemplate.hasKey(limitKey))) {
+            if (redisTemplate.hasKey(limitKey)) {
                 log.debug("用户{}在5分钟内已浏览过{}-{}, 不重复计数", userId, category, contentId);
                 return;
             }
