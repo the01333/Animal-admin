@@ -345,7 +345,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void incrementViewCount(Long id) {
-        // 已改为通过Redis增量统计与定时任务入库
+        // 已改为通过 Redis 增量统计与定时任务入库
         viewCountService.incrementPetView(id);
     }
 

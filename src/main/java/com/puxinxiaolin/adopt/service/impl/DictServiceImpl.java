@@ -509,7 +509,7 @@ public class DictServiceImpl implements DictService {
      * 2. 对纯中文场景, 目前先退化为使用原文的拼音/简写留待后续接入 Qwen
      */
     private String generateDictKey(String label) {
-        // 严格依赖 AI 翻译, 不做本地兜底。失败时抛业务异常, 前端显示“新增失败”。
+        // 严格依赖 AI 翻译, 不做本地兜底 失败时抛业务异常, 前端显示“新增失败” 
         try {
             String english = translationService.translateToEnglishKey(label);
             if (english == null || english.isBlank()) {

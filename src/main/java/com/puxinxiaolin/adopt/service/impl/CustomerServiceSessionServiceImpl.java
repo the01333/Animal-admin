@@ -11,8 +11,8 @@ import com.puxinxiaolin.adopt.entity.vo.CustomerServiceSessionVO;
 import com.puxinxiaolin.adopt.mapper.CustomerServiceSessionMapper;
 import com.puxinxiaolin.adopt.service.CustomerServiceSessionService;
 import com.puxinxiaolin.adopt.service.UserService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Service;
 
@@ -25,12 +25,16 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
-public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServiceSessionMapper, CustomerServiceSession>
-        implements CustomerServiceSessionService {
+public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServiceSessionMapper, CustomerServiceSession> implements CustomerServiceSessionService {
 
-    private final UserService userService;
-    private final SimpUserRegistry simpUserRegistry;
+    @Autowired
+    private CustomerServiceSessionMapper baseMapper;
+    
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private SimpUserRegistry simpUserRegistry;
 
     @Override
     public CustomerServiceSessionVO openOrGetCurrentUserSession() {
@@ -49,7 +53,18 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
             session.setStatus("OPEN");
             session.setUnreadForUser(0);
             session.setUnreadForAgent(0);
+            // 为新会话分配一个默认客服, 便于后续用户发消息时直接推送未读给该客服
+            Long defaultAgentId = resolveDefaultAgentId();
+            if (defaultAgentId != null) {
+                session.setAgentId(defaultAgentId);
+            }
             this.save(session);
+        } else if (session.getAgentId() == null) {
+            Long defaultAgentId = resolveDefaultAgentId();
+            if (defaultAgentId != null) {
+                session.setAgentId(defaultAgentId);
+                this.updateById(session);
+            }
         }
 
         return buildSessionVO(session);
@@ -63,7 +78,7 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
         if (StrUtil.isNotBlank(status)) {
             wrapper.eq(CustomerServiceSession::getStatus, status);
         }
-        // 预留关键字搜索, 后续可以通过 join 或在上层补充
+        // TODO [YCcLin 2025/12/15]: 预留关键字搜索, 后续可以通过 join 或在上层补充
         wrapper.orderByDesc(CustomerServiceSession::getLastTime);
 
         Page<CustomerServiceSession> page = this.page(new Page<>(current, size), wrapper);
@@ -122,9 +137,72 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
                 .unreadForAgent(session.getUnreadForAgent())
                 .online(online);
         if (user != null) {
+            builder.userUsername(user.getUsername());
             builder.userNickname(user.getNickname());
             builder.userAvatar(user.getAvatar());
         }
         return builder.build();
+    }
+
+    /**
+     * 获取默认客服
+     *
+     * @return
+     */
+    private Long resolveDefaultAgentId() {
+        try {
+            LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(User::getStatus, 1)
+                    .eq(User::getRole, "super_admin")
+                    .orderByAsc(User::getId);
+
+            List<User> candidates = userService.list(wrapper);
+            if (candidates == null || candidates.isEmpty()) {
+                return null;
+            }
+
+            Long fallback = null;
+            for (User u : candidates) {
+                if (u == null || u.getId() == null) {
+                    continue;
+                }
+                if (fallback == null) {
+                    fallback = u.getId();
+                }
+                if (simpUserRegistry.getUser(String.valueOf(u.getId())) != null) {
+                    return u.getId();
+                }
+            }
+
+            return fallback;
+        } catch (Exception e) {
+            log.warn("分配默认客服失败", e);
+        }
+        return null;
+    }
+
+    @Override
+    public Integer sumUnreadForAgent(Long agentId) {
+        if (agentId == null) {
+            return 0;
+        }
+        
+        Integer sum = baseMapper.sumUnreadForAgent(agentId);
+        return sum == null ? 0 : sum;
+    }
+
+    @Override
+    public Integer sumUnreadForUser(Long userId) {
+        if (userId == null) {
+            return 0;
+        }
+        Integer sum = baseMapper.sumUnreadForUser(userId);
+        return sum == null ? 0 : sum;
+    }
+
+    @Override
+    public Integer sumUnreadForAllAgents() {
+        Integer sum = baseMapper.sumUnreadForAllAgents();
+        return sum == null ? 0 : sum;
     }
 }

@@ -11,6 +11,10 @@ import com.puxinxiaolin.adopt.enums.ContentCategoryEnum;
  */
 public class RedisConstant {
 
+    // ========================== 对话相关 ===============================
+    public static String CONVERSATION_PREFIX = "conversation:";
+
+
     // ========================== 验证码相关 ===============================
 
     /**
@@ -93,7 +97,7 @@ public class RedisConstant {
      */
     public static final String VISIT_UV_PREFIX = "visit:uv:";
 
-    
+
     // =========================== 字典相关 ================================
     public static final String DICT_ALL = "dict:all";
     public static final String DICT_PET_CATEGORY = "dict:pet_category";
@@ -102,7 +106,7 @@ public class RedisConstant {
     public static final String DICT_HEALTH_STATUS = "dict:health_status";
     public static final String DICT_ARTICLE_CATEGORY = "dict:article_category";
 
-    
+
     // =========================== 工具方法 ================================
 
     /**
@@ -162,6 +166,16 @@ public class RedisConstant {
      */
     public static String buildPhoneCodeKey(String phone, String purpose) {
         return PHONE_CODE_PREFIX + purpose + ":" + phone;
+    }
+
+    /**
+     * 构建对话 key
+     *
+     * @param sessionId
+     * @return
+     */
+    public static String buildConversationKey(String sessionId) {
+        return CONVERSATION_PREFIX + sessionId;
     }
 
 }

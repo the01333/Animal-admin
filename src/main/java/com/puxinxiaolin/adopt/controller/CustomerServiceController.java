@@ -1,7 +1,5 @@
 package com.puxinxiaolin.adopt.controller;
 
-import cn.dev33.satoken.annotation.SaCheckRole;
-import cn.dev33.satoken.annotation.SaMode;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -11,12 +9,14 @@ import com.puxinxiaolin.adopt.entity.dto.CsSendMessageDTO;
 import com.puxinxiaolin.adopt.entity.dto.CsWsUnreadDTO;
 import com.puxinxiaolin.adopt.entity.entity.ChatMessage;
 import com.puxinxiaolin.adopt.entity.entity.CustomerServiceSession;
+import com.puxinxiaolin.adopt.entity.entity.User;
 import com.puxinxiaolin.adopt.entity.vo.CustomerServiceMessageVO;
 import com.puxinxiaolin.adopt.entity.vo.CustomerServiceSessionVO;
 import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.ChatMessageMapper;
 import com.puxinxiaolin.adopt.service.CustomerServiceLongPollingService;
 import com.puxinxiaolin.adopt.service.CustomerServiceSessionService;
+import com.puxinxiaolin.adopt.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +53,7 @@ public class CustomerServiceController {
     private final CustomerServiceLongPollingService customerServiceLongPollingService;
     private final SimpMessagingTemplate messagingTemplate;
     private final SimpUserRegistry simpUserRegistry;
+    private final UserService userService;
 
     /**
      * 前台用户: 获取或创建当前用户的人工客服会话
@@ -64,16 +65,21 @@ public class CustomerServiceController {
     }
 
     /**
-     * 后台客服: 分页查询会话列表
+     * 后台客服: 分页查询会话列表（仅 super_admin 可用）
      */
     @GetMapping("/sessions")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
     public Result<Page<CustomerServiceSessionVO>> pageSessions(
             @RequestParam(defaultValue = "1") @Min(1) Long current,
             @RequestParam(defaultValue = "10") @Min(1) Long size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status
     ) {
+        Long currentUserId = StpUtil.getLoginIdAsLong();
+        boolean isSuperAdmin = StpUtil.hasRole("super_admin");
+        if (!isSuperAdmin) {
+            log.warn("非超级管理员尝试访问客服会话列表, userId={}", currentUserId);
+            throw new BizException(ResultCode.FORBIDDEN, "仅超级管理员可查看客服会话");
+        }
         Page<CustomerServiceSessionVO> page = customerServiceSessionService.pageSessionsForAdmin(current, size, keyword, status);
         return Result.success(page);
     }
@@ -91,10 +97,16 @@ public class CustomerServiceController {
             return Result.success(List.of());
         }
 
-        // 简单权限校验: 普通用户只能查看自己的会话; 管理员可查看所有
-        boolean isAdmin = StpUtil.hasRole("admin") || StpUtil.hasRole("super_admin");
+        // 权限校验: 普通用户只能查看自己的会话; 仅 super_admin 可以查看任何会话
+        boolean isSuperAdmin = StpUtil.hasRole("super_admin");
+        boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
         if (!isAdmin && !currentUserId.equals(session.getUserId())) {
             // 非管理员且不是会话所属用户, 返回空列表以避免信息泄露
+            return Result.success(List.of());
+        }
+        if (isAdmin && !isSuperAdmin && !currentUserId.equals(session.getUserId())) {
+            // admin 角色不允许查看客服会话
+            log.warn("非超级管理员尝试查看客服会话消息, sessionId={}, userId={}", sessionId, currentUserId);
             return Result.success(List.of());
         }
 
@@ -105,13 +117,13 @@ public class CustomerServiceController {
         List<ChatMessage> messages = chatMessageMapper.selectList(wrapper);
         List<CustomerServiceMessageVO> voList = messages.stream()
                 .map(msg -> buildMessageVO(session, msg))
-                .collect(Collectors.toList());
+                .toList();
 
         return Result.success(voList);
     }
 
     /**
-     * 长轮询获取某个会话中的新消息。
+     * 长轮询获取某个会话中的新消息 
      */
     @GetMapping("/sessions/{sessionId}/lp-messages")
     public DeferredResult<Result<List<CustomerServiceMessageVO>>> longPollSessionMessages(
@@ -129,8 +141,14 @@ public class CustomerServiceController {
             return deferred;
         }
 
-        boolean isAdmin = StpUtil.hasRole("admin") || StpUtil.hasRole("super_admin");
+        boolean isSuperAdmin = StpUtil.hasRole("super_admin");
+        boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
         if (!isAdmin && !currentUserId.equals(session.getUserId())) {
+            DeferredResult<Result<List<CustomerServiceMessageVO>>> deferred = new DeferredResult<>();
+            deferred.setResult(Result.success(List.of()));
+            return deferred;
+        }
+        if (isAdmin && !isSuperAdmin && !currentUserId.equals(session.getUserId())) {
             DeferredResult<Result<List<CustomerServiceMessageVO>>> deferred = new DeferredResult<>();
             deferred.setResult(Result.success(List.of()));
             return deferred;
@@ -173,9 +191,14 @@ public class CustomerServiceController {
             throw new BizException(ResultCode.NOT_FOUND, "会话不存在");
         }
 
-        boolean isAdmin = StpUtil.hasRole("admin") || StpUtil.hasRole("super_admin");
+        boolean isSuperAdmin = StpUtil.hasRole("super_admin");
+        boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
         if (!isAdmin && !currentUserId.equals(session.getUserId())) {
             throw new BizException(ResultCode.FORBIDDEN, "无权发送该会话消息");
+        }
+        if (isAdmin && !isSuperAdmin) {
+            // 普通 admin 不允许作为客服发送消息
+            throw new BizException(ResultCode.FORBIDDEN, "仅超级管理员可作为客服对话");
         }
 
         String messageType = StringUtils.isBlank(body.getMessageType()) ? "text" : body.getMessageType();
@@ -188,12 +211,21 @@ public class CustomerServiceController {
         msg.setSenderId(currentUserId);
 
         Long receiverId = null;
-        // 如果当前用户是会话中的普通用户, 则接收者是客服
-        if (session.getUserId() != null && currentUserId.equals(session.getUserId())) {
+        boolean userSending = session.getUserId() != null && currentUserId.equals(session.getUserId());
+        if (userSending) {
             receiverId = session.getAgentId();
+            if (receiverId == null || simpUserRegistry.getUser(String.valueOf(receiverId)) == null) {
+                Long onlineAgentId = resolveFirstOnlineSuperAdminId();
+                if (onlineAgentId != null) {
+                    receiverId = onlineAgentId;
+                    session.setAgentId(onlineAgentId);
+                }
+            }
         } else {
-            // 否则认为是客服发给用户
             receiverId = session.getUserId();
+            if (isSuperAdmin && (session.getAgentId() == null || !currentUserId.equals(session.getAgentId()))) {
+                session.setAgentId(currentUserId);
+            }
         }
         msg.setReceiverId(receiverId);
         msg.setIsRead(false);
@@ -221,10 +253,44 @@ public class CustomerServiceController {
         // 通知所有长轮询等待者有新消息
         customerServiceLongPollingService.publishNewMessage(session.getId(), vo);
 
-        // 通过 WebSocket 推送最新未读汇总给接收方 (用户或客服)，用于驱动前台/后台入口红点
+        // 通过 WebSocket 推送最新未读汇总给接收方 (用户或客服), 用于驱动前台/后台入口红点
         if (receiverId != null) {
+            Integer totalUnreadForUser = customerServiceSessionService.sumUnreadForUser(session.getUserId());
+            Integer totalUnreadForAgent = customerServiceSessionService.sumUnreadForAllAgents();
             log.info("[WS] 准备推送未读汇总, receiverId={}, unreadForUser={}, unreadForAgent={}",
-                    receiverId, session.getUnreadForUser(), session.getUnreadForAgent());
+                    receiverId, totalUnreadForUser, totalUnreadForAgent);
+
+            CsWsUnreadDTO unreadDTO = CsWsUnreadDTO.builder()
+                    .unreadForUser(totalUnreadForUser)
+                    .unreadForAgent(totalUnreadForAgent)
+                    .build();
+
+            if (userSending) {
+                List<Long> onlineAdminIds = resolveOnlineSuperAdminIds();
+                for (Long adminId : onlineAdminIds) {
+                    messagingTemplate.convertAndSendToUser(
+                            String.valueOf(adminId),
+                            "/queue/cs/chat",
+                            vo
+                    );
+                    messagingTemplate.convertAndSendToUser(
+                            String.valueOf(adminId),
+                            "/queue/cs/unread",
+                            unreadDTO
+                    );
+                }
+            } else {
+                messagingTemplate.convertAndSendToUser(
+                        String.valueOf(receiverId),
+                        "/queue/cs/chat",
+                        vo
+                );
+                messagingTemplate.convertAndSendToUser(
+                        String.valueOf(receiverId),
+                        "/queue/cs/unread",
+                        unreadDTO
+                );
+            }
 
             // 打印当前在线的 WebSocket 用户及其订阅, 便于排查 convertAndSendToUser 是否能命中
             for (SimpUser user : simpUserRegistry.getUsers()) {
@@ -235,17 +301,6 @@ public class CustomerServiceController {
                     }
                 }
             }
-
-            CsWsUnreadDTO unreadDTO = CsWsUnreadDTO.builder()
-                    .unreadForUser(session.getUnreadForUser())
-                    .unreadForAgent(session.getUnreadForAgent())
-                    .build();
-
-            messagingTemplate.convertAndSendToUser(
-                    String.valueOf(receiverId),
-                    "/queue/cs/unread",
-                    unreadDTO
-            );
         }
 
         return Result.success(vo);
@@ -267,20 +322,81 @@ public class CustomerServiceController {
             throw new BizException(ResultCode.NOT_FOUND, "会话不存在");
         }
 
-        boolean isAdmin = StpUtil.hasRole("admin") || StpUtil.hasRole("super_admin");
+        boolean isSuperAdmin = StpUtil.hasRole("super_admin");
+        boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
         if (!isAdmin && !currentUserId.equals(session.getUserId())) {
             throw new BizException(ResultCode.FORBIDDEN, "无权更新该会话未读状态");
+        }
+        if (isAdmin && !isSuperAdmin && !currentUserId.equals(session.getUserId())) {
+            throw new BizException(ResultCode.FORBIDDEN, "仅超级管理员可更新客服会话未读状态");
         }
 
         String side = readSide == null ? "" : readSide.toUpperCase();
         switch (side) {
             case "USER" -> session.setUnreadForUser(0);
-            case "AGENT" -> session.setUnreadForAgent(0);
+            case "AGENT" -> {
+                if (!isSuperAdmin) {
+                    throw new BizException(ResultCode.FORBIDDEN, "仅超级管理员可更新客服侧未读状态");
+                }
+                session.setAgentId(currentUserId);
+                session.setUnreadForAgent(0);
+            }
             default -> throw new BizException(ResultCode.BAD_REQUEST, "readSide 非法");
         }
 
         customerServiceSessionService.updateById(session);
+
+        Integer totalUnreadForUser = customerServiceSessionService.sumUnreadForUser(session.getUserId());
+        Integer totalUnreadForAgent = customerServiceSessionService.sumUnreadForAllAgents();
+
+        CsWsUnreadDTO unreadDTO = CsWsUnreadDTO.builder()
+                .unreadForUser(totalUnreadForUser)
+                .unreadForAgent(totalUnreadForAgent)
+                .build();
+
+        if ("USER".equals(side)) {
+            Long pushUserId = session.getUserId();
+            if (pushUserId != null) {
+                messagingTemplate.convertAndSendToUser(
+                        String.valueOf(pushUserId),
+                        "/queue/cs/unread",
+                        unreadDTO
+                );
+            }
+        } else if ("AGENT".equals(side)) {
+            List<Long> onlineAdminIds = resolveOnlineSuperAdminIds();
+            for (Long adminId : onlineAdminIds) {
+                messagingTemplate.convertAndSendToUser(
+                        String.valueOf(adminId),
+                        "/queue/cs/unread",
+                        unreadDTO
+                );
+            }
+        }
         return Result.success(null);
+    }
+
+    private List<Long> resolveOnlineSuperAdminIds() {
+        try {
+            LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(User::getStatus, 1)
+                    .eq(User::getRole, "super_admin")
+                    .orderByAsc(User::getId);
+
+            List<User> candidates = userService.list(wrapper);
+            if (candidates == null || candidates.isEmpty()) {
+                return List.of();
+            }
+
+            return candidates.stream()
+                    .filter(u -> u != null && u.getId() != null)
+                    .filter(u -> simpUserRegistry.getUser(String.valueOf(u.getId())) != null)
+                    .map(User::getId)
+                    .toList();
+        } catch (Exception e) {
+            log.warn("解析在线超级管理员列表失败", e);
+        }
+        return List.of();
     }
 
     private CustomerServiceMessageVO buildMessageVO(CustomerServiceSession session, ChatMessage msg) {
@@ -303,5 +419,31 @@ public class CustomerServiceController {
         }
         builder.senderRole(senderRole);
         return builder.build();
+    }
+
+    private Long resolveFirstOnlineSuperAdminId() {
+        try {
+            LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(User::getStatus, 1)
+                    .eq(User::getRole, "super_admin")
+                    .orderByAsc(User::getId);
+
+            List<User> candidates = userService.list(wrapper);
+            if (candidates == null || candidates.isEmpty()) {
+                return null;
+            }
+
+            for (User u : candidates) {
+                if (u == null || u.getId() == null) {
+                    continue;
+                }
+                if (simpUserRegistry.getUser(String.valueOf(u.getId())) != null) {
+                    return u.getId();
+                }
+            }
+        } catch (Exception e) {
+            log.warn("解析在线超级管理员失败", e);
+        }
+        return null;
     }
 }

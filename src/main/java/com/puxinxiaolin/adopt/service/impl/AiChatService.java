@@ -1,30 +1,29 @@
 package com.puxinxiaolin.adopt.service.impl;
 
 import com.puxinxiaolin.adopt.service.SessionMemoryService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 
- */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class AiChatService {
 
-    private final ChatClient chatClient;
-    private final SessionMemoryService sessionMemoryService;
+    @Autowired
+    private ChatClient chatClient;
     
+    @Autowired
+    private SessionMemoryService sessionMemoryService;
+
     public Flux<String> chatStream(String content) {
         String system = buildSystemPrompt();
         Message user = new UserMessage(content == null ? "" : content);
@@ -37,8 +36,8 @@ public class AiChatService {
 
     /**
      * 流式多轮对话（使用会话记忆）
-     * 
-     * 核心特性: 
+     * <p>
+     * 核心特性:
      * 1. 用户隔离 - 不同用户的对话完全分离
      * 2. 持久化 - 对话历史保存到 Cassandra
      * 3. 缓存加速 - 使用 Redis 缓存热数据
@@ -75,7 +74,7 @@ public class AiChatService {
         return chatClient.prompt(prompt)
                 .stream()
                 .content();
-                // 注意: 完整的AI回复内容由前端收集后通过 /save-message 接口保存
+        // 注意: 完整的AI回复内容由前端收集后通过 /save-message 接口保存
     }
 
     /**
@@ -103,7 +102,7 @@ public class AiChatService {
      */
     private String buildSystemPrompt() {
         return """
-                你是i宠园的智能客服助手, 一个专业、友好且富有同情心的宠物领养顾问。
+                你是i宠园的智能客服助手, 一个专业、友好且富有同情心的宠物领养顾问 
                 
                 【核心职责】
                 1. 帮助用户找到最适合他们的宠物伴侣

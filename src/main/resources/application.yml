@@ -102,7 +102,6 @@ logging:
     org.springframework.ai: debug
   pattern:
 #    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
-#    console: "%clr{%date{yyyy-MM-dd HH:mm:ss}}{cyan} %clr{[%thread]}{blue} %clr{%-5level}{highlightLevel} %clr{%logger{36}}{magenta} %clr{---} %clr{%msg%n}{faint}"
     console: "%clr{%date{yyyy-MM-dd HH:mm:ss}}{cyan} %clr{[%thread]}{blue} %clr{%-4level}{highlightLevel} %clr{%logger{36}}{magenta}  %clr{%msg%n}{faint}"
 
 minio:

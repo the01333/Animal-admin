@@ -34,7 +34,7 @@ public class AiConfig {
     private AiToolService aiToolService;
 
     private static final String SYSTEM_PROMPT = """
-            你是宠物领养系统的客服, 只回答与本系统相关的问题, 不相关的问题直接拒绝。
+            你是宠物领养系统的客服, 只回答与本系统相关的问题, 不相关的问题直接拒绝 
             """;
 
     @Bean

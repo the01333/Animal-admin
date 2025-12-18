@@ -24,4 +24,10 @@ public interface CustomerServiceSessionService extends IService<CustomerServiceS
      * @param status  会话状态（OPEN/CLOSED）, 为空则不过滤
      */
     Page<CustomerServiceSessionVO> pageSessionsForAdmin(Long current, Long size, String keyword, String status);
+
+    Integer sumUnreadForAgent(Long agentId);
+
+    Integer sumUnreadForAllAgents();
+
+    Integer sumUnreadForUser(Long userId);
 }

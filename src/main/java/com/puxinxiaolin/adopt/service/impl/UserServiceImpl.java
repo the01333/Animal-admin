@@ -8,13 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.puxinxiaolin.adopt.common.ResultCode;
-import com.puxinxiaolin.adopt.entity.dto.AdminUpdateUserDTO;
-import com.puxinxiaolin.adopt.entity.dto.LoginDTO;
-import com.puxinxiaolin.adopt.entity.dto.RegisterDTO;
-import com.puxinxiaolin.adopt.entity.dto.EmailCodeLoginDTO;
-import com.puxinxiaolin.adopt.entity.dto.PhoneCodeLoginDTO;
-import com.puxinxiaolin.adopt.entity.dto.ChangePasswordDTO;
-import com.puxinxiaolin.adopt.entity.dto.UpdateUserStatusDTO;
+import com.puxinxiaolin.adopt.entity.dto.*;
 import com.puxinxiaolin.adopt.entity.entity.User;
 import com.puxinxiaolin.adopt.entity.vo.LoginVO;
 import com.puxinxiaolin.adopt.entity.vo.UserVO;
@@ -24,8 +18,8 @@ import com.puxinxiaolin.adopt.mapper.UserMapper;
 import com.puxinxiaolin.adopt.service.FileUploadService;
 import com.puxinxiaolin.adopt.service.UserService;
 import com.puxinxiaolin.adopt.service.VerificationCodeService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,10 +29,13 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
-    private final VerificationCodeService verificationCodeService;
-    private final FileUploadService fileUploadService;
+    
+    @Autowired
+    private VerificationCodeService verificationCodeService;
+    
+    @Autowired
+    private FileUploadService fileUploadService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)

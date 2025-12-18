@@ -16,7 +16,7 @@ public class VerificationCode implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 验证码ID
+     * 验证码 ID
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;

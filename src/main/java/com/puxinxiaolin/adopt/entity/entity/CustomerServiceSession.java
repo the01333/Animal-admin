@@ -22,7 +22,7 @@ public class CustomerServiceSession implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 主键ID
+     * 主键 ID
      */
     @TableId(type = IdType.AUTO)
     private Long id;

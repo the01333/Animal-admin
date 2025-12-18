@@ -1,6 +1,8 @@
 package com.puxinxiaolin.adopt.service.impl;
 
 import cn.hutool.core.util.IdUtil;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.entity.cassandra.ConversationHistoryCassandra;
 import com.puxinxiaolin.adopt.entity.entity.ConversationHistory;
 import com.puxinxiaolin.adopt.entity.entity.ConversationSession;
@@ -10,12 +12,11 @@ import com.puxinxiaolin.adopt.mapper.ConversationHistoryMapper;
 import com.puxinxiaolin.adopt.mapper.ConversationSessionMapper;
 import com.puxinxiaolin.adopt.repository.ConversationHistoryCassandraRepository;
 import com.puxinxiaolin.adopt.service.ConversationService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,15 +32,18 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapper, ConversationSession>
         implements ConversationService {
     
-    private final ConversationHistoryMapper conversationHistoryMapper;
-    private final ConversationHistoryCassandraRepository cassandraRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private ConversationHistoryMapper conversationHistoryMapper;
     
-    private static final String CONVERSATION_CACHE_PREFIX = "conversation:";
+    @Autowired
+    private ConversationHistoryCassandraRepository cassandraRepository;
+    
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+    
     private static final long CACHE_EXPIRE_HOURS = 24;
     
     @Override
@@ -211,7 +215,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
         log.info("获取会话的对话历史, 会话ID: {}", sessionId);
         
         // 先从缓存获取
-        String cacheKey = CONVERSATION_CACHE_PREFIX + sessionId;
+        String cacheKey = RedisConstant.buildConversationKey(sessionId);
         @SuppressWarnings("unchecked")
         List<Message> cachedMessages = (List<Message>) redisTemplate.opsForValue().get(cacheKey);
         if (cachedMessages != null && !cachedMessages.isEmpty()) {
@@ -383,7 +387,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
      * 清除会话缓存
      */
     private void clearSessionCache(String sessionId) {
-        String cacheKey = CONVERSATION_CACHE_PREFIX + sessionId;
+        String cacheKey = RedisConstant.buildConversationKey(sessionId);
         redisTemplate.delete(cacheKey);
     }
 }
