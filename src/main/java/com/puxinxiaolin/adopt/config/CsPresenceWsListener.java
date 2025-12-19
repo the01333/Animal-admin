@@ -30,17 +30,35 @@ public class CsPresenceWsListener {
     @EventListener
     public void handleSessionConnected(SessionConnectedEvent event) {
         String sessionId = null;
+        Principal principal = event.getUser();
         try {
-            sessionId = StompHeaderAccessor.wrap(event.getMessage()).getSessionId();
+            StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
+            sessionId = accessor.getSessionId();
+            if (principal == null) {
+                principal = accessor.getUser();
+            }
         } catch (Exception e) {
             log.debug("[WS] 解析 STOMP sessionId 失败", e);
         }
-        handlePresenceConnect(event.getUser(), sessionId);
+        handlePresenceConnect(principal, sessionId);
     }
 
     @EventListener
     public void handleSessionDisconnect(SessionDisconnectEvent event) {
-        handlePresenceDisconnect(event.getUser(), event.getSessionId());
+        Principal principal = event.getUser();
+        String sessionId = event.getSessionId();
+        if (principal == null) {
+            try {
+                StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
+                if (sessionId == null || sessionId.isBlank()) {
+                    sessionId = accessor.getSessionId();
+                }
+                principal = accessor.getUser();
+            } catch (Exception e) {
+                log.debug("[WS] 解析 STOMP sessionId 失败", e);
+            }
+        }
+        handlePresenceDisconnect(principal, sessionId);
     }
 
     private void handlePresenceConnect(Principal principal, String sessionId) {

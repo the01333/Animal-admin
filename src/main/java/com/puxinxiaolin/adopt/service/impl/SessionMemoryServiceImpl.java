@@ -1,5 +1,6 @@
 package com.puxinxiaolin.adopt.service.impl;
 
+import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.entity.cassandra.ConversationHistoryCassandra;
 import com.puxinxiaolin.adopt.entity.entity.ConversationSession;
 import com.puxinxiaolin.adopt.mapper.ConversationSessionMapper;
@@ -13,8 +14,12 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -35,7 +40,6 @@ public class SessionMemoryServiceImpl implements SessionMemoryService {
     private final ConversationSessionMapper sessionMapper;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private static final String MEMORY_CACHE_PREFIX = "session:memory:";
     private static final long CACHE_EXPIRE_HOURS = 24;
 
     @Override
@@ -49,12 +53,12 @@ public class SessionMemoryServiceImpl implements SessionMemoryService {
         }
 
         // 2. 尝试从缓存获取
-        String cacheKey = MEMORY_CACHE_PREFIX + sessionId;
+        String cacheKey = RedisConstant.buildSessionMemoryKey(sessionId);
         @SuppressWarnings("unchecked")
         List<Message> cachedMessages = (List<Message>) redisTemplate.opsForValue().get(cacheKey);
         if (cachedMessages != null && !cachedMessages.isEmpty()) {
             log.debug("从缓存获取会话历史 - 会话ID: {}", sessionId);
-            // 返回最近的N条消息
+            // 返回最近的 N 条消息
             int startIndex = Math.max(0, cachedMessages.size() - limit);
             return cachedMessages.subList(startIndex, cachedMessages.size());
         }
@@ -74,8 +78,7 @@ public class SessionMemoryServiceImpl implements SessionMemoryService {
 
         // 4. 缓存到 Redis
         if (!messages.isEmpty()) {
-            redisTemplate.opsForValue().set(cacheKey, messages,
-                    java.time.Duration.ofHours(CACHE_EXPIRE_HOURS));
+            redisTemplate.opsForValue().set(cacheKey, messages, Duration.ofHours(CACHE_EXPIRE_HOURS));
         }
 
         log.debug("从 Cassandra 获取会话历史 - 会话ID: {}, 消息数: {}", sessionId, messages.size());
@@ -208,7 +211,7 @@ public class SessionMemoryServiceImpl implements SessionMemoryService {
      * 清除会话的缓存
      */
     private void clearCache(String sessionId) {
-        String cacheKey = MEMORY_CACHE_PREFIX + sessionId;
+        String cacheKey = RedisConstant.buildSessionMemoryKey(sessionId);
         redisTemplate.delete(cacheKey);
         log.debug("缓存已清除 - 会话ID: {}", sessionId);
     }

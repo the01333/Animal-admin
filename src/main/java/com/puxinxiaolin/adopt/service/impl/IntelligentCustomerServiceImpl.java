@@ -12,9 +12,9 @@ import com.puxinxiaolin.adopt.entity.vo.ConversationSessionVO;
 import com.puxinxiaolin.adopt.service.ConversationService;
 import com.puxinxiaolin.adopt.service.IntelligentCustomerService;
 import com.puxinxiaolin.adopt.service.SessionMemoryService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -26,13 +26,19 @@ import java.time.Duration;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class IntelligentCustomerServiceImpl implements IntelligentCustomerService {
-
-    private final AiChatService aiChatService;
-    private final ConversationService conversationService;
-    private final SessionMemoryService sessionMemoryService;
-    private final RedisTemplate<String, Object> redisTemplate;
+    
+    @Autowired
+    private AiChatService aiChatService;
+    
+    @Autowired
+    private ConversationService conversationService;
+    
+    @Autowired
+    private SessionMemoryService sessionMemoryService;
+    
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public ChatStreamResult chatStream(ChatStreamRequestDTO request, String clientIp) {
@@ -66,7 +72,7 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
     public Result<String> saveMessage(SaveMessageDTO request) {
         Long userId = UserContext.getUserId();
         if (StringUtils.isBlank(request.getSessionId())) {
-            return Result.error(ResultCode.BAD_REQUEST.getCode(), "会话ID不能为空");
+            return Result.error(ResultCode.BAD_REQUEST.getCode(), "会话 ID 不能为空");
         }
         String role = StringUtils.defaultIfBlank(request.getRole(), "assistant");
         String content = StringUtils.isNotBlank(request.getContent()) ? request.getContent() : "";
