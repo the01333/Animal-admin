@@ -5,6 +5,7 @@ import com.puxinxiaolin.adopt.utils.SaTokenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -23,6 +24,7 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,6 +34,45 @@ import java.util.Map;
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    private static String trimBearerPrefix(String token) {
+        if (token == null) {
+            return null;
+        }
+        String t = token.trim();
+        if (t.startsWith("Bearer ")) {
+            return t.substring("Bearer ".length()).trim();
+        }
+        return t;
+    }
+
+    private static String getQueryParamFromUri(URI uri, String key) {
+        if (uri == null || key == null) {
+            return null;
+        }
+        String query = uri.getQuery();
+        if (query == null || query.isBlank()) {
+            return null;
+        }
+        try {
+            String[] pairs = query.split("&");
+            for (String pair : pairs) {
+                int idx = pair.indexOf('=');
+                if (idx <= 0) {
+                    continue;
+                }
+                String k = pair.substring(0, idx);
+                if (!key.equals(k)) {
+                    continue;
+                }
+                String raw = pair.substring(idx + 1);
+                return URLDecoder.decode(raw, StandardCharsets.UTF_8);
+            }
+        } catch (Exception ignore) {
+            return null;
+        }
+        return null;
+    }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -46,19 +87,24 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                         // 1. 优先从 WebSocket URL 查询参数中解析 token
                         try {
                             URI uri = request.getURI();
-                            String query = uri.getQuery();
-                            if (query != null) {
-                                String[] pairs = query.split("&");
-                                for (String pair : pairs) {
-                                    int idx = pair.indexOf('=');
-                                    if (idx > 0) {
-                                        String key = pair.substring(0, idx);
-                                        if ("token".equals(key)) {
-                                            String raw = pair.substring(idx + 1);
-                                            tokenParam = URLDecoder.decode(raw, StandardCharsets.UTF_8);
-                                            break;
+                            tokenParam = getQueryParamFromUri(uri, "token");
+
+                            // SockJS 的 websocket/iframe 等传输在某些情况下 query 可能为空，
+                            // 这里兼容从 Servlet 请求参数中取值
+                            if ((tokenParam == null || tokenParam.isBlank()) && request instanceof ServletServerHttpRequest servletRequest) {
+                                try {
+                                    String tokenFromParam = servletRequest.getServletRequest().getParameter("token");
+                                    if (tokenFromParam != null && !tokenFromParam.isBlank()) {
+                                        tokenParam = tokenFromParam;
+                                    }
+
+                                    if (tokenParam == null || tokenParam.isBlank()) {
+                                        String authHeader = servletRequest.getServletRequest().getHeader("Authorization");
+                                        if (authHeader != null && !authHeader.isBlank()) {
+                                            tokenParam = authHeader;
                                         }
                                     }
+                                } catch (Exception ignore) {
                                 }
                             }
                         } catch (Exception ex) {
@@ -68,11 +114,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                         // 2. 根据 token 解析登录用户ID, 兼容可能携带 Bearer 前缀的情况
                         if (tokenParam != null && !tokenParam.isEmpty()) {
                             try {
-                                Object loginId = StpUtil.getLoginIdByToken(tokenParam);
-                                if (loginId == null && tokenParam.startsWith("Bearer ")) {
-                                    String rawToken = tokenParam.substring("Bearer ".length());
-                                    loginId = StpUtil.getLoginIdByToken(rawToken);
-                                }
+                                String rawToken = trimBearerPrefix(tokenParam);
+                                Object loginId = StpUtil.getLoginIdByToken(rawToken);
                                 if (loginId != null) {
                                     userId = Long.valueOf(loginId.toString());
                                 }

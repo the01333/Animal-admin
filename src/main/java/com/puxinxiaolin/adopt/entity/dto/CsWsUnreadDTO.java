@@ -10,9 +10,13 @@ import lombok.Data;
 @Builder
 public class CsWsUnreadDTO {
 
-    /** 用户端总未读数 */
+    /**
+     * 用户端总未读数
+     */
     private Integer unreadForUser;
 
-    /** 客服端总未读数 */
+    /**
+     * 客服端总未读数
+     */
     private Integer unreadForAgent;
 }

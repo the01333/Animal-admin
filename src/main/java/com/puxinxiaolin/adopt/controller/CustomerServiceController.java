@@ -267,17 +267,27 @@ public class CustomerServiceController {
 
             if (userSending) {
                 List<Long> onlineAdminIds = resolveOnlineSuperAdminIds();
+                log.info("[WS] userSending=true, sessionId={}, senderUserId={}, onlineAdminIds={}",
+                        session.getId(), currentUserId, onlineAdminIds);
                 for (Long adminId : onlineAdminIds) {
+                    log.info("[WS] 即将推送给管理员, adminId={}, simpUserExists={}",
+                            adminId, simpUserRegistry.getUser(String.valueOf(adminId)) != null);
+                }
+                for (Long adminId : onlineAdminIds) {
+                    // 推送具体的聊天消息给管理员
                     messagingTemplate.convertAndSendToUser(
                             String.valueOf(adminId),
                             "/queue/cs/chat",
                             vo
                     );
+                    // 推送未读数更新给管理员
                     messagingTemplate.convertAndSendToUser(
                             String.valueOf(adminId),
                             "/queue/cs/unread",
                             unreadDTO
                     );
+                    log.info("[WS] 已推送给管理员, adminId={}, sessionId={}, msgId={}",
+                            adminId, session.getId(), msg.getId());
                 }
             } else {
                 messagingTemplate.convertAndSendToUser(
