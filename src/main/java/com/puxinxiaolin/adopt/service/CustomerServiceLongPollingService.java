@@ -1,6 +1,6 @@
 package com.puxinxiaolin.adopt.service;
 
-import com.puxinxiaolin.adopt.common.Result;
+import com.puxinxiaolin.adopt.entity.common.Result;
 import com.puxinxiaolin.adopt.entity.vo.CustomerServiceMessageVO;
 import org.springframework.web.context.request.async.DeferredResult;
 

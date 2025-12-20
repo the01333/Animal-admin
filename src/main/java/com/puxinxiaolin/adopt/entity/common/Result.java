@@ -1,5 +1,6 @@
-package com.puxinxiaolin.adopt.common;
+package com.puxinxiaolin.adopt.entity.common;
 
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import lombok.Data;
 import java.io.Serializable;
 
@@ -39,35 +40,35 @@ public class Result<T> implements Serializable {
      * 成功响应
      */
     public static <T> Result<T> success() {
-        return new Result<>(ResultCode.SUCCESS.getCode(), ResultCode.SUCCESS.getMessage(), null);
+        return new Result<>(ResultCodeEnum.SUCCESS.getCode(), ResultCodeEnum.SUCCESS.getMessage(), null);
     }
     
     /**
      * 成功响应（带数据）
      */
     public static <T> Result<T> success(T data) {
-        return new Result<>(ResultCode.SUCCESS.getCode(), ResultCode.SUCCESS.getMessage(), data);
+        return new Result<>(ResultCodeEnum.SUCCESS.getCode(), ResultCodeEnum.SUCCESS.getMessage(), data);
     }
     
     /**
      * 成功响应（自定义消息和数据）
      */
     public static <T> Result<T> success(String message, T data) {
-        return new Result<>(ResultCode.SUCCESS.getCode(), message, data);
+        return new Result<>(ResultCodeEnum.SUCCESS.getCode(), message, data);
     }
     
     /**
      * 失败响应
      */
     public static <T> Result<T> error() {
-        return new Result<>(ResultCode.ERROR.getCode(), ResultCode.ERROR.getMessage(), null);
+        return new Result<>(ResultCodeEnum.ERROR.getCode(), ResultCodeEnum.ERROR.getMessage(), null);
     }
     
     /**
      * 失败响应（自定义消息）
      */
     public static <T> Result<T> error(String message) {
-        return new Result<>(ResultCode.ERROR.getCode(), message, null);
+        return new Result<>(ResultCodeEnum.ERROR.getCode(), message, null);
     }
     
     /**
@@ -80,15 +81,15 @@ public class Result<T> implements Serializable {
     /**
      * 根据 ResultCode 返回结果
      */
-    public static <T> Result<T> result(ResultCode resultCode) {
-        return new Result<>(resultCode.getCode(), resultCode.getMessage(), null);
+    public static <T> Result<T> result(ResultCodeEnum resultCodeEnum) {
+        return new Result<>(resultCodeEnum.getCode(), resultCodeEnum.getMessage(), null);
     }
     
     /**
      * 根据 ResultCode 返回结果（带数据）
      */
-    public static <T> Result<T> result(ResultCode resultCode, T data) {
-        return new Result<>(resultCode.getCode(), resultCode.getMessage(), data);
+    public static <T> Result<T> result(ResultCodeEnum resultCodeEnum, T data) {
+        return new Result<>(resultCodeEnum.getCode(), resultCodeEnum.getMessage(), data);
     }
 }
 

@@ -1,7 +1,7 @@
 package com.puxinxiaolin.adopt.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.puxinxiaolin.adopt.common.Result;
+import com.puxinxiaolin.adopt.entity.common.Result;
 import com.puxinxiaolin.adopt.entity.dto.FavoritePageQueryDTO;
 import com.puxinxiaolin.adopt.entity.vo.FavoriteVO;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;

@@ -2,7 +2,7 @@ package com.puxinxiaolin.adopt.service.impl;
 
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
-import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.config.MinioConfig;
 import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.service.FileUploadService;
@@ -61,7 +61,7 @@ public class OssFileUploadServiceImpl implements FileUploadService {
             return buildFileUrl(objectName);
         } catch (Exception e) {
             log.error("文件上传失败", e);
-            throw new BizException(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "文件上传失败: " + e.getMessage());
+            throw new BizException(ResultCodeEnum.INTERNAL_SERVER_ERROR.getCode(), "文件上传失败: " + e.getMessage());
         }
     }
 
@@ -94,7 +94,7 @@ public class OssFileUploadServiceImpl implements FileUploadService {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             }
         } catch (Exception e) {
-            throw new BizException(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "校验/创建 MinIO 存储桶失败: " + e.getMessage());
+            throw new BizException(ResultCodeEnum.INTERNAL_SERVER_ERROR.getCode(), "校验/创建 MinIO 存储桶失败: " + e.getMessage());
         }
     }
 

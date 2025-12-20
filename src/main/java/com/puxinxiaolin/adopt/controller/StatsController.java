@@ -2,7 +2,7 @@ package com.puxinxiaolin.adopt.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.annotation.SaMode;
-import com.puxinxiaolin.adopt.common.Result;
+import com.puxinxiaolin.adopt.entity.common.Result;
 import com.puxinxiaolin.adopt.entity.vo.ApplicationStatusStatsVO;
 import com.puxinxiaolin.adopt.entity.vo.PetCategoryStatsVO;
 import com.puxinxiaolin.adopt.entity.vo.StatsVO;

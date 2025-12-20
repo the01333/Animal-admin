@@ -4,7 +4,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.entity.dto.FavoritePageQueryDTO;
 import com.puxinxiaolin.adopt.entity.entity.Favorite;
@@ -50,7 +50,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         // 检查宠物是否存在
         Pet pet = petService.getById(petId);
         if (pet == null) {
-            throw new BizException(ResultCode.PET_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.PET_NOT_FOUND);
         }
         
         // 检查是否已收藏

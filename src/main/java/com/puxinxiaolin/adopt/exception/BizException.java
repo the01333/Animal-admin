@@ -1,6 +1,6 @@
 package com.puxinxiaolin.adopt.exception;
 
-import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import lombok.Getter;
 
 /**
@@ -21,14 +21,14 @@ public class BizException extends RuntimeException {
         this.code = code;
     }
     
-    public BizException(ResultCode resultCode) {
-        super(resultCode.getMessage());
-        this.code = resultCode.getCode();
+    public BizException(ResultCodeEnum resultCodeEnum) {
+        super(resultCodeEnum.getMessage());
+        this.code = resultCodeEnum.getCode();
     }
     
-    public BizException(ResultCode resultCode, String customMessage) {
+    public BizException(ResultCodeEnum resultCodeEnum, String customMessage) {
         super(customMessage);
-        this.code = resultCode.getCode();
+        this.code = resultCodeEnum.getCode();
     }
     
     public BizException(Exception e) {

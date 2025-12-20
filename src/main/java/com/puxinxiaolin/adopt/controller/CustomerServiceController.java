@@ -3,8 +3,8 @@ package com.puxinxiaolin.adopt.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.puxinxiaolin.adopt.common.Result;
-import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.entity.common.Result;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.entity.dto.CsSendMessageDTO;
 import com.puxinxiaolin.adopt.entity.dto.CsWsUnreadDTO;
 import com.puxinxiaolin.adopt.entity.entity.ChatMessage;
@@ -78,7 +78,7 @@ public class CustomerServiceController {
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
         if (!isSuperAdmin) {
             log.warn("非超级管理员尝试访问客服会话列表, userId={}", currentUserId);
-            throw new BizException(ResultCode.FORBIDDEN, "仅超级管理员可查看客服会话");
+            throw new BizException(ResultCodeEnum.FORBIDDEN, "仅超级管理员可查看客服会话");
         }
         Page<CustomerServiceSessionVO> page = customerServiceSessionService.pageSessionsForAdmin(current, size, keyword, status);
         return Result.success(page);
@@ -188,17 +188,17 @@ public class CustomerServiceController {
 
         CustomerServiceSession session = customerServiceSessionService.getById(sessionId);
         if (session == null) {
-            throw new BizException(ResultCode.NOT_FOUND, "会话不存在");
+            throw new BizException(ResultCodeEnum.NOT_FOUND, "会话不存在");
         }
 
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
         boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
         if (!isAdmin && !currentUserId.equals(session.getUserId())) {
-            throw new BizException(ResultCode.FORBIDDEN, "无权发送该会话消息");
+            throw new BizException(ResultCodeEnum.FORBIDDEN, "无权发送该会话消息");
         }
         if (isAdmin && !isSuperAdmin) {
             // 普通 admin 不允许作为客服发送消息
-            throw new BizException(ResultCode.FORBIDDEN, "仅超级管理员可作为客服对话");
+            throw new BizException(ResultCodeEnum.FORBIDDEN, "仅超级管理员可作为客服对话");
         }
 
         String messageType = StringUtils.isBlank(body.getMessageType()) ? "text" : body.getMessageType();
@@ -329,16 +329,16 @@ public class CustomerServiceController {
 
         CustomerServiceSession session = customerServiceSessionService.getById(sessionId);
         if (session == null) {
-            throw new BizException(ResultCode.NOT_FOUND, "会话不存在");
+            throw new BizException(ResultCodeEnum.NOT_FOUND, "会话不存在");
         }
 
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
         boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
         if (!isAdmin && !currentUserId.equals(session.getUserId())) {
-            throw new BizException(ResultCode.FORBIDDEN, "无权更新该会话未读状态");
+            throw new BizException(ResultCodeEnum.FORBIDDEN, "无权更新该会话未读状态");
         }
         if (isAdmin && !isSuperAdmin && !currentUserId.equals(session.getUserId())) {
-            throw new BizException(ResultCode.FORBIDDEN, "仅超级管理员可更新客服会话未读状态");
+            throw new BizException(ResultCodeEnum.FORBIDDEN, "仅超级管理员可更新客服会话未读状态");
         }
 
         String side = readSide == null ? "" : readSide.toUpperCase();
@@ -346,12 +346,12 @@ public class CustomerServiceController {
             case "USER" -> session.setUnreadForUser(0);
             case "AGENT" -> {
                 if (!isSuperAdmin) {
-                    throw new BizException(ResultCode.FORBIDDEN, "仅超级管理员可更新客服侧未读状态");
+                    throw new BizException(ResultCodeEnum.FORBIDDEN, "仅超级管理员可更新客服侧未读状态");
                 }
                 session.setAgentId(currentUserId);
                 session.setUnreadForAgent(0);
             }
-            default -> throw new BizException(ResultCode.BAD_REQUEST, "readSide 非法");
+            default -> throw new BizException(ResultCodeEnum.BAD_REQUEST, "readSide 非法");
         }
 
         customerServiceSessionService.updateById(session);

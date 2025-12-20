@@ -101,7 +101,7 @@ logging:
     # 设置日志级别为 debug, 获取 Spring AI 的日志信息
     org.springframework.ai: debug
   pattern:
-#    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+    # TODO: 看后期是否要采用文件形式自定义日志格式
     console: "%clr{%date{yyyy-MM-dd HH:mm:ss}}{cyan} %clr{[%thread]}{blue} %clr{%-4level}{highlightLevel} %clr{%logger{36}}{magenta}  %clr{%msg%n}{faint}"
 
 minio:

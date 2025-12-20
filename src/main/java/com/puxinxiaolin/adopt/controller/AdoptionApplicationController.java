@@ -3,7 +3,7 @@ package com.puxinxiaolin.adopt.controller;
 import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.annotation.SaMode;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.puxinxiaolin.adopt.common.Result;
+import com.puxinxiaolin.adopt.entity.common.Result;
 import com.puxinxiaolin.adopt.entity.dto.AdoptionApplicationDTO;
 import com.puxinxiaolin.adopt.entity.dto.AdoptionApplicationPageQueryDTO;
 import com.puxinxiaolin.adopt.entity.dto.AdoptionReviewDTO;

@@ -1,7 +1,7 @@
 package com.puxinxiaolin.adopt.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.entity.dto.CsSendMessageDTO;
 import com.puxinxiaolin.adopt.entity.dto.CsWsChatMessageDTO;
 import com.puxinxiaolin.adopt.entity.dto.CsWsReadAckDTO;
@@ -66,17 +66,17 @@ public class CustomerServiceWsController {
         log.info("[WS] 收到聊天消息, sessionId={}, userId={}", payload.getSessionId(), currentUserId);
 
         if (payload.getSessionId() == null || payload.getSessionId() <= 0) {
-            throw new BizException(ResultCode.BAD_REQUEST, "会话 ID 不能为空");
+            throw new BizException(ResultCodeEnum.BAD_REQUEST, "会话 ID 不能为空");
         }
 
         CustomerServiceSession session = customerServiceSessionService.getById(payload.getSessionId());
         if (session == null) {
-            throw new BizException(ResultCode.NOT_FOUND, "会话不存在");
+            throw new BizException(ResultCodeEnum.NOT_FOUND, "会话不存在");
         }
 
         boolean isAdmin = isAdminUser(currentUserId);
         if (!isAdmin && !Objects.equals(session.getUserId(), currentUserId)) {
-            throw new BizException(ResultCode.FORBIDDEN, "无权发送该会话消息");
+            throw new BizException(ResultCodeEnum.FORBIDDEN, "无权发送该会话消息");
         }
 
         CsSendMessageDTO dto = new CsSendMessageDTO();
@@ -186,24 +186,24 @@ public class CustomerServiceWsController {
                 payload.getSessionId(), payload.getReadSide(), currentUserId);
 
         if (payload.getSessionId() == null || payload.getSessionId() <= 0) {
-            throw new BizException(ResultCode.BAD_REQUEST, "会话ID不能为空");
+            throw new BizException(ResultCodeEnum.BAD_REQUEST, "会话ID不能为空");
         }
 
         CustomerServiceSession session = customerServiceSessionService.getById(payload.getSessionId());
         if (session == null) {
-            throw new BizException(ResultCode.NOT_FOUND, "会话不存在");
+            throw new BizException(ResultCodeEnum.NOT_FOUND, "会话不存在");
         }
 
         boolean isAdmin = isAdminUser(currentUserId);
         if (!isAdmin && !Objects.equals(session.getUserId(), currentUserId)) {
-            throw new BizException(ResultCode.FORBIDDEN, "无权更新该会话未读状态");
+            throw new BizException(ResultCodeEnum.FORBIDDEN, "无权更新该会话未读状态");
         }
 
         String side = payload.getReadSide() == null ? "" : payload.getReadSide().toUpperCase();
         switch (side) {
             case "USER" -> session.setUnreadForUser(0);
             case "AGENT" -> session.setUnreadForAgent(0);
-            default -> throw new BizException(ResultCode.BAD_REQUEST, "readSide 非法");
+            default -> throw new BizException(ResultCodeEnum.BAD_REQUEST, "readSide 非法");
         }
         customerServiceSessionService.updateById(session);
 
@@ -261,12 +261,12 @@ public class CustomerServiceWsController {
 
     private Long resolveCurrentUserId(Principal principal) {
         if (principal == null || principal.getName() == null) {
-            throw new BizException(ResultCode.UNAUTHORIZED, "WebSocket 会话未登录");
+            throw new BizException(ResultCodeEnum.UNAUTHORIZED, "WebSocket 会话未登录");
         }
         try {
             return Long.valueOf(principal.getName());
         } catch (NumberFormatException e) {
-            throw new BizException(ResultCode.UNAUTHORIZED, "WebSocket 会话用户ID非法");
+            throw new BizException(ResultCodeEnum.UNAUTHORIZED, "WebSocket 会话用户ID非法");
         }
     }
 

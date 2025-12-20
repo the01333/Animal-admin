@@ -1,4 +1,4 @@
-package com.puxinxiaolin.adopt.common;
+package com.puxinxiaolin.adopt.entity.common;
 
 import lombok.Data;
 

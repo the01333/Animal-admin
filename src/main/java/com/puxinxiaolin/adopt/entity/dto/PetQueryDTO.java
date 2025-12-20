@@ -1,6 +1,6 @@
 package com.puxinxiaolin.adopt.entity.dto;
 
-import com.puxinxiaolin.adopt.common.PageInfo;
+import com.puxinxiaolin.adopt.entity.common.PageInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

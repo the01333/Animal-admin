@@ -1,7 +1,7 @@
 package com.puxinxiaolin.adopt.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.entity.dto.DictItemDTO;
 import com.puxinxiaolin.adopt.entity.entity.DictItem;
@@ -458,7 +458,7 @@ public class DictServiceImpl implements DictService {
     @Override
     public Long createPetCategoryAuto(String label) {
         if (label == null || label.trim().isEmpty()) {
-            throw new BizException(ResultCode.PARAM_ERROR, "类别名称不能为空");
+            throw new BizException(ResultCodeEnum.PARAM_ERROR, "类别名称不能为空");
         }
         String trimmedLabel = label.trim();
 
@@ -513,13 +513,13 @@ public class DictServiceImpl implements DictService {
         try {
             String english = translationService.translateToEnglishKey(label);
             if (english == null || english.isBlank()) {
-                throw new BizException(ResultCode.AI_REQUEST_FAILED, "AI 翻译返回空结果, 无法生成宠物类别编码");
+                throw new BizException(ResultCodeEnum.AI_REQUEST_FAILED, "AI 翻译返回空结果, 无法生成宠物类别编码");
             }
             return english;
         } catch (BizException e) {
             throw e;
         } catch (Exception e) {
-            throw new BizException(ResultCode.AI_REQUEST_FAILED, "AI 翻译失败, 无法生成宠物类别编码");
+            throw new BizException(ResultCodeEnum.AI_REQUEST_FAILED, "AI 翻译失败, 无法生成宠物类别编码");
         }
     }
 
