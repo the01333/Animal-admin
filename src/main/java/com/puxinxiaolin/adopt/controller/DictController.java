@@ -91,6 +91,7 @@ public class DictController {
      * 管理员手动刷新缓存时调用
      */
     @PostMapping("/refresh")
+    @SaCheckRole("super_admin")
     public Result<Void> refreshCache() {
         log.info("手动刷新字典缓存");
         dictService.refreshCache();
@@ -103,7 +104,7 @@ public class DictController {
      * 按类型查询字典项列表
      */
     @GetMapping("/items")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    @SaCheckRole("super_admin")
     public Result<List<DictItemVO>> listDictItems(@RequestParam(value = "dictType", required = false) String dictType) {
         log.debug("查询字典项列表, dictType={}", dictType);
         return Result.success(dictService.listDictItems(dictType));
@@ -113,7 +114,7 @@ public class DictController {
      * 创建字典项
      */
     @PostMapping("/items")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    @SaCheckRole("super_admin")
     public Result<Long> createDictItem(@Valid @RequestBody DictItemDTO dto) {
         log.info("创建字典项, type={}, key={}", dto.getDictType(), dto.getDictKey());
         return Result.success(dictService.createDictItem(dto));
@@ -123,7 +124,7 @@ public class DictController {
      * 更新字典项
      */
     @PutMapping("/items/{id}")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    @SaCheckRole("super_admin")
     public Result<Void> updateDictItem(@PathVariable("id") Long id, @Valid @RequestBody DictItemDTO dto) {
         log.info("更新字典项, id={}", id);
         dictService.updateDictItem(id, dto);
@@ -134,7 +135,7 @@ public class DictController {
      * 删除字典项
      */
     @DeleteMapping("/items/{id}")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    @SaCheckRole("super_admin")
     public Result<Void> deleteDictItem(@PathVariable("id") Long id) {
         log.info("删除字典项, id={}", id);
         dictService.deleteDictItem(id);
@@ -146,7 +147,7 @@ public class DictController {
      * 前端只需要传入中文 label, 后端通过 AI 翻译生成英文编码并写入 pet_category
      */
     @PostMapping("/items/pet-category/auto")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    @SaCheckRole("super_admin")
     public Result<Long> createPetCategoryAuto(@RequestBody Map<String, String> body) {
         String label = body.get("label");
         log.info("根据中文名称自动创建宠物类别, label={}", label);

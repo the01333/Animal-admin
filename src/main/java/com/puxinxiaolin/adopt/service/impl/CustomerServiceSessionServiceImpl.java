@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -78,7 +79,29 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
         if (StrUtil.isNotBlank(status)) {
             wrapper.eq(CustomerServiceSession::getStatus, status);
         }
-        // TODO [YCcLin 2025/12/15]: 预留关键字搜索, 后续可以通过 join 或在上层补充
+        if (StrUtil.isNotBlank(keyword)) {
+            // 按用户账号/昵称模糊搜索, 先查出匹配的用户ID集合
+            LambdaQueryWrapper<User> userWrapper = new LambdaQueryWrapper<>();
+            userWrapper.like(User::getUsername, keyword)
+                    .or()
+                    .like(User::getNickname, keyword);
+            List<User> matchedUsers = userService.list(userWrapper);
+            List<Long> userIds = matchedUsers.stream()
+                    .map(User::getId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            if (userIds.isEmpty()) {
+                Page<CustomerServiceSessionVO> emptyPage = new Page<>(current, size);
+                emptyPage.setTotal(0);
+                emptyPage.setRecords(Collections.emptyList());
+                return emptyPage;
+            }
+
+            wrapper.in(CustomerServiceSession::getUserId, userIds);
+        }
+
         wrapper.orderByDesc(CustomerServiceSession::getLastTime);
 
         Page<CustomerServiceSession> page = this.page(new Page<>(current, size), wrapper);
