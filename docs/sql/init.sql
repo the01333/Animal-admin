@@ -11,7 +11,7 @@
  Target Server Version : 80034 (8.0.34)
  File Encoding         : 65001
 
- Date: 08/12/2025 22:55:14
+ Date: 20/12/2025 20:35:22
 */
 
 SET NAMES utf8mb4;
@@ -75,7 +75,7 @@ CREATE TABLE `t_chat_message`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_session_id`(`session_id` ASC) USING BTREE,
   INDEX `idx_sender_id`(`sender_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '聊天消息表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 316 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '聊天消息表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of t_chat_message
@@ -93,6 +93,308 @@ INSERT INTO `t_chat_message` VALUES (10, 1, 1, NULL, '好的 没关系', 'text',
 INSERT INTO `t_chat_message` VALUES (11, 1, 1, NULL, '那你希望狗狗的性格是怎么样的呢？\n比如：活泼一点、安静一点、可爱灵动一点呢？', 'text', 0, 4, NULL, '2025-12-08 22:39:55', 0);
 INSERT INTO `t_chat_message` VALUES (12, 1, 4, NULL, '我喜欢活泼一点的', 'text', 0, NULL, NULL, '2025-12-08 22:51:04', 0);
 INSERT INTO `t_chat_message` VALUES (13, 1, 1, NULL, '欧克欧克', 'text', 0, 4, NULL, '2025-12-08 22:51:12', 0);
+INSERT INTO `t_chat_message` VALUES (14, 1, 1, NULL, '活泼的小狗很多，你可以自己去宠物列表看一下每只宠物的具体详情', 'text', 0, 4, NULL, '2025-12-08 22:59:17', 0);
+INSERT INTO `t_chat_message` VALUES (15, 1, 1, NULL, '有合适的再来沟通', 'text', 0, 4, NULL, '2025-12-08 22:59:32', 0);
+INSERT INTO `t_chat_message` VALUES (16, 1, 4, NULL, '欧克欧克', 'text', 0, NULL, NULL, '2025-12-08 23:43:58', 0);
+INSERT INTO `t_chat_message` VALUES (17, 1, 4, NULL, '那我看看', 'text', 0, NULL, NULL, '2025-12-08 23:44:06', 0);
+INSERT INTO `t_chat_message` VALUES (18, 1, 4, NULL, '我觉得耶耶不错', 'text', 0, NULL, NULL, '2025-12-08 23:44:34', 0);
+INSERT INTO `t_chat_message` VALUES (19, 1, 1, NULL, '可以呀', 'text', 0, 4, NULL, '2025-12-08 23:51:04', 0);
+INSERT INTO `t_chat_message` VALUES (20, 1, 1, NULL, '耶耶很可爱 也很活泼', 'text', 0, 4, NULL, '2025-12-08 23:51:45', 0);
+INSERT INTO `t_chat_message` VALUES (21, 1, 4, NULL, '那太棒了 我先暂时选中这只了吧', 'text', 0, NULL, NULL, '2025-12-08 23:52:06', 0);
+INSERT INTO `t_chat_message` VALUES (22, 1, 1, NULL, '可以呀 后续还有其他的想咨询的欢迎再来哈', 'text', 0, 4, NULL, '2025-12-09 11:24:40', 0);
+INSERT INTO `t_chat_message` VALUES (23, 1, 1, NULL, '你好', 'text', 0, 4, NULL, '2025-12-10 17:20:31', 0);
+INSERT INTO `t_chat_message` VALUES (24, 1, 1, NULL, '你好', 'text', 0, 4, NULL, '2025-12-10 17:42:41', 0);
+INSERT INTO `t_chat_message` VALUES (25, 1, 1, NULL, '哈哈哈哈', 'text', 0, 4, NULL, '2025-12-10 17:42:46', 0);
+INSERT INTO `t_chat_message` VALUES (26, 1, 1, NULL, '你好', 'text', 0, 4, NULL, '2025-12-10 17:43:06', 0);
+INSERT INTO `t_chat_message` VALUES (27, 1, 1, NULL, '你好啊', 'text', 0, 4, NULL, '2025-12-10 17:43:39', 0);
+INSERT INTO `t_chat_message` VALUES (28, 1, 1, NULL, '你好', 'text', 0, 4, NULL, '2025-12-10 17:44:25', 0);
+INSERT INTO `t_chat_message` VALUES (29, 1, 1, NULL, '1111', 'text', 0, 4, NULL, '2025-12-10 18:32:03', 0);
+INSERT INTO `t_chat_message` VALUES (30, 1, 1, NULL, 'nihao', 'text', 0, 4, NULL, '2025-12-10 18:33:22', 0);
+INSERT INTO `t_chat_message` VALUES (31, 1, 1, NULL, '1111111', 'text', 0, 4, NULL, '2025-12-10 18:34:21', 0);
+INSERT INTO `t_chat_message` VALUES (32, 1, 1, NULL, 'nsjaikjhsikqhjskqa', 'text', 0, 4, NULL, '2025-12-10 20:48:59', 0);
+INSERT INTO `t_chat_message` VALUES (33, 1, 1, NULL, '哈哈哈哈哈', 'text', 0, 4, NULL, '2025-12-10 21:01:46', 0);
+INSERT INTO `t_chat_message` VALUES (34, 1, 1, NULL, '11111', 'text', 0, 4, NULL, '2025-12-10 21:28:30', 0);
+INSERT INTO `t_chat_message` VALUES (35, 1, 1, NULL, '1111', 'text', 0, 4, NULL, '2025-12-10 21:29:18', 0);
+INSERT INTO `t_chat_message` VALUES (36, 1, 1, NULL, '11111111', 'text', 0, 4, NULL, '2025-12-10 21:29:59', 0);
+INSERT INTO `t_chat_message` VALUES (37, 1, 1, NULL, '啦啦啦啦啦啦啦啦', 'text', 0, 4, NULL, '2025-12-10 21:41:29', 0);
+INSERT INTO `t_chat_message` VALUES (38, 1, 1, NULL, '手机卡健身卡健身卡尽快·1', 'text', 0, 4, NULL, '2025-12-10 21:41:35', 0);
+INSERT INTO `t_chat_message` VALUES (39, 1, 1, NULL, '你好', 'text', 0, 4, NULL, '2025-12-10 21:59:29', 0);
+INSERT INTO `t_chat_message` VALUES (40, 1, 1, NULL, '你好呀', 'text', 0, 4, NULL, '2025-12-10 22:05:22', 0);
+INSERT INTO `t_chat_message` VALUES (41, 1, 1, NULL, '花时间安徽省晋安河睡觉啊', 'text', 0, 4, NULL, '2025-12-10 22:18:25', 0);
+INSERT INTO `t_chat_message` VALUES (42, 1, 1, NULL, '杀菌时间暗黑圣经', 'text', 0, 4, NULL, '2025-12-10 22:20:48', 0);
+INSERT INTO `t_chat_message` VALUES (43, 1, 1, NULL, '高', 'text', 0, 4, NULL, '2025-12-10 22:27:54', 0);
+INSERT INTO `t_chat_message` VALUES (44, 1, 1, NULL, '楚', 'text', 0, 4, NULL, '2025-12-10 22:27:59', 0);
+INSERT INTO `t_chat_message` VALUES (45, 1, 1, NULL, '燕', 'text', 0, 4, NULL, '2025-12-10 22:28:02', 0);
+INSERT INTO `t_chat_message` VALUES (46, 1, 1, NULL, '是', 'text', 0, 4, NULL, '2025-12-10 22:28:08', 0);
+INSERT INTO `t_chat_message` VALUES (47, 1, 1, NULL, '🐷', 'text', 0, 4, NULL, '2025-12-10 22:28:20', 0);
+INSERT INTO `t_chat_message` VALUES (48, 1, 1, NULL, '！', 'text', 0, 4, NULL, '2025-12-10 22:28:28', 0);
+INSERT INTO `t_chat_message` VALUES (49, 1, 1, NULL, '！！', 'text', 0, 4, NULL, '2025-12-10 22:28:30', 0);
+INSERT INTO `t_chat_message` VALUES (50, 1, 1, NULL, '！！！', 'text', 0, 4, NULL, '2025-12-10 22:28:31', 0);
+INSERT INTO `t_chat_message` VALUES (51, 1, 1, NULL, '！！！！', 'text', 0, 4, NULL, '2025-12-10 22:28:34', 0);
+INSERT INTO `t_chat_message` VALUES (52, 1, 1, NULL, '！！！！！', 'text', 0, 4, NULL, '2025-12-10 22:28:37', 0);
+INSERT INTO `t_chat_message` VALUES (53, 1, 4, NULL, '我觉得你说得对', 'text', 0, NULL, NULL, '2025-12-10 22:29:52', 0);
+INSERT INTO `t_chat_message` VALUES (54, 1, 4, NULL, '👍', 'text', 0, NULL, NULL, '2025-12-10 22:31:05', 0);
+INSERT INTO `t_chat_message` VALUES (55, 1, 4, NULL, '哈哈哈', 'text', 0, NULL, NULL, '2025-12-10 22:44:27', 0);
+INSERT INTO `t_chat_message` VALUES (56, 1, 4, NULL, '哈哈哈', 'text', 0, NULL, NULL, '2025-12-10 22:44:49', 0);
+INSERT INTO `t_chat_message` VALUES (57, 1, 1, NULL, '好的，我们已为您记录需求，如有合适的宠物会第一时间联系您。', 'text', 0, 4, NULL, '2025-12-10 23:11:43', 0);
+INSERT INTO `t_chat_message` VALUES (58, 3, 5, NULL, '我没有养过宠物，请问需要注意什么吗', 'text', 0, NULL, NULL, '2025-12-11 19:06:11', 0);
+INSERT INTO `t_chat_message` VALUES (59, 3, 5, NULL, '你好', 'text', 0, NULL, NULL, '2025-12-11 19:06:34', 0);
+INSERT INTO `t_chat_message` VALUES (60, 4, 6, NULL, '你好', 'text', 0, NULL, NULL, '2025-12-11 19:22:40', 0);
+INSERT INTO `t_chat_message` VALUES (61, 5, 7, NULL, '你好', 'text', 0, 1, NULL, '2025-12-14 22:43:28', 0);
+INSERT INTO `t_chat_message` VALUES (62, 5, 7, NULL, '你好', 'text', 0, 1, NULL, '2025-12-14 22:43:32', 0);
+INSERT INTO `t_chat_message` VALUES (63, 5, 7, NULL, '1111', 'text', 0, 1, NULL, '2025-12-14 22:43:50', 0);
+INSERT INTO `t_chat_message` VALUES (64, 5, 7, NULL, '哈哈哈', 'text', 0, 1, NULL, '2025-12-14 22:43:59', 0);
+INSERT INTO `t_chat_message` VALUES (65, 5, 7, NULL, 'aaa', 'text', 0, 1, NULL, '2025-12-14 23:40:37', 0);
+INSERT INTO `t_chat_message` VALUES (66, 5, 7, NULL, 'aaaaaaaq', 'text', 0, 1, NULL, '2025-12-14 23:42:01', 0);
+INSERT INTO `t_chat_message` VALUES (67, 5, 7, NULL, '1111', 'text', 0, 1, NULL, '2025-12-14 23:43:17', 0);
+INSERT INTO `t_chat_message` VALUES (68, 5, 7, NULL, '2222', 'text', 0, 1, NULL, '2025-12-14 23:43:38', 0);
+INSERT INTO `t_chat_message` VALUES (69, 5, 1, NULL, '你好', 'text', 0, 7, NULL, '2025-12-15 15:26:55', 0);
+INSERT INTO `t_chat_message` VALUES (70, 5, 7, NULL, '哈哈哈', 'text', 0, 1, NULL, '2025-12-15 15:28:05', 0);
+INSERT INTO `t_chat_message` VALUES (71, 5, 1, NULL, '你好', 'text', 0, 7, NULL, '2025-12-15 20:29:25', 0);
+INSERT INTO `t_chat_message` VALUES (72, 5, 1, NULL, '你好', 'text', 0, 7, NULL, '2025-12-15 20:30:06', 0);
+INSERT INTO `t_chat_message` VALUES (73, 5, 1, NULL, '111', 'text', 0, 7, NULL, '2025-12-15 20:30:18', 0);
+INSERT INTO `t_chat_message` VALUES (74, 5, 1, NULL, '111\naaa\n111', 'text', 0, 7, NULL, '2025-12-15 20:30:23', 0);
+INSERT INTO `t_chat_message` VALUES (75, 5, 7, NULL, '你好', 'text', 0, 1, NULL, '2025-12-15 20:30:30', 0);
+INSERT INTO `t_chat_message` VALUES (76, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-15 20:32:01', 0);
+INSERT INTO `t_chat_message` VALUES (77, 5, 7, NULL, '11', 'text', 0, 1, NULL, '2025-12-15 20:32:13', 0);
+INSERT INTO `t_chat_message` VALUES (78, 5, 7, NULL, '1', 'text', 0, 1, NULL, '2025-12-15 20:32:13', 0);
+INSERT INTO `t_chat_message` VALUES (79, 5, 7, NULL, '1', 'text', 0, 1, NULL, '2025-12-15 20:32:14', 0);
+INSERT INTO `t_chat_message` VALUES (80, 5, 7, NULL, '1', 'text', 0, 1, NULL, '2025-12-15 20:32:14', 0);
+INSERT INTO `t_chat_message` VALUES (81, 5, 7, NULL, '1', 'text', 0, 1, NULL, '2025-12-15 20:32:14', 0);
+INSERT INTO `t_chat_message` VALUES (82, 5, 7, NULL, '1', 'text', 0, 1, NULL, '2025-12-15 20:32:17', 0);
+INSERT INTO `t_chat_message` VALUES (83, 5, 1, NULL, '外网', 'text', 0, 7, NULL, '2025-12-15 20:32:46', 0);
+INSERT INTO `t_chat_message` VALUES (84, 5, 1, NULL, '111', 'text', 0, 7, NULL, '2025-12-15 20:32:47', 0);
+INSERT INTO `t_chat_message` VALUES (85, 5, 1, NULL, '1', 'text', 0, 7, NULL, '2025-12-15 20:32:53', 0);
+INSERT INTO `t_chat_message` VALUES (86, 5, 1, NULL, '1', 'text', 0, 7, NULL, '2025-12-15 20:32:54', 0);
+INSERT INTO `t_chat_message` VALUES (87, 5, 1, NULL, '1', 'text', 0, 7, NULL, '2025-12-15 20:32:56', 0);
+INSERT INTO `t_chat_message` VALUES (88, 5, 1, NULL, '111111', 'text', 0, 7, NULL, '2025-12-15 20:33:03', 0);
+INSERT INTO `t_chat_message` VALUES (89, 5, 1, NULL, '你好', 'text', 0, 7, NULL, '2025-12-15 21:14:34', 0);
+INSERT INTO `t_chat_message` VALUES (90, 5, 1, NULL, '1111111', 'text', 0, 7, NULL, '2025-12-15 21:14:41', 0);
+INSERT INTO `t_chat_message` VALUES (91, 4, 1, NULL, '111', 'text', 0, 6, NULL, '2025-12-15 21:14:51', 0);
+INSERT INTO `t_chat_message` VALUES (92, 4, 1, NULL, '1111', 'text', 0, 6, NULL, '2025-12-15 21:15:21', 0);
+INSERT INTO `t_chat_message` VALUES (93, 5, 1, NULL, '111111', 'text', 0, 7, NULL, '2025-12-15 21:15:42', 0);
+INSERT INTO `t_chat_message` VALUES (94, 5, 1, NULL, '11', 'text', 0, 7, NULL, '2025-12-15 21:15:45', 0);
+INSERT INTO `t_chat_message` VALUES (95, 5, 1, NULL, '111111', 'text', 0, 7, NULL, '2025-12-15 21:15:47', 0);
+INSERT INTO `t_chat_message` VALUES (96, 5, 1, NULL, 'sasas', 'text', 0, 7, NULL, '2025-12-15 21:15:51', 0);
+INSERT INTO `t_chat_message` VALUES (97, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-15 21:16:39', 0);
+INSERT INTO `t_chat_message` VALUES (98, 5, 7, NULL, '11111', 'text', 0, 1, NULL, '2025-12-15 21:16:43', 0);
+INSERT INTO `t_chat_message` VALUES (99, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-15 21:17:53', 0);
+INSERT INTO `t_chat_message` VALUES (100, 5, 1, NULL, '你好', 'text', 0, 7, NULL, '2025-12-16 14:09:20', 0);
+INSERT INTO `t_chat_message` VALUES (101, 5, 7, NULL, '哈哈哈哈', 'text', 0, 1, NULL, '2025-12-16 14:09:25', 0);
+INSERT INTO `t_chat_message` VALUES (102, 5, 7, NULL, '1111', 'text', 0, 1, NULL, '2025-12-16 14:11:53', 0);
+INSERT INTO `t_chat_message` VALUES (103, 5, 1, NULL, '你好', 'text', 0, 7, NULL, '2025-12-16 21:00:40', 0);
+INSERT INTO `t_chat_message` VALUES (104, 5, 1, NULL, '11111', 'text', 0, 7, NULL, '2025-12-16 21:00:52', 0);
+INSERT INTO `t_chat_message` VALUES (105, 5, 7, NULL, '111111', 'text', 0, 1, NULL, '2025-12-16 21:01:00', 0);
+INSERT INTO `t_chat_message` VALUES (106, 5, 7, NULL, 'abc', 'text', 0, 1, NULL, '2025-12-16 21:01:20', 0);
+INSERT INTO `t_chat_message` VALUES (107, 5, 7, NULL, '666', 'text', 0, 1, NULL, '2025-12-16 21:03:17', 0);
+INSERT INTO `t_chat_message` VALUES (108, 5, 1, NULL, '121212', 'text', 0, 7, NULL, '2025-12-16 21:04:15', 0);
+INSERT INTO `t_chat_message` VALUES (109, 5, 1, NULL, '12133131', 'text', 0, 7, NULL, '2025-12-16 21:04:32', 0);
+INSERT INTO `t_chat_message` VALUES (110, 5, 7, NULL, '我真的是服了', 'text', 0, 1, NULL, '2025-12-16 21:05:48', 0);
+INSERT INTO `t_chat_message` VALUES (111, 5, 7, NULL, '咋了', 'text', 0, 1, NULL, '2025-12-16 21:05:57', 0);
+INSERT INTO `t_chat_message` VALUES (112, 5, 7, NULL, '777', 'text', 0, 1, NULL, '2025-12-16 21:06:01', 0);
+INSERT INTO `t_chat_message` VALUES (113, 5, 1, NULL, '好的，我们已为您记录需求，如有合适的宠物会第一时间联系您。', 'text', 0, 7, NULL, '2025-12-16 21:09:15', 0);
+INSERT INTO `t_chat_message` VALUES (114, 5, 7, NULL, '啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊', 'text', 0, 1, NULL, '2025-12-16 21:10:32', 0);
+INSERT INTO `t_chat_message` VALUES (115, 5, 1, NULL, '你是咋了孩子', 'text', 0, 7, NULL, '2025-12-16 21:10:43', 0);
+INSERT INTO `t_chat_message` VALUES (116, 5, 1, NULL, '没事吧', 'text', 0, 7, NULL, '2025-12-16 21:10:48', 0);
+INSERT INTO `t_chat_message` VALUES (117, 5, 7, NULL, '1212121', 'text', 0, 1, NULL, '2025-12-16 21:20:42', 0);
+INSERT INTO `t_chat_message` VALUES (118, 5, 7, NULL, '121212121', 'text', 0, 1, NULL, '2025-12-16 21:22:37', 0);
+INSERT INTO `t_chat_message` VALUES (119, 5, 7, NULL, '你好', 'text', 0, 1, NULL, '2025-12-16 21:28:59', 0);
+INSERT INTO `t_chat_message` VALUES (120, 5, 7, NULL, 'abc', 'text', 0, 1, NULL, '2025-12-17 11:47:04', 0);
+INSERT INTO `t_chat_message` VALUES (121, 5, 7, NULL, '11111', 'text', 0, 1, NULL, '2025-12-19 11:56:07', 0);
+INSERT INTO `t_chat_message` VALUES (122, 5, 1, NULL, '11111', 'text', 0, 7, NULL, '2025-12-19 12:02:58', 0);
+INSERT INTO `t_chat_message` VALUES (123, 5, 1, NULL, '2222', 'text', 0, 7, NULL, '2025-12-19 12:03:20', 0);
+INSERT INTO `t_chat_message` VALUES (124, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-19 12:03:28', 0);
+INSERT INTO `t_chat_message` VALUES (125, 5, 7, NULL, '1111', 'text', 0, 1, NULL, '2025-12-19 12:03:37', 0);
+INSERT INTO `t_chat_message` VALUES (126, 5, 1, NULL, '111', 'text', 0, 7, NULL, '2025-12-19 12:11:36', 0);
+INSERT INTO `t_chat_message` VALUES (127, 5, 7, NULL, '11111', 'text', 0, 1, NULL, '2025-12-19 12:11:42', 0);
+INSERT INTO `t_chat_message` VALUES (128, 5, 7, NULL, '1222', 'text', 0, 1, NULL, '2025-12-19 12:11:50', 0);
+INSERT INTO `t_chat_message` VALUES (129, 5, 1, NULL, '哈哈哈哈哈', 'text', 0, 7, NULL, '2025-12-19 12:15:49', 0);
+INSERT INTO `t_chat_message` VALUES (130, 5, 1, NULL, '2121', 'text', 0, 7, NULL, '2025-12-19 12:15:53', 0);
+INSERT INTO `t_chat_message` VALUES (131, 5, 1, NULL, '1111', 'text', 0, 7, NULL, '2025-12-19 12:23:09', 0);
+INSERT INTO `t_chat_message` VALUES (132, 5, 7, NULL, '222', 'text', 0, 1, NULL, '2025-12-19 12:23:18', 0);
+INSERT INTO `t_chat_message` VALUES (133, 5, 1, NULL, '12121', 'text', 0, 7, NULL, '2025-12-19 13:10:08', 0);
+INSERT INTO `t_chat_message` VALUES (134, 5, 7, NULL, '1212121', 'text', 0, 1, NULL, '2025-12-19 13:10:13', 0);
+INSERT INTO `t_chat_message` VALUES (135, 5, 7, NULL, '12121', 'text', 0, 1, NULL, '2025-12-19 13:10:17', 0);
+INSERT INTO `t_chat_message` VALUES (136, 5, 7, NULL, '1221112121', 'text', 0, 1, NULL, '2025-12-19 13:10:22', 0);
+INSERT INTO `t_chat_message` VALUES (137, 5, 7, NULL, '1', 'text', 0, 1, NULL, '2025-12-19 13:10:28', 0);
+INSERT INTO `t_chat_message` VALUES (138, 5, 7, NULL, '测试', 'text', 0, 1, NULL, '2025-12-19 13:15:04', 0);
+INSERT INTO `t_chat_message` VALUES (139, 5, 7, NULL, '是否有红点', 'text', 0, 1, NULL, '2025-12-19 13:15:15', 0);
+INSERT INTO `t_chat_message` VALUES (140, 5, 7, NULL, '112', 'text', 0, 1, NULL, '2025-12-19 13:15:25', 0);
+INSERT INTO `t_chat_message` VALUES (141, 5, 1, NULL, '111', 'text', 0, 7, NULL, '2025-12-19 13:15:58', 0);
+INSERT INTO `t_chat_message` VALUES (142, 5, 7, NULL, '你好', 'text', 0, 1, NULL, '2025-12-19 13:16:01', 0);
+INSERT INTO `t_chat_message` VALUES (143, 5, 1, NULL, '你好', 'text', 0, 7, NULL, '2025-12-19 13:17:37', 0);
+INSERT INTO `t_chat_message` VALUES (144, 5, 7, NULL, '你好啊', 'text', 0, 1, NULL, '2025-12-19 13:17:42', 0);
+INSERT INTO `t_chat_message` VALUES (145, 5, 7, NULL, '你好', 'text', 0, 1, NULL, '2025-12-19 13:19:18', 0);
+INSERT INTO `t_chat_message` VALUES (146, 5, 1, NULL, '111', 'text', 0, 7, NULL, '2025-12-19 13:19:25', 0);
+INSERT INTO `t_chat_message` VALUES (147, 5, 1, NULL, '222', 'text', 0, 7, NULL, '2025-12-19 13:19:29', 0);
+INSERT INTO `t_chat_message` VALUES (148, 5, 1, NULL, '333', 'text', 0, 7, NULL, '2025-12-19 13:19:32', 0);
+INSERT INTO `t_chat_message` VALUES (149, 5, 7, NULL, '44', 'text', 0, 1, NULL, '2025-12-19 13:19:38', 0);
+INSERT INTO `t_chat_message` VALUES (150, 5, 7, NULL, '你好', 'text', 0, 1, NULL, '2025-12-19 13:22:24', 0);
+INSERT INTO `t_chat_message` VALUES (151, 5, 7, NULL, '11', 'text', 0, 1, NULL, '2025-12-19 13:22:36', 0);
+INSERT INTO `t_chat_message` VALUES (152, 5, 7, NULL, '1', 'text', 0, 1, NULL, '2025-12-19 13:22:42', 0);
+INSERT INTO `t_chat_message` VALUES (153, 5, 7, NULL, '123', 'text', 0, 1, NULL, '2025-12-19 13:22:46', 0);
+INSERT INTO `t_chat_message` VALUES (154, 5, 1, NULL, '123', 'text', 0, 7, NULL, '2025-12-19 13:23:36', 0);
+INSERT INTO `t_chat_message` VALUES (155, 5, 7, NULL, '哈哈哈', 'text', 0, 1, NULL, '2025-12-19 13:23:39', 0);
+INSERT INTO `t_chat_message` VALUES (156, 5, 7, NULL, '哈哈哈', 'text', 0, 1, NULL, '2025-12-19 13:23:43', 0);
+INSERT INTO `t_chat_message` VALUES (157, 5, 7, NULL, '1212', 'text', 0, 1, NULL, '2025-12-19 13:23:47', 0);
+INSERT INTO `t_chat_message` VALUES (158, 5, 1, NULL, '有短语是', 'text', 0, 7, NULL, '2025-12-19 13:23:57', 0);
+INSERT INTO `t_chat_message` VALUES (159, 5, 7, NULL, '1212', 'text', 0, 1, NULL, '2025-12-19 13:23:59', 0);
+INSERT INTO `t_chat_message` VALUES (160, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-19 13:24:02', 0);
+INSERT INTO `t_chat_message` VALUES (161, 5, 7, NULL, '121', 'text', 0, 1, NULL, '2025-12-19 13:24:03', 0);
+INSERT INTO `t_chat_message` VALUES (162, 5, 7, NULL, '22', 'text', 0, 1, NULL, '2025-12-19 13:24:04', 0);
+INSERT INTO `t_chat_message` VALUES (163, 5, 7, NULL, '33', 'text', 0, 1, NULL, '2025-12-19 13:24:05', 0);
+INSERT INTO `t_chat_message` VALUES (164, 5, 7, NULL, '44', 'text', 0, 1, NULL, '2025-12-19 13:24:06', 0);
+INSERT INTO `t_chat_message` VALUES (165, 5, 7, NULL, '121', 'text', 0, 1, NULL, '2025-12-19 13:24:12', 0);
+INSERT INTO `t_chat_message` VALUES (166, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-19 13:26:27', 0);
+INSERT INTO `t_chat_message` VALUES (167, 5, 7, NULL, '1111', 'text', 0, 1, NULL, '2025-12-19 13:26:39', 0);
+INSERT INTO `t_chat_message` VALUES (168, 5, 7, NULL, '嗯嗯', 'text', 0, 1, NULL, '2025-12-19 13:27:07', 0);
+INSERT INTO `t_chat_message` VALUES (169, 5, 7, NULL, '22', 'text', 0, 1, NULL, '2025-12-19 13:29:16', 0);
+INSERT INTO `t_chat_message` VALUES (170, 5, 7, NULL, '33', 'text', 0, 1, NULL, '2025-12-19 13:29:26', 0);
+INSERT INTO `t_chat_message` VALUES (171, 5, 7, NULL, '44', 'text', 0, 1, NULL, '2025-12-19 13:29:33', 0);
+INSERT INTO `t_chat_message` VALUES (172, 5, 7, NULL, '11', 'text', 0, 1, NULL, '2025-12-19 13:29:48', 0);
+INSERT INTO `t_chat_message` VALUES (173, 5, 7, NULL, '222', 'text', 0, 1, NULL, '2025-12-19 13:30:35', 0);
+INSERT INTO `t_chat_message` VALUES (174, 5, 7, NULL, '121', 'text', 0, 1, NULL, '2025-12-19 13:30:48', 0);
+INSERT INTO `t_chat_message` VALUES (175, 5, 1, NULL, '111', 'text', 0, 7, NULL, '2025-12-19 13:31:11', 0);
+INSERT INTO `t_chat_message` VALUES (176, 5, 1, NULL, '123', 'text', 0, 7, NULL, '2025-12-19 13:32:23', 0);
+INSERT INTO `t_chat_message` VALUES (177, 5, 7, NULL, '1234', 'text', 0, 1, NULL, '2025-12-19 13:34:04', 0);
+INSERT INTO `t_chat_message` VALUES (178, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-19 13:34:16', 0);
+INSERT INTO `t_chat_message` VALUES (179, 5, 1, NULL, '111', 'text', 0, 7, NULL, '2025-12-19 23:04:42', 0);
+INSERT INTO `t_chat_message` VALUES (180, 5, 7, NULL, '22', 'text', 0, 1, NULL, '2025-12-19 23:04:49', 0);
+INSERT INTO `t_chat_message` VALUES (181, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-19 23:05:15', 0);
+INSERT INTO `t_chat_message` VALUES (182, 5, 1, NULL, '111', 'text', 0, 7, NULL, '2025-12-19 23:47:06', 0);
+INSERT INTO `t_chat_message` VALUES (183, 5, 7, NULL, '222', 'text', 0, 1, NULL, '2025-12-19 23:47:10', 0);
+INSERT INTO `t_chat_message` VALUES (184, 5, 1, NULL, '111', 'text', 0, 7, NULL, '2025-12-20 11:30:43', 0);
+INSERT INTO `t_chat_message` VALUES (185, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 11:30:47', 0);
+INSERT INTO `t_chat_message` VALUES (186, 5, 7, NULL, '2222', 'text', 0, 1, NULL, '2025-12-20 11:31:10', 0);
+INSERT INTO `t_chat_message` VALUES (187, 5, 1, NULL, '111', 'text', 0, 7, NULL, '2025-12-20 11:35:26', 0);
+INSERT INTO `t_chat_message` VALUES (188, 5, 7, NULL, '1', 'text', 0, 1, NULL, '2025-12-20 11:35:31', 0);
+INSERT INTO `t_chat_message` VALUES (189, 5, 7, NULL, '2', 'text', 0, 1, NULL, '2025-12-20 11:35:34', 0);
+INSERT INTO `t_chat_message` VALUES (190, 5, 1, NULL, '1', 'text', 0, 7, NULL, '2025-12-20 12:49:26', 0);
+INSERT INTO `t_chat_message` VALUES (191, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 12:49:29', 0);
+INSERT INTO `t_chat_message` VALUES (192, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 12:49:51', 0);
+INSERT INTO `t_chat_message` VALUES (193, 5, 7, NULL, '121213', 'text', 0, 1, NULL, '2025-12-20 12:51:02', 0);
+INSERT INTO `t_chat_message` VALUES (194, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 12:55:02', 0);
+INSERT INTO `t_chat_message` VALUES (195, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 12:55:49', 0);
+INSERT INTO `t_chat_message` VALUES (196, 5, 1, NULL, '111', 'text', 0, 7, NULL, '2025-12-20 12:58:51', 0);
+INSERT INTO `t_chat_message` VALUES (197, 5, 7, NULL, '222', 'text', 0, 1, NULL, '2025-12-20 12:58:55', 0);
+INSERT INTO `t_chat_message` VALUES (198, 5, 7, NULL, '1212121', 'text', 0, 1, NULL, '2025-12-20 12:58:57', 0);
+INSERT INTO `t_chat_message` VALUES (199, 5, 1, NULL, '2121', 'text', 0, 7, NULL, '2025-12-20 12:59:00', 0);
+INSERT INTO `t_chat_message` VALUES (200, 5, 7, NULL, '1212', 'text', 0, 1, NULL, '2025-12-20 13:04:59', 0);
+INSERT INTO `t_chat_message` VALUES (201, 5, 7, NULL, '212121', 'text', 0, 1, NULL, '2025-12-20 13:05:04', 0);
+INSERT INTO `t_chat_message` VALUES (202, 5, 1, NULL, '111', 'text', 0, 7, NULL, '2025-12-20 13:05:27', 0);
+INSERT INTO `t_chat_message` VALUES (203, 5, 7, NULL, '1212121', 'text', 0, 1, NULL, '2025-12-20 13:05:29', 0);
+INSERT INTO `t_chat_message` VALUES (204, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 13:07:35', 0);
+INSERT INTO `t_chat_message` VALUES (205, 5, 7, NULL, '12121', 'text', 0, 1, NULL, '2025-12-20 13:07:44', 0);
+INSERT INTO `t_chat_message` VALUES (206, 5, 7, NULL, '1212121', 'text', 0, 1, NULL, '2025-12-20 13:08:00', 0);
+INSERT INTO `t_chat_message` VALUES (207, 5, 7, NULL, '12121', 'text', 0, 1, NULL, '2025-12-20 13:08:17', 0);
+INSERT INTO `t_chat_message` VALUES (208, 5, 1, NULL, '211', 'text', 0, 7, NULL, '2025-12-20 13:08:25', 0);
+INSERT INTO `t_chat_message` VALUES (209, 5, 1, NULL, '111', 'text', 0, 7, NULL, '2025-12-20 13:09:54', 0);
+INSERT INTO `t_chat_message` VALUES (210, 5, 7, NULL, '222', 'text', 0, 1, NULL, '2025-12-20 13:09:57', 0);
+INSERT INTO `t_chat_message` VALUES (211, 5, 7, NULL, '1111', 'text', 0, 1, NULL, '2025-12-20 13:11:45', 0);
+INSERT INTO `t_chat_message` VALUES (212, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 13:16:49', 0);
+INSERT INTO `t_chat_message` VALUES (213, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 13:19:22', 0);
+INSERT INTO `t_chat_message` VALUES (214, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 13:23:45', 0);
+INSERT INTO `t_chat_message` VALUES (215, 5, 7, NULL, '121', 'text', 0, 1, NULL, '2025-12-20 13:28:08', 0);
+INSERT INTO `t_chat_message` VALUES (216, 5, 1, NULL, '11', 'text', 0, 7, NULL, '2025-12-20 13:28:14', 0);
+INSERT INTO `t_chat_message` VALUES (217, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 13:28:33', 0);
+INSERT INTO `t_chat_message` VALUES (218, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 13:28:37', 0);
+INSERT INTO `t_chat_message` VALUES (219, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 13:29:23', 0);
+INSERT INTO `t_chat_message` VALUES (220, 5, 1, NULL, '111', 'text', 0, 7, NULL, '2025-12-20 13:29:26', 0);
+INSERT INTO `t_chat_message` VALUES (221, 5, 7, NULL, '你好啊', 'text', 0, 1, NULL, '2025-12-20 13:32:49', 0);
+INSERT INTO `t_chat_message` VALUES (222, 5, 7, NULL, '你好', 'text', 0, 1, NULL, '2025-12-20 13:55:15', 0);
+INSERT INTO `t_chat_message` VALUES (223, 5, 7, NULL, '21111', 'text', 0, 1, NULL, '2025-12-20 13:55:19', 0);
+INSERT INTO `t_chat_message` VALUES (224, 5, 7, NULL, '1111', 'text', 0, 1, NULL, '2025-12-20 13:56:01', 0);
+INSERT INTO `t_chat_message` VALUES (225, 5, 1, NULL, '1111', 'text', 0, 7, NULL, '2025-12-20 13:56:04', 0);
+INSERT INTO `t_chat_message` VALUES (226, 5, 7, NULL, '好的', 'text', 0, 1, NULL, '2025-12-20 13:56:08', 0);
+INSERT INTO `t_chat_message` VALUES (227, 5, 7, NULL, '好的', 'text', 0, 1, NULL, '2025-12-20 13:56:15', 0);
+INSERT INTO `t_chat_message` VALUES (228, 5, 1, NULL, '11111', 'text', 0, 7, NULL, '2025-12-20 13:57:47', 0);
+INSERT INTO `t_chat_message` VALUES (229, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 13:58:05', 0);
+INSERT INTO `t_chat_message` VALUES (230, 5, 7, NULL, '12121', 'text', 0, 1, NULL, '2025-12-20 13:58:09', 0);
+INSERT INTO `t_chat_message` VALUES (231, 5, 7, NULL, '212121', 'text', 0, 1, NULL, '2025-12-20 13:58:31', 0);
+INSERT INTO `t_chat_message` VALUES (232, 5, 7, NULL, '12121', 'text', 0, 1, NULL, '2025-12-20 14:03:21', 0);
+INSERT INTO `t_chat_message` VALUES (233, 5, 1, NULL, '111', 'text', 0, 7, NULL, '2025-12-20 14:04:46', 0);
+INSERT INTO `t_chat_message` VALUES (234, 5, 7, NULL, '11', 'text', 0, 1, NULL, '2025-12-20 14:04:48', 0);
+INSERT INTO `t_chat_message` VALUES (235, 5, 1, NULL, '好', 'text', 0, 7, NULL, '2025-12-20 14:04:52', 0);
+INSERT INTO `t_chat_message` VALUES (236, 5, 7, NULL, '嗯额', 'text', 0, 1, NULL, '2025-12-20 14:05:08', 0);
+INSERT INTO `t_chat_message` VALUES (237, 5, 7, NULL, '嗯额', 'text', 0, 1, NULL, '2025-12-20 14:05:30', 0);
+INSERT INTO `t_chat_message` VALUES (238, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 14:06:24', 0);
+INSERT INTO `t_chat_message` VALUES (239, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 14:06:39', 0);
+INSERT INTO `t_chat_message` VALUES (240, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 14:07:08', 0);
+INSERT INTO `t_chat_message` VALUES (241, 5, 1, NULL, '11111', 'text', 0, 7, NULL, '2025-12-20 14:07:53', 0);
+INSERT INTO `t_chat_message` VALUES (242, 5, 7, NULL, '1111', 'text', 0, 1, NULL, '2025-12-20 14:07:55', 0);
+INSERT INTO `t_chat_message` VALUES (243, 5, 7, NULL, '21313121', 'text', 0, 1, NULL, '2025-12-20 14:08:04', 0);
+INSERT INTO `t_chat_message` VALUES (244, 5, 7, NULL, '1111', 'text', 0, 1, NULL, '2025-12-20 14:11:00', 0);
+INSERT INTO `t_chat_message` VALUES (245, 5, 7, NULL, '11111', 'text', 0, 1, NULL, '2025-12-20 14:11:22', 0);
+INSERT INTO `t_chat_message` VALUES (246, 5, 7, NULL, '11111212122', 'text', 0, 1, NULL, '2025-12-20 14:11:28', 0);
+INSERT INTO `t_chat_message` VALUES (247, 5, 1, NULL, '212121', 'text', 0, 7, NULL, '2025-12-20 14:11:35', 0);
+INSERT INTO `t_chat_message` VALUES (248, 5, 7, NULL, '好啊', 'text', 0, 1, NULL, '2025-12-20 14:11:37', 0);
+INSERT INTO `t_chat_message` VALUES (249, 5, 7, NULL, '嗯呢', 'text', 0, 1, NULL, '2025-12-20 14:12:43', 0);
+INSERT INTO `t_chat_message` VALUES (250, 5, 1, NULL, '好呀', 'text', 0, 7, NULL, '2025-12-20 14:12:51', 0);
+INSERT INTO `t_chat_message` VALUES (251, 5, 7, NULL, '你好', 'text', 0, 1, NULL, '2025-12-20 14:12:55', 0);
+INSERT INTO `t_chat_message` VALUES (252, 5, 1, NULL, '你好', 'text', 0, 7, NULL, '2025-12-20 14:15:17', 0);
+INSERT INTO `t_chat_message` VALUES (253, 5, 7, NULL, '嗯嗯', 'text', 0, 1, NULL, '2025-12-20 14:15:22', 0);
+INSERT INTO `t_chat_message` VALUES (254, 5, 7, NULL, '你好', 'text', 0, 1, NULL, '2025-12-20 14:16:58', 0);
+INSERT INTO `t_chat_message` VALUES (255, 5, 1, NULL, '你好', 'text', 0, 7, NULL, '2025-12-20 15:08:01', 0);
+INSERT INTO `t_chat_message` VALUES (256, 5, 7, NULL, '你好啊', 'text', 0, 1, NULL, '2025-12-20 15:08:13', 0);
+INSERT INTO `t_chat_message` VALUES (257, 5, 7, NULL, '你好', 'text', 0, 1, NULL, '2025-12-20 15:08:21', 0);
+INSERT INTO `t_chat_message` VALUES (258, 5, 1, NULL, '哈哈哈哈', 'text', 0, 7, NULL, '2025-12-20 15:30:08', 0);
+INSERT INTO `t_chat_message` VALUES (259, 5, 7, NULL, '1', 'text', 0, 1, NULL, '2025-12-20 15:30:27', 0);
+INSERT INTO `t_chat_message` VALUES (260, 5, 7, NULL, '2', 'text', 0, 1, NULL, '2025-12-20 15:42:23', 0);
+INSERT INTO `t_chat_message` VALUES (261, 5, 1, NULL, '3', 'text', 0, 7, NULL, '2025-12-20 15:42:28', 0);
+INSERT INTO `t_chat_message` VALUES (262, 5, 1, NULL, '11111', 'text', 0, 7, NULL, '2025-12-20 15:47:23', 0);
+INSERT INTO `t_chat_message` VALUES (263, 5, 7, NULL, '2222', 'text', 0, 1, NULL, '2025-12-20 15:47:25', 0);
+INSERT INTO `t_chat_message` VALUES (264, 5, 1, NULL, '你好', 'text', 0, 7, NULL, '2025-12-20 15:51:47', 0);
+INSERT INTO `t_chat_message` VALUES (265, 5, 7, NULL, '你好', 'text', 0, 1, NULL, '2025-12-20 15:51:49', 0);
+INSERT INTO `t_chat_message` VALUES (266, 5, 1, NULL, '1111', 'text', 0, 7, NULL, '2025-12-20 15:52:03', 0);
+INSERT INTO `t_chat_message` VALUES (267, 5, 7, NULL, '222', 'text', 0, 1, NULL, '2025-12-20 15:52:06', 0);
+INSERT INTO `t_chat_message` VALUES (268, 5, 1, NULL, '3', 'text', 0, 7, NULL, '2025-12-20 16:10:31', 0);
+INSERT INTO `t_chat_message` VALUES (269, 5, 7, NULL, '4', 'text', 0, 1, NULL, '2025-12-20 16:10:34', 0);
+INSERT INTO `t_chat_message` VALUES (270, 5, 7, NULL, '5', 'text', 0, 1, NULL, '2025-12-20 16:10:41', 0);
+INSERT INTO `t_chat_message` VALUES (271, 5, 7, NULL, '6', 'text', 0, 1, NULL, '2025-12-20 16:10:41', 0);
+INSERT INTO `t_chat_message` VALUES (272, 5, 7, NULL, '7', 'text', 0, 1, NULL, '2025-12-20 16:10:42', 0);
+INSERT INTO `t_chat_message` VALUES (273, 5, 7, NULL, '8', 'text', 0, 1, NULL, '2025-12-20 16:10:42', 0);
+INSERT INTO `t_chat_message` VALUES (274, 5, 7, NULL, '9', 'text', 0, 1, NULL, '2025-12-20 16:10:43', 0);
+INSERT INTO `t_chat_message` VALUES (275, 5, 1, NULL, '1', 'text', 0, 7, NULL, '2025-12-20 16:19:38', 0);
+INSERT INTO `t_chat_message` VALUES (276, 5, 7, NULL, '222', 'text', 0, 1, NULL, '2025-12-20 16:19:40', 0);
+INSERT INTO `t_chat_message` VALUES (277, 5, 7, NULL, '3', 'text', 0, 1, NULL, '2025-12-20 16:19:42', 0);
+INSERT INTO `t_chat_message` VALUES (278, 5, 7, NULL, '4', 'text', 0, 1, NULL, '2025-12-20 16:19:43', 0);
+INSERT INTO `t_chat_message` VALUES (279, 5, 7, NULL, '45', 'text', 0, 1, NULL, '2025-12-20 16:19:43', 0);
+INSERT INTO `t_chat_message` VALUES (280, 5, 7, NULL, '5', 'text', 0, 1, NULL, '2025-12-20 16:19:43', 0);
+INSERT INTO `t_chat_message` VALUES (281, 5, 7, NULL, '56', 'text', 0, 1, NULL, '2025-12-20 16:19:43', 0);
+INSERT INTO `t_chat_message` VALUES (282, 5, 7, NULL, '56', 'text', 0, 1, NULL, '2025-12-20 16:19:44', 0);
+INSERT INTO `t_chat_message` VALUES (283, 5, 7, NULL, '576', 'text', 0, 1, NULL, '2025-12-20 16:19:44', 0);
+INSERT INTO `t_chat_message` VALUES (284, 5, 7, NULL, '5', 'text', 0, 1, NULL, '2025-12-20 16:19:44', 0);
+INSERT INTO `t_chat_message` VALUES (285, 5, 7, NULL, '765', 'text', 0, 1, NULL, '2025-12-20 16:19:44', 0);
+INSERT INTO `t_chat_message` VALUES (286, 5, 7, NULL, '76', 'text', 0, 1, NULL, '2025-12-20 16:19:44', 0);
+INSERT INTO `t_chat_message` VALUES (287, 5, 7, NULL, '57', 'text', 0, 1, NULL, '2025-12-20 16:19:44', 0);
+INSERT INTO `t_chat_message` VALUES (288, 5, 7, NULL, '5', 'text', 0, 1, NULL, '2025-12-20 16:19:45', 0);
+INSERT INTO `t_chat_message` VALUES (289, 5, 7, NULL, '7', 'text', 0, 1, NULL, '2025-12-20 16:19:46', 0);
+INSERT INTO `t_chat_message` VALUES (290, 5, 1, NULL, 'okok别发了', 'text', 0, 7, NULL, '2025-12-20 16:19:51', 0);
+INSERT INTO `t_chat_message` VALUES (291, 5, 7, NULL, '1', 'text', 0, 1, NULL, '2025-12-20 16:19:57', 0);
+INSERT INTO `t_chat_message` VALUES (292, 5, 7, NULL, '1', 'text', 0, 1, NULL, '2025-12-20 16:29:09', 0);
+INSERT INTO `t_chat_message` VALUES (293, 5, 1, NULL, '2', 'text', 0, 7, NULL, '2025-12-20 16:29:11', 0);
+INSERT INTO `t_chat_message` VALUES (294, 5, 1, NULL, '11', 'text', 0, 7, NULL, '2025-12-20 16:29:16', 0);
+INSERT INTO `t_chat_message` VALUES (295, 5, 7, NULL, '111', 'text', 0, 1, NULL, '2025-12-20 16:29:21', 0);
+INSERT INTO `t_chat_message` VALUES (296, 5, 7, NULL, '222', 'text', 0, 1, NULL, '2025-12-20 16:29:22', 0);
+INSERT INTO `t_chat_message` VALUES (297, 5, 7, NULL, '3333', 'text', 0, 1, NULL, '2025-12-20 16:29:23', 0);
+INSERT INTO `t_chat_message` VALUES (298, 5, 1, NULL, '你好', 'text', 0, 7, NULL, '2025-12-20 19:52:58', 0);
+INSERT INTO `t_chat_message` VALUES (299, 5, 7, NULL, 'hello', 'text', 0, 1, NULL, '2025-12-20 19:53:04', 0);
+INSERT INTO `t_chat_message` VALUES (300, 5, 7, NULL, '哈哈哈哈', 'text', 0, 1, NULL, '2025-12-20 19:53:11', 0);
+INSERT INTO `t_chat_message` VALUES (301, 5, 1, NULL, '11', 'text', 0, 7, NULL, '2025-12-20 20:05:16', 0);
+INSERT INTO `t_chat_message` VALUES (302, 5, 7, NULL, '22', 'text', 0, 1, NULL, '2025-12-20 20:05:18', 0);
+INSERT INTO `t_chat_message` VALUES (303, 5, 1, NULL, '33', 'text', 0, 7, NULL, '2025-12-20 20:05:23', 0);
+INSERT INTO `t_chat_message` VALUES (304, 5, 1, NULL, '44', 'text', 0, 7, NULL, '2025-12-20 20:14:09', 0);
+INSERT INTO `t_chat_message` VALUES (305, 5, 7, NULL, '55', 'text', 0, 1, NULL, '2025-12-20 20:17:33', 0);
+INSERT INTO `t_chat_message` VALUES (306, 5, 1, NULL, '66', 'text', 0, 7, NULL, '2025-12-20 20:17:36', 0);
+INSERT INTO `t_chat_message` VALUES (307, 5, 1, NULL, '77', 'text', 0, 7, NULL, '2025-12-20 20:19:30', 0);
+INSERT INTO `t_chat_message` VALUES (308, 5, 7, NULL, '88', 'text', 0, 1, NULL, '2025-12-20 20:19:42', 0);
+INSERT INTO `t_chat_message` VALUES (309, 5, 1, NULL, '99', 'text', 0, 7, NULL, '2025-12-20 20:19:50', 0);
+INSERT INTO `t_chat_message` VALUES (310, 5, 7, NULL, '10', 'text', 0, 1, NULL, '2025-12-20 20:21:48', 0);
+INSERT INTO `t_chat_message` VALUES (311, 5, 7, NULL, '11', 'text', 0, 1, NULL, '2025-12-20 20:22:02', 0);
+INSERT INTO `t_chat_message` VALUES (312, 5, 7, NULL, '12', 'text', 0, 1, NULL, '2025-12-20 20:22:05', 0);
+INSERT INTO `t_chat_message` VALUES (313, 5, 1, NULL, '13', 'text', 0, 7, NULL, '2025-12-20 20:23:33', 0);
+INSERT INTO `t_chat_message` VALUES (314, 5, 7, NULL, '14', 'text', 0, 1, NULL, '2025-12-20 20:24:28', 0);
+INSERT INTO `t_chat_message` VALUES (315, 5, 7, NULL, '15', 'text', 0, 1, NULL, '2025-12-20 20:27:36', 0);
 
 -- ----------------------------
 -- Table structure for t_conversation_history
@@ -114,7 +416,7 @@ CREATE TABLE `t_conversation_history`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_session_id_create_time`(`session_id` ASC, `create_time` ASC) USING BTREE,
   INDEX `idx_user_id_role`(`user_id` ASC, `role` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 27 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'AI客服对话历史表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 28 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'AI客服对话历史表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of t_conversation_history
@@ -145,6 +447,7 @@ INSERT INTO `t_conversation_history` VALUES (23, 'f8bad93fa74648ed9cac83a435e524
 INSERT INTO `t_conversation_history` VALUES (24, 'af66b498a4e84820a44502181b0cb73c', 4, 'assistant', '\"目前我们系统中暂未找到标记为\\\"可爱\\\"性格的可领养小狗。不过，\\\"可爱\\\"是很多狗狗的普遍特质，我可以为您推荐一些适合家庭、性格温顺且外貌讨喜的小型犬种。\\n\\n让我为您重新查询一些适合新手、性格友善的可领养小狗：\\n\\n您好！看到您喜欢可爱的小狗，我很高兴为您推荐几位正在等待温暖家庭的毛孩子。他们都性格各异，但都拥有可爱的特质。\\n\\n🐾 **拉拉 - 拉布拉多寻回犬**\\n活泼友善的黄色小天使，性格温顺，特别喜欢和人互动，对小孩特别有耐心。已绝育并完成疫苗接种，非常适合家庭饲养，是优秀的家庭伴侣犬。\\n\\n🐾 **泰迪 - 泰迪犬**\\n一只毛发卷曲蓬松的棕色小可爱，聪明伶俐又粘人，非常适合作为陪伴犬。已绝育并接种疫苗，身体健康，需要主人每天给予陪伴和玩耍时间。\\n\\n🐾 **小柴 - 柴犬**\\n赤色毛发的标准柴犬，笑容治愈人心。性格独立但忠诚，活泼好动，喜欢户外活动。已绝育并完成疫苗接种，需要每天至少1小时的户外运动。\\n\\n🐾 **二哈 - 哈士奇**\\n拥有标志性蓝眼睛的黑白帅气小伙，精力充沛，喜欢奔跑。虽然有点调皮，但性格友善。已绝育并完成疫苗接种，适合有经验的主人。\\n\\n🐾 **金金 - 金毛**\\n四岁的温柔大男孩，性格活泼，体重15公斤左右，健康状况良好。是一只典型的金毛暖男，喜欢与人亲近。\\n\\n🐾 **边边 - 边牧犬**\\n四岁的聪明边牧，黑白相间的毛色，精力旺盛。和小高一样皮实，需要主人有足够时间陪伴和训练。\\n\\n🐾 **小博 - 博美犬**\\n三岁的白色小萌物，性格温顺可爱，体重10公斤，是一只标准的\\\"小狐狸\\\"模样，非常讨人喜爱。\\n\\n【温馨提示】\\n每只狗狗都有独特的个性和需求，建议您根据自己的生活方式选择最适合的伙伴。领养前可以预约见面，让我们共同为这些可爱的毛孩子找到最温暖的家！\\n\\n如果您对某位小伙伴特别感兴趣，我可以为您提供更多详细信息或安排见面哦！\"', NULL, NULL, NULL, '2025-12-06 12:08:02', '2025-12-06 12:08:02', '2025-12-06 12:08:02', 0);
 INSERT INTO `t_conversation_history` VALUES (25, 'af66b498a4e84820a44502181b0cb73c', 4, 'assistant', '\"您好！看到您在寻找粘人的小猫，我特别为您找到了一位非常合适的小伙伴：\\n\\n🐾 **小暹 - 暹罗猫**\\n性格活泼粘人，喜欢和主人交流，叫声独特，需要陪伴。这是一只优雅的蓝色眼睛重点色猫咪，已绝育并完成疫苗接种。\\n适合喜欢互动、有时间陪伴的主人，不适合长时间独处。\\n\\n【温馨提示】\\n暹罗猫是非常社交化的品种，他们渴望主人的关注和互动。建议每天至少安排30分钟的玩耍和陪伴时间，为他们提供丰富的玩具和活动空间。\\n\\n如果您想了解更多关于小暹的信息，或者想要预约见面，请随时告诉我！让我们一起为这位可爱的小天使找到温暖的家~\"', NULL, NULL, NULL, '2025-12-06 12:08:24', '2025-12-06 12:08:24', '2025-12-06 12:08:24', 0);
 INSERT INTO `t_conversation_history` VALUES (26, '107df6e5c49144dd8861801503d80332', 4, 'assistant', '\"您好！我正在为您查找热情活泼且正在等待领养的小狗，稍等片刻...\\n\\n看起来系统暂时没有返回相关结果，可能是筛选条件需要调整。让我为您扩大搜索范围，查找更多可领养的狗狗：\\n\\n目前系统中暂无明确标注为\\\"热情\\\"性格的小狗信息。不过，我很乐意为您推荐一些正在等待领养的活泼可爱的小狗！\\n\\n我理解您想要一只热情的小狗，虽然目前系统中没有明确标注\\\"热情\\\"性格的小狗，但我为您找到了几只性格活泼、非常适合互动的可领养小狗：\\n\\n🐾 **金金 - 金毛**\\n活泼开朗的金毛犬，天性友善亲人，喜欢与人互动和玩耍。金毛犬以热情好客著称，是非常理想的家庭伴侣犬。\\n\\n🐾 **边边 - 边牧犬**\\n活泼聪明的边境牧羊犬，精力充沛且极具互动性。边牧需要较多的运动和智力刺激，适合喜欢户外活动的主人。\\n\\n【温馨提示】\\n狗狗的\\\"活泼\\\"性格往往意味着它们需要较多的陪伴和运动时间。建议您考虑每天是否有足够的时间陪狗狗散步、玩耍和训练。\\n\\n如果您希望了解更多关于这些小狗的信息，或者想了解其他可领养的宠物，我很乐意为您提供帮助！\"', NULL, NULL, NULL, '2025-12-06 22:01:51', '2025-12-06 22:01:51', '2025-12-06 22:01:51', 0);
+INSERT INTO `t_conversation_history` VALUES (27, 'b2005e12fe164ea98ba181dc8af40760', 7, 'assistant', '\"我正在为您查找性格安静、适合安静生活环境的可领养宠物。请稍等片刻，我将为您提供最合适的推荐。\\n\\n🐾 **米米 - 英国短毛猫**  \\n性格温顺安静，喜欢安静地陪伴在主人身边，不需要过多吵闹的互动。  \\n适合喜欢宁静生活、希望有个温柔伴侣的您。\\n\\n🐾 **小灰 - 安哥拉兔**  \\n性情温和，动作轻柔，很少发出声音，是非常理想的室内安静宠物。  \\n适合居住在公寓或需要低噪音环境的家庭。\\n\\n🐾 **布丁 - 彭布罗克威尔士柯基（幼犬）**  \\n虽然柯基通常较活跃，但布丁性格沉稳，经过初步训练后表现得非常安静有礼。  \\n适合希望拥有小狗但又偏好安静氛围的领养人。\\n\\n🐾 **墨墨 - 美国短毛猫**  \\n独立性强，不会频繁叫唤，日常活动安静，自我娱乐能力强。  \\n特别适合工作繁忙或喜欢安静独处的人士。\\n\\n【温馨提示】  \\n安静的性格也需良好的环境来维持，建议为宠物提供稳定的生活节奏和舒适的空间。如果您希望进一步了解某只宠物的详细情况，我可以为您获取更多资讯。\"', NULL, NULL, NULL, '2025-12-19 12:16:16', '2025-12-19 12:16:16', '2025-12-19 12:16:16', 0);
 
 -- ----------------------------
 -- Table structure for t_conversation_session
@@ -167,7 +470,7 @@ CREATE TABLE `t_conversation_session`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_session_id`(`session_id` ASC) USING BTREE,
   INDEX `idx_user_id_status`(`user_id` ASC, `status` ASC, `update_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 33 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'AI客服会话表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 34 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'AI客服会话表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of t_conversation_session
@@ -204,6 +507,7 @@ INSERT INTO `t_conversation_session` VALUES (29, 'ab116c895c7e42ed9e4ac03fc4d0c5
 INSERT INTO `t_conversation_session` VALUES (30, 'f8bad93fa74648ed9cac83a435e524ca', 4, '新对话', NULL, 1, 'active', '作为第一次养宠物的新手，您需要了解以下几个关键方面：\n\n【心理准备】\n领养宠物是一项长期的承诺，通常意味着10-20年的陪伴责任。请确保您已经准备好投入时间、精力和情感来照顾一个生命。\n\n【物质准备】\n在迎接宠物回家前，建议准备好以下基本用品：\n- 适合宠物的食物和饮水器\n- 舒适的休息空间（窝或笼子）\n- 必要的卫生用品（如猫砂盆、牵引绳等）\n- 玩具和磨牙/磨爪工具\n- 基础护理工具（梳子、指甲剪等）\n\n【健康管理】\n新宠物到家后，建议尽快安排首次健康检查，并注意：\n- 按时接种疫苗\n- 定期进行体内外驱虫\n- 建立健康档案\n- 了解附近可靠的宠物医院\n\n【适应期关怀】\n宠物刚到新家可能会感到紧张，建议：\n- 给予安静的适应空间\n- 逐步建立信任关系\n- 保持规律的作息\n- 耐心观察行为变化\n\n【温馨提示】\n我们建议您先从阅读《领养前的准备工作》和《新宠物到家的第一周》这两篇指南开始，它们能为您提供更详细的实用建议。如果您已经有心仪的宠物类型，也可以告诉我，我可以为您提供更具体的护理建议。', '2025-12-06 00:08:53', '2025-12-06 00:08:36', '2025-12-06 00:08:53', NULL, 0);
 INSERT INTO `t_conversation_session` VALUES (31, 'af66b498a4e84820a44502181b0cb73c', 4, '新对话', NULL, 2, 'active', '您好！看到您在寻找粘人的小猫，我特别为您找到了一位非常合适的小伙伴：\n\n🐾 **小暹 - 暹罗猫**\n性格活泼粘人，喜欢和主人交流，叫声独特，需要陪伴。这是一只优雅的蓝色眼睛重点色猫咪，已绝育并完成疫苗接种。\n适合喜欢互动、有时间陪伴的主人，不适合长时间独处。\n\n【温馨提示】\n暹罗猫是非常社交化的品种，他们渴望主人的关注和互动。建议每天至少安排30分钟的玩耍和陪伴时间，为他们提供丰富的玩具和活动空间。\n\n如果您想了解更多关于小暹的信息，或者想要预约见面，请随时告诉我！让我们一起为这位可爱的小天使找到温暖的家~', '2025-12-06 12:08:24', '2025-12-06 12:07:47', '2025-12-06 12:08:24', NULL, 0);
 INSERT INTO `t_conversation_session` VALUES (32, '107df6e5c49144dd8861801503d80332', 4, '新对话', NULL, 1, 'active', '您好！我正在为您查找热情活泼且正在等待领养的小狗，稍等片刻...\n\n看起来系统暂时没有返回相关结果，可能是筛选条件需要调整。让我为您扩大搜索范围，查找更多可领养的狗狗：\n\n目前系统中暂无明确标注为\"热情\"性格的小狗信息。不过，我很乐意为您推荐一些正在等待领养的活泼可爱的小狗！\n\n我理解您想要一只热情的小狗，虽然目前系统中没有明确标注\"热情\"性格的小狗，但我为您找到了几只性格活泼、非常适合互动的可领养小狗：\n\n🐾 **金金 - 金毛**\n活泼开朗的金毛犬，天性友善亲人，喜欢与人互动和玩耍。金毛犬以热情好客著称，是非常理想的家庭伴侣犬。\n\n🐾 **边边 - 边牧犬**\n活泼聪明的边境牧羊犬，精力充沛且极具互动性。边牧需要较多的运动和智力刺激，适合喜欢户外活动的主人。\n\n【温馨提示】\n狗狗的\"活泼\"性格往往意味着它们需要较多的陪伴和运动时间。建议您考虑每天是否有足够的时间陪狗狗散步、玩耍和训练。\n\n如果您希望了解更多关于这些小狗的信息，或者想了解其他可领养的宠物，我很乐意为您提供帮助！', '2025-12-06 22:01:52', '2025-12-06 22:01:39', '2025-12-06 22:01:52', NULL, 0);
+INSERT INTO `t_conversation_session` VALUES (33, 'b2005e12fe164ea98ba181dc8af40760', 7, '新对话', NULL, 1, 'active', '我正在为您查找性格安静、适合安静生活环境的可领养宠物。请稍等片刻，我将为您提供最合适的推荐。\n\n🐾 **米米 - 英国短毛猫**  \n性格温顺安静，喜欢安静地陪伴在主人身边，不需要过多吵闹的互动。  \n适合喜欢宁静生活、希望有个温柔伴侣的您。\n\n🐾 **小灰 - 安哥拉兔**  \n性情温和，动作轻柔，很少发出声音，是非常理想的室内安静宠物。  \n适合居住在公寓或需要低噪音环境的家庭。\n\n🐾 **布丁 - 彭布罗克威尔士柯基（幼犬）**  \n虽然柯基通常较活跃，但布丁性格沉稳，经过初步训练后表现得非常安静有礼。  \n适合希望拥有小狗但又偏好安静氛围的领养人。\n\n🐾 **墨墨 - 美国短毛猫**  \n独立性强，不会频繁叫唤，日常活动安静，自我娱乐能力强。  \n特别适合工作繁忙或喜欢安静独处的人士。\n\n【温馨提示】  \n安静的性格也需良好的环境来维持，建议为宠物提供稳定的生活节奏和舒适的空间。如果您希望进一步了解某只宠物的详细情况，我可以为您获取更多资讯。', '2025-12-19 12:16:16', '2025-12-19 12:16:06', '2025-12-19 12:16:16', NULL, 0);
 
 -- ----------------------------
 -- Table structure for t_cs_session
@@ -225,12 +529,16 @@ CREATE TABLE `t_cs_session`  (
   INDEX `idx_cs_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_cs_agent_id`(`agent_id` ASC) USING BTREE,
   INDEX `idx_cs_status_time`(`status` ASC, `last_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '人工客服会话表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '人工客服会话表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of t_cs_session
 -- ----------------------------
-INSERT INTO `t_cs_session` VALUES (1, 4, NULL, 'OPEN', '欧克欧克', '2025-12-08 22:51:12', 0, 0, '2025-12-08 21:56:02', '2025-12-08 21:56:02', 0);
+INSERT INTO `t_cs_session` VALUES (1, 4, 1, 'OPEN', '好的，我们已为您记录需求，如有合适的宠物会第一时间联系您。', '2025-12-10 23:11:43', 0, 0, '2025-12-08 21:56:02', '2025-12-08 21:56:02', 0);
+INSERT INTO `t_cs_session` VALUES (2, 1, 1, 'OPEN', NULL, NULL, 0, 0, '2025-12-09 00:15:59', '2025-12-09 00:15:59', 0);
+INSERT INTO `t_cs_session` VALUES (3, 5, 1, 'OPEN', '你好', '2025-12-11 19:06:35', 0, 0, '2025-12-11 19:05:49', '2025-12-11 19:05:49', 0);
+INSERT INTO `t_cs_session` VALUES (4, 6, 1, 'OPEN', '1111', '2025-12-15 21:15:21', 2, 0, '2025-12-11 19:22:02', '2025-12-11 19:22:02', 0);
+INSERT INTO `t_cs_session` VALUES (5, 7, 1, 'OPEN', '15', '2025-12-20 20:27:36', 0, 1, '2025-12-14 22:43:24', '2025-12-14 22:43:24', 0);
 
 -- ----------------------------
 -- Table structure for t_dict_item
@@ -255,7 +563,7 @@ CREATE TABLE `t_dict_item`  (
 -- ----------------------------
 -- Records of t_dict_item
 -- ----------------------------
-INSERT INTO `t_dict_item` VALUES (1, 'pet_category', 'dog', '狗狗', 1, 1, '小狗', '2025-12-07 16:13:58', '2025-12-07 16:13:58', 0);
+INSERT INTO `t_dict_item` VALUES (1, 'pet_category', 'dog', '狗狗', 1, 1, '该宠物类型为狗狗', '2025-12-07 16:13:58', '2025-12-07 16:13:58', 0);
 INSERT INTO `t_dict_item` VALUES (2, 'pet_category', 'cat', '猫咪', 2, 1, '小猫', '2025-12-07 16:13:58', '2025-12-07 16:13:58', 0);
 INSERT INTO `t_dict_item` VALUES (3, 'pet_category', 'bird', '鸟类', 3, 1, '小鸟', '2025-12-07 16:13:58', '2025-12-07 16:13:58', 0);
 INSERT INTO `t_dict_item` VALUES (4, 'pet_category', 'rabbit', '兔子', 4, 1, '小兔子', '2025-12-07 16:13:58', '2025-12-07 16:13:58', 0);
@@ -374,7 +682,7 @@ CREATE TABLE `t_notification`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_is_read`(`is_read` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '通知消息表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '通知消息表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of t_notification
@@ -401,7 +709,7 @@ CREATE TABLE `t_operation_log`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_create_time`(`create_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '操作日志表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '操作日志表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of t_operation_log
@@ -458,7 +766,7 @@ INSERT INTO `t_pet` VALUES (2, '小白', '兔子', '白兔', 2, 8, 2.50, '纯白
 INSERT INTO `t_pet` VALUES (3, '金金', '小狗', '金毛寻回犬', 1, 18, 28.50, '金黄色', 1, 1, 'healthy', NULL, '性格温顺友善, 聪明听话, 喜欢和人互动, 对小孩很有耐心', '这是一只帅气的金毛犬, 毛色金黄, 性格温顺。已完成绝育和疫苗接种, 训练有素, 会基本指令。非常适合家庭饲养, 是孩子们的好伙伴。', '[\"http://localhost:9000/animal-adopt/小狗1.png\"]', 'http://localhost:9000/animal-adopt/小狗1.png', NULL, '市区流浪犬救助中心', '需要有足够的活动空间, 每天遛狗2次以上, 定期梳理毛发, 有养大型犬经验者优先', 'available', NULL, 1, 0, 0, 0, 0, 3, NULL, '2025-11-19 13:44:14', '2025-12-06 19:51:45', 0);
 INSERT INTO `t_pet` VALUES (4, '小柴', '小狗', '柴犬', 2, 12, 9.80, '赤色', 1, 1, 'healthy', NULL, '性格独立但忠诚, 活泼好动, 喜欢户外活动, 警惕性高', '这是一只可爱的柴犬, 标准的赤色毛发, 笑容治愈。已绝育并完成疫苗接种, 身体健康。性格活泼, 需要足够的运动量。', '[\"http://localhost:9000/animal-adopt/小狗2.jpg\"]', 'http://localhost:9000/animal-adopt/小狗2.jpg', NULL, '郊区宠物救助站', '需要每天至少1小时户外运动, 定期梳理毛发, 有养中型犬经验', 'available', NULL, 1, 1, 0, 0, 0, 4, NULL, '2025-11-19 13:44:14', '2025-12-06 19:51:45', 0);
 INSERT INTO `t_pet` VALUES (5, '泰迪', '小狗', '泰迪犬', 1, 10, 4.20, '棕色', 1, 1, 'healthy', NULL, '性格活泼粘人, 聪明伶俐, 喜欢和主人互动, 适合陪伴', '这是一只可爱的泰迪犬, 毛发卷曲蓬松, 非常可爱。已绝育并接种疫苗, 身体健康。性格粘人, 适合需要陪伴的家庭。', '[\"http://localhost:9000/animal-adopt/小狗3.jpg\"]', 'http://localhost:9000/animal-adopt/小狗3.jpg', NULL, '市区宠物医院', '需要定期美容修剪毛发, 每天陪伴玩耍, 适合有时间照顾的家庭', 'available', NULL, 1, 0, 0, 0, 0, 5, NULL, '2025-11-19 13:44:14', '2025-12-06 19:51:45', 0);
-INSERT INTO `t_pet` VALUES (6, '二哈', '小狗', '哈士奇', 1, 15, 22.00, '黑白色', 1, 1, 'healthy', NULL, '性格活泼好动, 精力充沛, 喜欢奔跑, 有时会有点调皮', '这是一只帅气的哈士奇, 标志性的蓝眼睛和黑白毛色。已绝育并完成疫苗接种, 精力旺盛, 需要大量运动。性格友善但有点调皮, 适合有经验的主人。', '[\"http://localhost:9000/animal-adopt/小狗4.png\"]', 'http://localhost:9000/animal-adopt/小狗4.png', NULL, '郊区救助站', '需要大量运动空间, 每天至少2小时户外活动, 有养大型犬经验, 能接受它的调皮性格', 'available', NULL, 1, 5, 0, 0, 1, 6, NULL, '2025-11-19 13:44:14', '2025-12-06 22:00:00', 0);
+INSERT INTO `t_pet` VALUES (6, '二哈', '小狗', '哈士奇', 1, 15, 22.00, '黑白色', 1, 1, 'healthy', NULL, '性格活泼好动, 精力充沛, 喜欢奔跑, 有时会有点调皮', '这是一只帅气的哈士奇, 标志性的蓝眼睛和黑白毛色。已绝育并完成疫苗接种, 精力旺盛, 需要大量运动。性格友善但有点调皮, 适合有经验的主人。', '[\"http://localhost:9000/animal-adopt/小狗4.png\"]', 'http://localhost:9000/animal-adopt/小狗4.png', NULL, '郊区救助站', '需要大量运动空间, 每天至少2小时户外活动, 有养大型犬经验, 能接受它的调皮性格', 'available', NULL, 1, 6, 0, 0, 1, 6, NULL, '2025-11-19 13:44:14', '2025-12-10 23:15:00', 0);
 INSERT INTO `t_pet` VALUES (7, '小黑', '小狗', '边境牧羊犬', 1, 20, 18.50, '黑白色', 1, 1, 'healthy', NULL, '智商极高, 学习能力强, 精力充沛, 需要大量脑力和体力活动', '这是一只聪明的边牧, 黑白相间的毛色, 眼神专注。已绝育并完成疫苗接种, 智商很高, 学东西很快。需要主人有足够时间陪伴和训练。', '[\"http://localhost:9000/animal-adopt/小狗5.jpg\"]', 'http://localhost:9000/animal-adopt/小狗5.jpg', NULL, '训练基地', '需要大量运动和智力游戏, 每天至少2小时户外活动, 有养犬经验, 能提供足够的训练和刺激', 'available', NULL, 1, 0, 0, 0, 0, 7, NULL, '2025-11-19 13:44:14', '2025-12-06 19:51:45', 0);
 INSERT INTO `t_pet` VALUES (8, '拉拉', '小狗', '拉布拉多寻回犬', 2, 24, 26.00, '黄色', 1, 1, 'healthy', NULL, '性格温顺友善, 对人友好, 喜欢游泳, 是优秀的家庭伴侣犬', '这是一只温柔的拉布拉多, 毛色金黄, 性格超好。已绝育并完成疫苗接种, 非常适合家庭饲养。喜欢和人互动, 对小孩特别有耐心。', '[\"http://localhost:9000/animal-adopt/小狗6.jpg\"]', 'http://localhost:9000/animal-adopt/小狗6.jpg', NULL, '市区救助中心', '需要足够的活动空间, 每天遛狗2次, 定期梳理毛发, 适合有院子的家庭', 'available', NULL, 1, 0, 0, 0, 0, 8, NULL, '2025-11-19 13:44:14', '2025-12-06 19:51:45', 0);
 INSERT INTO `t_pet` VALUES (9, '圆圆', '小猫', '英国短毛猫', 2, 14, 4.50, '蓝灰色', 1, 1, 'healthy', NULL, '性格温顺安静, 喜欢睡觉, 不太爱动, 适合公寓饲养', '这是一只可爱的英短猫, 圆圆的脸蛋, 蓝灰色的毛发。已绝育并完成疫苗接种, 性格温顺, 不吵不闹, 非常适合公寓饲养。', '[\"http://localhost:9000/animal-adopt/小猫1.jpg\"]', 'http://localhost:9000/animal-adopt/小猫1.jpg', NULL, '宠物店', '需要定期梳理毛发, 提供猫砂盆和猫爬架, 定期体检', 'available', NULL, 1, 2, 0, 0, 0, 9, NULL, '2025-11-19 13:44:14', '2025-12-06 19:51:45', 0);
@@ -470,14 +778,14 @@ INSERT INTO `t_pet` VALUES (14, '小狸', '小猫', '中华狸花猫', 1, 10, 4.
 INSERT INTO `t_pet` VALUES (20, '耶耶', '小狗', '萨摩耶', 2, 5, 15.00, '白色', 0, 0, 'healthy', NULL, '温顺', '一只可爱的萨摩耶', '[\"http://localhost:9000/animal-adopt/pet-images/8962033cf5c44e629554661ac480f271.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/5f372549aeed448590d9fc4e41e20c6b.png', NULL, NULL, NULL, 'adopted', 1, 1, 26, 1, 1, 1, 0, 1, '2025-11-23 00:30:33', '2025-12-06 19:51:45', 0);
 INSERT INTO `t_pet` VALUES (21, '小博', '小狗', '博美犬', 1, 3, 10.00, '白色', 0, 0, 'healthy', NULL, '温顺', '一只可爱温顺的博美犬', '[\"http://localhost:9000/animal-adopt/pet-images/08352439a0244cd6aa188ec7b290f653.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/0b0f079552b04de3952ea0e27c895a84.png', NULL, NULL, NULL, 'available', NULL, 1, 5, 0, 1, 0, 0, 1, '2025-11-24 14:13:34', '2025-12-06 19:51:45', 0);
 INSERT INTO `t_pet` VALUES (22, '布布', '小猫', '布偶猫', 2, 3, 6.00, '白色', 0, 0, 'healthy', NULL, '调皮', '一只和小高一样调皮的可爱布偶猫', '[\"http://localhost:9000/animal-adopt/pet-images/c9a740e1c6b743b0b8930343a26678b9.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/cd04017645314c5ca9a64e5d95e2600f.png', NULL, NULL, NULL, 'available', NULL, 1, 8, 0, 0, 2, 0, 1, '2025-11-24 15:05:08', '2025-12-06 22:00:00', 0);
-INSERT INTO `t_pet` VALUES (23, '边边', '小狗', '边牧犬', 1, 4, 14.00, '黑白相见', 0, 0, 'healthy', NULL, '活泼', '和小高一样皮', '[\"http://localhost:9000/animal-adopt/pet-images/39d3242eb0a84cdf8c55199a95a24840.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/c68f5065d8a84819a75a0019c9d04927.png', NULL, NULL, NULL, 'available', NULL, 1, 14, 1, 1, 0, 0, 1, '2025-11-24 15:06:49', '2025-12-06 19:51:45', 0);
+INSERT INTO `t_pet` VALUES (23, '边边', '小狗', '边牧犬', 1, 4, 14.00, '黑白相见', 0, 0, 'healthy', NULL, '活泼', '和小高一样皮', '[\"http://localhost:9000/animal-adopt/pet-images/39d3242eb0a84cdf8c55199a95a24840.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/c68f5065d8a84819a75a0019c9d04927.png', NULL, NULL, NULL, 'available', NULL, 1, 15, 1, 1, 0, 0, 1, '2025-11-24 15:06:49', '2025-12-10 23:15:00', 0);
 INSERT INTO `t_pet` VALUES (24, '金金', '小狗', '金毛', 1, 4, 15.00, '棕色', 0, 0, 'healthy', NULL, '活泼', '一只金毛', '[\"http://localhost:9000/animal-adopt/pet-images/8f9b25c437a54df2927d477b46535406.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/412005b4bf8c43b89c398a3e4b8160e9.png', NULL, NULL, NULL, 'available', NULL, 1, 5, 0, 0, 0, 0, 1, '2025-11-24 15:11:43', '2025-12-06 19:51:45', 0);
-INSERT INTO `t_pet` VALUES (25, '松松', '松鼠', '松鼠', 1, 3, 4.00, '黑棕色', 0, 0, 'healthy', NULL, '谨慎', '胆小的松鼠', '[\"http://localhost:9000/animal-adopt/pet-images/a3f842d804d14893a24f776594f76dc0.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/a097fdcf5c2e43bf895465c537c2125f.png', NULL, NULL, NULL, 'available', NULL, 1, 10, 0, 0, 0, 0, 1, '2025-11-24 15:27:05', '2025-11-28 16:55:00', 0);
+INSERT INTO `t_pet` VALUES (25, '松松', '松鼠', '松鼠', 1, 3, 4.00, '黑棕色', 0, 0, 'healthy', NULL, '谨慎', '胆小的松鼠', '[\"http://localhost:9000/animal-adopt/pet-images/a3f842d804d14893a24f776594f76dc0.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/a097fdcf5c2e43bf895465c537c2125f.png', NULL, NULL, NULL, 'available', NULL, 1, 11, 1, 1, 0, 0, 1, '2025-11-24 15:27:05', '2025-12-20 12:06:50', 0);
 INSERT INTO `t_pet` VALUES (26, '小松', '松鼠', '美洲红松鼠', 2, 3, 6.00, '红棕色', 0, 0, 'healthy', NULL, '活泼', '活泼的松鼠', '[\"http://localhost:9000/animal-adopt/pet-images/32cce10b71bd4c35b7a40053bbc6c894.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/9eebd6cf4f3d47f1acaf6c8fedae6587.png', NULL, NULL, NULL, 'available', NULL, 1, 11, 1, 1, 0, 0, 1, '2025-11-24 15:45:43', '2025-12-07 23:50:00', 0);
 INSERT INTO `t_pet` VALUES (27, '大松', '松鼠', '美洲红松鼠', 1, 2, 2.00, '红棕色', 0, 0, 'healthy', NULL, '活泼', '松鼠', '[\"http://localhost:9000/animal-adopt/pet-images/d755515cc94b4185ac57897f5a056431.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/53695e368c5e4024a39b8a2f220d89bb.png', NULL, NULL, NULL, 'available', NULL, 1, 0, 0, 0, 0, 0, 1, '2025-11-24 15:49:12', '2025-11-24 15:55:56', 1);
 INSERT INTO `t_pet` VALUES (28, '大松', '松鼠', '美洲红松鼠', 1, 2, 2.00, '红棕色', 0, 0, 'healthy', NULL, '胆小', '胆小的松鼠', '[\"http://localhost:9000/animal-adopt/pet-images/97c11e865e914da691a4700f6751db27.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/c06a6676216847af8c1794ba188c63f8.png', NULL, NULL, NULL, 'available', NULL, 1, 0, 0, 0, 0, 0, 1, '2025-11-24 15:56:49', '2025-11-24 19:15:02', 1);
 INSERT INTO `t_pet` VALUES (29, '大松', '松鼠', '美洲红松鼠', 1, 3, 4.00, '红棕色', 0, 0, 'healthy', NULL, '谨慎', '谨慎的松鼠', '[\"http://localhost:9000/animal-adopt/pet-images/ab25cef1966448e6ab9d15c5f3c2f703.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/50e686e36754405497e7ca53f4e6954e.png', NULL, NULL, NULL, 'available', NULL, 1, 0, 0, 0, 0, 0, 1, '2025-11-24 19:15:56', '2025-11-26 14:54:34', 1);
-INSERT INTO `t_pet` VALUES (33, '仓仓', '仓鼠', '仓鼠', 1, 2, 2.00, '白色', 0, 0, 'healthy', NULL, '胆小、谨慎', '小心的仓鼠', '[\"http://localhost:9000/animal-adopt/pet-images/5dbea0668a4342de8ddf71da8b9bc530.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/5af36d9a6bcf4fbe983d78da208e0b19.png', NULL, NULL, NULL, 'available', NULL, 1, 11, 0, 0, 0, 0, 1, '2025-11-24 22:38:51', '2025-12-08 01:05:00', 0);
+INSERT INTO `t_pet` VALUES (33, '仓仓', '仓鼠', '仓鼠', 1, 2, 2.00, '白色', 0, 0, 'healthy', NULL, '胆小、谨慎', '小心的仓鼠', '[\"http://localhost:9000/animal-adopt/pet-images/5dbea0668a4342de8ddf71da8b9bc530.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/5af36d9a6bcf4fbe983d78da208e0b19.png', NULL, NULL, NULL, 'available', NULL, 1, 14, 1, 1, 0, 0, 1, '2025-11-24 22:38:51', '2025-12-20 12:06:50', 0);
 INSERT INTO `t_pet` VALUES (34, '熊大', 'cat', '熊', 1, 6, 200.00, '棕白色', 0, 0, 'healthy', NULL, '凶猛', '熊大', '[\"http://localhost:9000/animal-adopt/pet-images/68b633d3d7ef4421a402e64111aa34eb.jpg\"]', 'http://localhost:9000/animal-adopt/pet-covers/95f1b8e2488a4762b99007aea0d6c25b.jpg', NULL, NULL, NULL, 'available', NULL, 1, 0, 0, 0, 0, 0, 1, '2025-12-07 19:27:27', '2025-12-07 19:34:06', 1);
 INSERT INTO `t_pet` VALUES (35, '熊大2', '熊', '熊', 1, 6, 300.00, '棕白色', 0, 0, 'healthy', NULL, '凶猛', '熊大', '[\"http://localhost:9000/animal-adopt/pet-images/cf122c4211714b58a3a8418d31a17346.jpg\"]', 'http://localhost:9000/animal-adopt/pet-covers/b14528717e1d4d1c81b4ca25025b5798.jpg', NULL, NULL, NULL, 'available', NULL, 1, 0, 0, 0, 0, 0, 1, '2025-12-07 19:29:42', '2025-12-07 19:33:54', 1);
 INSERT INTO `t_pet` VALUES (36, '熊大', 'bear', '狗熊', 1, 7, 300.00, '棕白色', 0, 0, 'healthy', NULL, '凶猛', '凶猛的熊大', '[\"http://localhost:9000/animal-adopt/pet-images/7b7044333d374cf79424eb58d3d4370a.jpg\"]', 'http://localhost:9000/animal-adopt/pet-covers/e54fce360dc14b64bc3c3ffefa782165.jpg', NULL, NULL, NULL, 'available', NULL, 1, 0, 0, 0, 0, 0, 1, '2025-12-07 20:31:37', '2025-12-07 23:34:47', 1);
@@ -496,7 +804,7 @@ CREATE TABLE `t_pet_favorite`  (
   UNIQUE INDEX `uk_user_pet`(`user_id` ASC, `pet_id` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_pet_id`(`pet_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 23 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '宠物收藏表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 25 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '宠物收藏表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of t_pet_favorite
@@ -509,6 +817,8 @@ INSERT INTO `t_pet_favorite` VALUES (19, 1, 20, '2025-11-23 16:44:24', 0);
 INSERT INTO `t_pet_favorite` VALUES (20, 1, 26, '2025-11-28 15:12:51', 0);
 INSERT INTO `t_pet_favorite` VALUES (21, 1, 21, '2025-11-28 16:12:31', 0);
 INSERT INTO `t_pet_favorite` VALUES (22, 4, 23, '2025-12-05 15:33:32', 0);
+INSERT INTO `t_pet_favorite` VALUES (23, 7, 33, '2025-12-20 12:05:36', 0);
+INSERT INTO `t_pet_favorite` VALUES (24, 7, 25, '2025-12-20 12:05:43', 0);
 
 -- ----------------------------
 -- Table structure for t_pet_like
@@ -524,7 +834,7 @@ CREATE TABLE `t_pet_like`  (
   UNIQUE INDEX `uk_user_pet`(`user_id` ASC, `pet_id` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_pet_id`(`pet_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 21 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '宠物点赞表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 23 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '宠物点赞表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of t_pet_like
@@ -537,6 +847,8 @@ INSERT INTO `t_pet_like` VALUES (17, 1, 20, '2025-11-23 16:44:25', 0);
 INSERT INTO `t_pet_like` VALUES (18, 1, 26, '2025-11-28 15:12:52', 0);
 INSERT INTO `t_pet_like` VALUES (19, 1, 21, '2025-11-28 16:12:29', 1);
 INSERT INTO `t_pet_like` VALUES (20, 4, 23, '2025-12-05 15:33:29', 0);
+INSERT INTO `t_pet_like` VALUES (21, 7, 33, '2025-12-20 12:05:36', 0);
+INSERT INTO `t_pet_like` VALUES (22, 7, 25, '2025-12-20 12:05:44', 0);
 
 -- ----------------------------
 -- Table structure for t_story
@@ -635,7 +947,7 @@ CREATE TABLE `t_system_config`  (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_config_key`(`config_key` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '系统配置表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '系统配置表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of t_system_config
@@ -675,15 +987,18 @@ CREATE TABLE `t_user`  (
   UNIQUE INDEX `uk_email`(`email` ASC) USING BTREE,
   INDEX `idx_role`(`role` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of t_user
 -- ----------------------------
-INSERT INTO `t_user` VALUES (1, 'admin', '$2a$10$jCsFThvTK3KCnCXmaRR1te4xQpRjfpM0A9wsxCEhA0hg31YupQB8O', '超级管理员', NULL, '13000000000', '3140000000@qq.com', 'avatars/e01c38ad0612481a8c5d8940da5a8c29.jpg', 0, NULL, '中国福建省漳州市xx县', NULL, NULL, NULL, NULL, 0, 'super_admin', 1, 1, NULL, '2025-11-19 11:16:41', '2025-11-19 22:17:53', 0);
+INSERT INTO `t_user` VALUES (1, 'super_admin', '$2a$10$jCsFThvTK3KCnCXmaRR1te4xQpRjfpM0A9wsxCEhA0hg31YupQB8O', '超级管理员', NULL, '13000000000', '3140000000@qq.com', 'avatars/e01c38ad0612481a8c5d8940da5a8c29.jpg', 0, NULL, '中国福建省漳州市xx县', NULL, NULL, NULL, NULL, 0, 'super_admin', 1, 1, NULL, '2025-11-19 11:16:41', '2025-12-16 14:39:35', 0);
 INSERT INTO `t_user` VALUES (2, 'auditor', '$2a$10$smWyW1Z7pZq.nzzYNaCLdOrzUE6p3Pz3vZAKnkv4pshEX8jebulQi', '审核员', NULL, NULL, NULL, 'https://192.168.99.228:9000/animal-adopt/微信图片_20250929211436_125_10.jpg', 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'application_auditor', 1, 1, NULL, '2025-11-19 11:16:41', '2025-11-19 22:19:40', 0);
-INSERT INTO `t_user` VALUES (3, 'manager', '$2a$10$smWyW1Z7pZq.nzzYNaCLdOrzUE6p3Pz3vZAKnkv4pshEX8jebulQi', '管理员', NULL, NULL, NULL, 'https://192.168.99.228:9000/animal-adopt/微信图片_20250929211439_126_10.jpg', 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'admin', 1, 1, NULL, '2025-11-19 11:16:41', '2025-11-19 22:19:53', 0);
-INSERT INTO `t_user` VALUES (4, '林林1', '$2a$10$SIIObX9KGifpHzdPg52ruuzfx3DdJmzyDqK427UzJiNYkj6EA8Mq.', NULL, NULL, '13063184972', '3140000001@qq.com', 'http://localhost:9000/animal-adopt/avatars/b940a95eafa84210a7fe780d005ae7d7.jpg', 0, NULL, '中国福建省', NULL, NULL, NULL, NULL, 0, 'user', 1, 1, NULL, '2025-12-05 13:51:40', '2025-12-05 21:53:47', 0);
+INSERT INTO `t_user` VALUES (3, 'admin', '$2a$10$smWyW1Z7pZq.nzzYNaCLdOrzUE6p3Pz3vZAKnkv4pshEX8jebulQi', '管理员', NULL, NULL, NULL, 'https://192.168.99.228:9000/animal-adopt/微信图片_20250929211439_126_10.jpg', 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'admin', 1, 1, NULL, '2025-11-19 11:16:41', '2025-12-16 14:39:35', 0);
+INSERT INTO `t_user` VALUES (4, '林林1', '$2a$10$SIIObX9KGifpHzdPg52ruuzfx3DdJmzyDqK427UzJiNYkj6EA8Mq.', NULL, NULL, '13000000001', '3140000001@qq.com', 'http://localhost:9000/animal-adopt/avatars/b940a95eafa84210a7fe780d005ae7d7.jpg', 0, NULL, '中国福建省', NULL, NULL, NULL, NULL, 0, 'user', 1, 1, NULL, '2025-12-05 13:51:40', '2025-12-11 19:21:44', 0);
+INSERT INTO `t_user` VALUES (5, '林林2', '$2a$10$MIKswZrzCIjZqn/d0ZNXYeHW164rjbSGpVRH2p3xJi2mnERNxaIJC', NULL, NULL, NULL, '3140000002@qq.com', NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'user', 1, 0, NULL, '2025-12-11 19:05:40', '2025-12-11 19:05:40', 0);
+INSERT INTO `t_user` VALUES (6, '林林3', '$2a$10$6C8zq6T.hZiFQh9zxWv9KumqXFWOI7Oatms7PxYGShqbKOH5gP5IK', NULL, NULL, '13000000002', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'user', 1, 0, NULL, '2025-12-11 19:22:01', '2025-12-11 19:22:01', 0);
+INSERT INTO `t_user` VALUES (7, '林林4', '$2a$10$Evz3oLjVn6UoHPhwy4P17uoJjJzA/pdaNqSVXOh9LNoOVNWWnt2oO', NULL, NULL, NULL, '3140000003@qq.com', 'http://localhost:9000/animal-adopt/avatars/c72fb1627b004dd0bc004399fc97cb56.jpg', 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'user', 1, 0, NULL, '2025-12-14 22:43:18', '2025-12-14 22:43:18', 0);
 
 -- ----------------------------
 -- Table structure for t_user_certification
@@ -733,13 +1048,17 @@ CREATE TABLE `t_verification_code`  (
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_target_type`(`target` ASC, `code_type` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '验证码表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '验证码表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of t_verification_code
 -- ----------------------------
 INSERT INTO `t_verification_code` VALUES (1, 'phone', '13063184972', '169097', 'login', '2025-12-05 13:56:23', 1, '2025-12-05 13:51:23');
 INSERT INTO `t_verification_code` VALUES (2, 'phone', '13063184972', '865767', 'login', '2025-12-05 14:36:08', 1, '2025-12-05 14:31:08');
+INSERT INTO `t_verification_code` VALUES (3, 'email', '3149696140@qq.com', '264774', 'login', '2025-12-11 19:10:13', 0, '2025-12-11 19:05:13');
+INSERT INTO `t_verification_code` VALUES (4, 'email', '3149696140@qq.com', '721443', 'login', '2025-12-11 19:10:22', 1, '2025-12-11 19:05:22');
+INSERT INTO `t_verification_code` VALUES (5, 'phone', '13063184972', '666439', 'login', '2025-12-11 19:26:46', 1, '2025-12-11 19:21:46');
+INSERT INTO `t_verification_code` VALUES (6, 'email', '3149696140@qq.com', '507016', 'login', '2025-12-14 22:47:09', 1, '2025-12-14 22:42:09');
 
 -- ----------------------------
 -- Table structure for t_visit_log
@@ -752,7 +1071,7 @@ CREATE TABLE `t_visit_log`  (
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_user_date`(`user_id` ASC, `visit_date` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '每日 uv 记录表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 31 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '每日 uv 记录表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of t_visit_log
@@ -763,5 +1082,23 @@ INSERT INTO `t_visit_log` VALUES (9, 1, '2025-12-07', '2025-12-07 00:08:39');
 INSERT INTO `t_visit_log` VALUES (10, 4, '2025-12-07', '2025-12-07 19:19:26');
 INSERT INTO `t_visit_log` VALUES (11, 1, '2025-12-08', '2025-12-08 00:02:22');
 INSERT INTO `t_visit_log` VALUES (12, 4, '2025-12-08', '2025-12-08 01:01:49');
+INSERT INTO `t_visit_log` VALUES (13, 1, '2025-12-09', '2025-12-09 00:03:10');
+INSERT INTO `t_visit_log` VALUES (14, 4, '2025-12-09', '2025-12-09 00:04:11');
+INSERT INTO `t_visit_log` VALUES (15, 4, '2025-12-10', '2025-12-10 17:01:34');
+INSERT INTO `t_visit_log` VALUES (16, 1, '2025-12-10', '2025-12-10 18:07:43');
+INSERT INTO `t_visit_log` VALUES (17, 1, '2025-12-11', '2025-12-11 19:03:43');
+INSERT INTO `t_visit_log` VALUES (18, 4, '2025-12-11', '2025-12-11 19:03:55');
+INSERT INTO `t_visit_log` VALUES (19, 6, '2025-12-14', '2025-12-14 22:41:37');
+INSERT INTO `t_visit_log` VALUES (20, 1, '2025-12-14', '2025-12-14 23:15:48');
+INSERT INTO `t_visit_log` VALUES (21, 7, '2025-12-14', '2025-12-14 23:15:49');
+INSERT INTO `t_visit_log` VALUES (22, 7, '2025-12-15', '2025-12-15 00:55:01');
+INSERT INTO `t_visit_log` VALUES (23, 1, '2025-12-15', '2025-12-15 00:56:08');
+INSERT INTO `t_visit_log` VALUES (24, 1, '2025-12-16', '2025-12-16 00:32:25');
+INSERT INTO `t_visit_log` VALUES (25, 7, '2025-12-16', '2025-12-16 00:32:42');
+INSERT INTO `t_visit_log` VALUES (26, 1, '2025-12-17', '2025-12-17 11:47:27');
+INSERT INTO `t_visit_log` VALUES (27, 1, '2025-12-19', '2025-12-19 11:55:41');
+INSERT INTO `t_visit_log` VALUES (28, 7, '2025-12-19', '2025-12-19 11:55:41');
+INSERT INTO `t_visit_log` VALUES (29, 1, '2025-12-20', '2025-12-20 12:06:21');
+INSERT INTO `t_visit_log` VALUES (30, 7, '2025-12-20', '2025-12-20 12:49:12');
 
 SET FOREIGN_KEY_CHECKS = 1;

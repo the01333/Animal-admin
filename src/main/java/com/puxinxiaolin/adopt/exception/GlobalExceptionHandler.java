@@ -3,8 +3,8 @@ package com.puxinxiaolin.adopt.exception;
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.exception.NotPermissionException;
 import cn.dev33.satoken.exception.NotRoleException;
-import com.puxinxiaolin.adopt.common.Result;
-import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.entity.common.Result;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UnauthorizedException.class)
     public Result<?> handleUnauthorizedException(UnauthorizedException e) {
         log.warn("未授权异常: {}", e.getMessage());
-        return Result.error(ResultCode.UNAUTHORIZED.getCode(), e.getMessage());
+        return Result.error(ResultCodeEnum.UNAUTHORIZED.getCode(), e.getMessage());
     }
     
     /**
@@ -54,7 +54,7 @@ public class GlobalExceptionHandler {
             default -> "当前会话未登录";
         };
         
-        return Result.error(ResultCode.UNAUTHORIZED.getCode(), message);
+        return Result.error(ResultCodeEnum.UNAUTHORIZED.getCode(), message);
     }
     
     /**
@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotPermissionException.class)
     public Result<?> handleNotPermissionException(NotPermissionException e) {
         log.error("权限异常: {}", e.getMessage());
-        return Result.error(ResultCode.FORBIDDEN.getCode(), "没有访问权限");
+        return Result.error(ResultCodeEnum.FORBIDDEN.getCode(), "没有访问权限");
     }
     
     /**
@@ -72,7 +72,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotRoleException.class)
     public Result<?> handleNotRoleException(NotRoleException e) {
         log.error("角色异常: {}", e.getMessage());
-        return Result.error(ResultCode.FORBIDDEN.getCode(), "没有对应角色");
+        return Result.error(ResultCodeEnum.FORBIDDEN.getCode(), "没有对应角色");
     }
     
     /**
@@ -85,7 +85,7 @@ public class GlobalExceptionHandler {
                 .stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining(", "));
-        return Result.error(ResultCode.BAD_REQUEST.getCode(), errors);
+        return Result.error(ResultCodeEnum.BAD_REQUEST.getCode(), errors);
     }
     
     /**
@@ -98,7 +98,7 @@ public class GlobalExceptionHandler {
                 .stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining(", "));
-        return Result.error(ResultCode.BAD_REQUEST.getCode(), errors);
+        return Result.error(ResultCodeEnum.BAD_REQUEST.getCode(), errors);
     }
     
     /**
@@ -107,7 +107,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public Result<?> handleIllegalArgumentException(IllegalArgumentException e) {
         log.error("非法参数异常: {}", e.getMessage());
-        return Result.error(ResultCode.BAD_REQUEST.getCode(), e.getMessage());
+        return Result.error(ResultCodeEnum.BAD_REQUEST.getCode(), e.getMessage());
     }
     
     /**
@@ -116,7 +116,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public Result<?> handleException(Exception e) {
         log.error("系统异常: ", e);
-        return Result.error(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "系统异常, 请联系管理员");
+        return Result.error(ResultCodeEnum.INTERNAL_SERVER_ERROR.getCode(), "系统异常, 请联系管理员");
     }
 }
 

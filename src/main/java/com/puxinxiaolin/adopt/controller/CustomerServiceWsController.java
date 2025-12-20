@@ -1,6 +1,7 @@
 package com.puxinxiaolin.adopt.controller;
 
-import com.puxinxiaolin.adopt.common.ResultCode;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.entity.dto.CsSendMessageDTO;
 import com.puxinxiaolin.adopt.entity.dto.CsWsChatMessageDTO;
 import com.puxinxiaolin.adopt.entity.dto.CsWsReadAckDTO;
@@ -15,13 +16,16 @@ import com.puxinxiaolin.adopt.service.CustomerServiceLongPollingService;
 import com.puxinxiaolin.adopt.service.CustomerServiceSessionService;
 import com.puxinxiaolin.adopt.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -50,6 +54,8 @@ public class CustomerServiceWsController {
     private CustomerServiceLongPollingService customerServiceLongPollingService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private SimpUserRegistry simpUserRegistry;
 
     /**
      * 处理聊天消息
@@ -60,25 +66,24 @@ public class CustomerServiceWsController {
         log.info("[WS] 收到聊天消息, sessionId={}, userId={}", payload.getSessionId(), currentUserId);
 
         if (payload.getSessionId() == null || payload.getSessionId() <= 0) {
-            throw new BizException(ResultCode.BAD_REQUEST, "会话ID不能为空");
+            throw new BizException(ResultCodeEnum.BAD_REQUEST, "会话 ID 不能为空");
         }
 
         CustomerServiceSession session = customerServiceSessionService.getById(payload.getSessionId());
         if (session == null) {
-            throw new BizException(ResultCode.NOT_FOUND, "会话不存在");
+            throw new BizException(ResultCodeEnum.NOT_FOUND, "会话不存在");
         }
 
         boolean isAdmin = isAdminUser(currentUserId);
         if (!isAdmin && !Objects.equals(session.getUserId(), currentUserId)) {
-            throw new BizException(ResultCode.FORBIDDEN, "无权发送该会话消息");
+            throw new BizException(ResultCodeEnum.FORBIDDEN, "无权发送该会话消息");
         }
 
         CsSendMessageDTO dto = new CsSendMessageDTO();
         dto.setMessageType(payload.getMessageType());
         dto.setContent(payload.getContent());
 
-        String messageType = (dto.getMessageType() == null || dto.getMessageType().isEmpty())
-                ? "text" : dto.getMessageType();
+        String messageType = StringUtils.isBlank(dto.getMessageType()) ? "text" : dto.getMessageType();
 
         ChatMessage msg = new ChatMessage();
         msg.setSessionId(String.valueOf(session.getId()));
@@ -131,30 +136,43 @@ public class CustomerServiceWsController {
         // 同步通知长轮询等待者
         customerServiceLongPollingService.publishNewMessage(session.getId(), vo);
 
-        Long targetUserId = null;
-        if (session.getUserId() != null && currentUserId.equals(session.getUserId())) {
-            targetUserId = session.getAgentId();
+        boolean userSending = session.getUserId() != null && currentUserId.equals(session.getUserId());
+
+        Integer totalUnreadForUser = customerServiceSessionService.sumUnreadForUser(session.getUserId());
+        Integer totalUnreadForAgent = customerServiceSessionService.sumUnreadForAllAgents();
+        CsWsUnreadDTO unreadDTO = CsWsUnreadDTO.builder()
+                .unreadForUser(totalUnreadForUser)
+                .unreadForAgent(totalUnreadForAgent)
+                .build();
+
+        if (userSending) {
+            List<Long> onlineAdminIds = resolveOnlineSuperAdminIds();
+            for (Long adminId : onlineAdminIds) {
+                messagingTemplate.convertAndSendToUser(
+                        String.valueOf(adminId),
+                        "/queue/cs/chat",
+                        vo
+                );
+                messagingTemplate.convertAndSendToUser(
+                        String.valueOf(adminId),
+                        "/queue/cs/unread",
+                        unreadDTO
+                );
+            }
         } else {
-            targetUserId = session.getUserId();
-        }
-
-        if (targetUserId != null) {
-            messagingTemplate.convertAndSendToUser(
-                    String.valueOf(targetUserId),
-                    "/queue/cs/chat",
-                    vo
-            );
-
-            CsWsUnreadDTO unreadDTO = CsWsUnreadDTO.builder()
-                    .unreadForUser(session.getUnreadForUser())
-                    .unreadForAgent(session.getUnreadForAgent())
-                    .build();
-
-            messagingTemplate.convertAndSendToUser(
-                    String.valueOf(targetUserId),
-                    "/queue/cs/unread",
-                    unreadDTO
-            );
+            Long targetUserId = session.getUserId();
+            if (targetUserId != null) {
+                messagingTemplate.convertAndSendToUser(
+                        String.valueOf(targetUserId),
+                        "/queue/cs/chat",
+                        vo
+                );
+                messagingTemplate.convertAndSendToUser(
+                        String.valueOf(targetUserId),
+                        "/queue/cs/unread",
+                        unreadDTO
+                );
+            }
         }
     }
 
@@ -168,48 +186,87 @@ public class CustomerServiceWsController {
                 payload.getSessionId(), payload.getReadSide(), currentUserId);
 
         if (payload.getSessionId() == null || payload.getSessionId() <= 0) {
-            throw new BizException(ResultCode.BAD_REQUEST, "会话ID不能为空");
+            throw new BizException(ResultCodeEnum.BAD_REQUEST, "会话ID不能为空");
         }
 
         CustomerServiceSession session = customerServiceSessionService.getById(payload.getSessionId());
         if (session == null) {
-            throw new BizException(ResultCode.NOT_FOUND, "会话不存在");
+            throw new BizException(ResultCodeEnum.NOT_FOUND, "会话不存在");
         }
 
         boolean isAdmin = isAdminUser(currentUserId);
         if (!isAdmin && !Objects.equals(session.getUserId(), currentUserId)) {
-            throw new BizException(ResultCode.FORBIDDEN, "无权更新该会话未读状态");
+            throw new BizException(ResultCodeEnum.FORBIDDEN, "无权更新该会话未读状态");
         }
 
         String side = payload.getReadSide() == null ? "" : payload.getReadSide().toUpperCase();
         switch (side) {
             case "USER" -> session.setUnreadForUser(0);
             case "AGENT" -> session.setUnreadForAgent(0);
-            default -> throw new BizException(ResultCode.BAD_REQUEST, "readSide 非法");
+            default -> throw new BizException(ResultCodeEnum.BAD_REQUEST, "readSide 非法");
         }
         customerServiceSessionService.updateById(session);
 
-        // 推送最新未读汇总给当前用户
+        // 推送最新未读汇总
+        Integer totalUnreadForUser = customerServiceSessionService.sumUnreadForUser(session.getUserId());
+        Integer totalUnreadForAgent = customerServiceSessionService.sumUnreadForAllAgents();
         CsWsUnreadDTO unreadDTO = CsWsUnreadDTO.builder()
-                .unreadForUser(session.getUnreadForUser())
-                .unreadForAgent(session.getUnreadForAgent())
+                .unreadForUser(totalUnreadForUser)
+                .unreadForAgent(totalUnreadForAgent)
                 .build();
 
-        messagingTemplate.convertAndSendToUser(
-                String.valueOf(currentUserId),
-                "/queue/cs/unread",
-                unreadDTO
-        );
+        if ("USER".equals(side)) {
+            Long pushUserId = session.getUserId();
+            if (pushUserId != null) {
+                messagingTemplate.convertAndSendToUser(
+                        String.valueOf(pushUserId),
+                        "/queue/cs/unread",
+                        unreadDTO
+                );
+            }
+        } else if ("AGENT".equals(side)) {
+            List<Long> onlineAdminIds = resolveOnlineSuperAdminIds();
+            for (Long adminId : onlineAdminIds) {
+                messagingTemplate.convertAndSendToUser(
+                        String.valueOf(adminId),
+                        "/queue/cs/unread",
+                        unreadDTO
+                );
+            }
+        }
+    }
+
+    private List<Long> resolveOnlineSuperAdminIds() {
+        try {
+            LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(User::getStatus, 1)
+                    .eq(User::getRole, "super_admin")
+                    .orderByAsc(User::getId);
+
+            List<User> candidates = userService.list(wrapper);
+            if (candidates == null || candidates.isEmpty()) {
+                return List.of();
+            }
+
+            return candidates.stream()
+                    .filter(u -> u != null && u.getId() != null)
+                    .filter(u -> simpUserRegistry.getUser(String.valueOf(u.getId())) != null)
+                    .map(User::getId)
+                    .toList();
+        } catch (Exception e) {
+            log.warn("解析在线超级管理员列表失败", e);
+        }
+        return List.of();
     }
 
     private Long resolveCurrentUserId(Principal principal) {
         if (principal == null || principal.getName() == null) {
-            throw new BizException(ResultCode.UNAUTHORIZED, "WebSocket 会话未登录");
+            throw new BizException(ResultCodeEnum.UNAUTHORIZED, "WebSocket 会话未登录");
         }
         try {
             return Long.valueOf(principal.getName());
         } catch (NumberFormatException e) {
-            throw new BizException(ResultCode.UNAUTHORIZED, "WebSocket 会话用户ID非法");
+            throw new BizException(ResultCodeEnum.UNAUTHORIZED, "WebSocket 会话用户ID非法");
         }
     }
 

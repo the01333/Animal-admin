@@ -3,25 +3,42 @@ package com.puxinxiaolin.adopt.constants;
 import com.puxinxiaolin.adopt.enums.ContentCategoryEnum;
 
 /**
- * Redis Key 常量类
- * 统一管理所有Redis Key的前缀
- *
- * @author Animal Adopt System
- * @date 2025-11-10
+ * @Description: Redis Key 常量类
+ * <p>
+ * 统一管理所有 Redis Key 的前缀
+ * @Author: YCcLin
+ * @Date: 2025/12/19 10:57
  */
 public class RedisConstant {
+
+    // ========================== 对话相关 ===============================
+
+    /**
+     * 会话 key
+     * 格式: conversation:{sessionId}
+     */
+    public static final String CONVERSATION_PREFIX = "conversation:";
+
+    /**
+     * 会话内存缓存 key
+     * 格式: session:memory:{sessionId}
+     */
+    private static final String MEMORY_CACHE_PREFIX = "session:memory:";
+
 
     // ========================== 验证码相关 ===============================
 
     /**
      * 邮箱验证码 key
+     * 格式: code:email:{email}
      */
-    public static String EMAIL_CODE_PREFIX = "code:email:";
+    public static final String EMAIL_CODE_PREFIX = "code:email:";
 
     /**
      * 手机验证码 key
+     * 格式: code:phone:{phone}
      */
-    public static String PHONE_CODE_PREFIX = "code:phone:";
+    public static final String PHONE_CODE_PREFIX = "code:phone:";
 
 
     // =========================== 宠物相关 ================================
@@ -93,7 +110,7 @@ public class RedisConstant {
      */
     public static final String VISIT_UV_PREFIX = "visit:uv:";
 
-    
+
     // =========================== 字典相关 ================================
     public static final String DICT_ALL = "dict:all";
     public static final String DICT_PET_CATEGORY = "dict:pet_category";
@@ -103,6 +120,7 @@ public class RedisConstant {
     public static final String DICT_ARTICLE_CATEGORY = "dict:article_category";
 
     
+
     // =========================== 工具方法 ================================
 
     /**
@@ -162,6 +180,26 @@ public class RedisConstant {
      */
     public static String buildPhoneCodeKey(String phone, String purpose) {
         return PHONE_CODE_PREFIX + purpose + ":" + phone;
+    }
+
+    /**
+     * 构建对话 key
+     *
+     * @param sessionId
+     * @return
+     */
+    public static String buildConversationKey(String sessionId) {
+        return CONVERSATION_PREFIX + sessionId;
+    }
+
+    /**
+     * 构建会话内存缓存 key
+     *
+     * @param sessionId
+     * @return
+     */
+    public static String buildSessionMemoryKey(String sessionId) {
+        return MEMORY_CACHE_PREFIX + sessionId;
     }
 
 }

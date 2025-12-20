@@ -8,13 +8,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
 /**
  * 发送邮箱验证码工具类
- * Created by sxy on 2024/3/11.
  */
 @Service
 @RequiredArgsConstructor
@@ -24,13 +24,23 @@ public class EmailSendUtils {
 
     @Value("${spring.mail.username}")
     private String userName;
-    
+
     public void sendVerificationEmail(String targetMail) {
         String emailCode = generateRandomCode();
         cacheCode(targetMail, emailCode, 60);
         doSend(targetMail, emailCode);
     }
 
+    /**
+     * 异步发送邮箱验证码
+     * <p>
+     * TODO 后续可以接入 MQ
+     *
+     * @param targetMail
+     * @param specifiedCode
+     * @param ttlSeconds
+     */
+    @Async
     public void sendVerificationEmail(String targetMail, String specifiedCode, long ttlSeconds) {
         cacheCode(targetMail, specifiedCode, ttlSeconds);
         doSend(targetMail, specifiedCode);
@@ -47,7 +57,7 @@ public class EmailSendUtils {
      */
     private String generateRandomCode() {
         StringBuilder emailCode = new StringBuilder();
-        
+
         String str = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         String[] newStr = str.split("");
         for (int i = 0; i < 6; i++) {

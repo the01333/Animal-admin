@@ -1,6 +1,8 @@
 package com.puxinxiaolin.adopt.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.puxinxiaolin.adopt.constants.DateConstant;
 import com.puxinxiaolin.adopt.entity.entity.Guide;
 import com.puxinxiaolin.adopt.entity.entity.GuideFavorite;
@@ -12,9 +14,6 @@ import com.puxinxiaolin.adopt.mapper.GuideLikeMapper;
 import com.puxinxiaolin.adopt.mapper.GuideMapper;
 import com.puxinxiaolin.adopt.service.DictService;
 import com.puxinxiaolin.adopt.service.GuideService;
-import com.puxinxiaolin.adopt.service.impl.OssUrlService;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,12 +25,16 @@ import java.util.stream.Collectors;
  */
 @Service
 public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements GuideService {
+    
     @Autowired
     private GuideLikeMapper guideLikeMapper;
+    
     @Autowired
     private GuideFavoriteMapper guideFavoriteMapper;
+    
     @Autowired
     private OssUrlService ossUrlService;
+    
     @Autowired
     private DictService dictService;
 

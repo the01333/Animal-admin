@@ -1,7 +1,10 @@
 package com.puxinxiaolin.adopt.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
-import com.puxinxiaolin.adopt.common.ResultCode;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.entity.dto.FavoritePageQueryDTO;
 import com.puxinxiaolin.adopt.entity.entity.Favorite;
@@ -13,11 +16,9 @@ import com.puxinxiaolin.adopt.mapper.FavoriteMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.service.FavoriteService;
 import com.puxinxiaolin.adopt.service.PetService;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,12 +30,16 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> implements FavoriteService {
     
-    private final PetService petService;
-    private final PetMapper petMapper;
-    private final org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private PetService petService;
+    
+    @Autowired
+    private PetMapper petMapper;
+    
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
     
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -45,7 +50,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         // 检查宠物是否存在
         Pet pet = petService.getById(petId);
         if (pet == null) {
-            throw new BizException(ResultCode.PET_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.PET_NOT_FOUND);
         }
         
         // 检查是否已收藏

@@ -1,8 +1,8 @@
 package com.puxinxiaolin.adopt.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.puxinxiaolin.adopt.common.Result;
-import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.entity.common.Result;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.context.UserContext;
 import com.puxinxiaolin.adopt.entity.dto.ChatStreamRequestDTO;
 import com.puxinxiaolin.adopt.entity.dto.ChatStreamResult;
@@ -12,9 +12,9 @@ import com.puxinxiaolin.adopt.entity.vo.ConversationSessionVO;
 import com.puxinxiaolin.adopt.service.ConversationService;
 import com.puxinxiaolin.adopt.service.IntelligentCustomerService;
 import com.puxinxiaolin.adopt.service.SessionMemoryService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -26,13 +26,19 @@ import java.time.Duration;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class IntelligentCustomerServiceImpl implements IntelligentCustomerService {
-
-    private final AiChatService aiChatService;
-    private final ConversationService conversationService;
-    private final SessionMemoryService sessionMemoryService;
-    private final RedisTemplate<String, Object> redisTemplate;
+    
+    @Autowired
+    private AiChatService aiChatService;
+    
+    @Autowired
+    private ConversationService conversationService;
+    
+    @Autowired
+    private SessionMemoryService sessionMemoryService;
+    
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public ChatStreamResult chatStream(ChatStreamRequestDTO request, String clientIp) {
@@ -66,7 +72,7 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
     public Result<String> saveMessage(SaveMessageDTO request) {
         Long userId = UserContext.getUserId();
         if (StringUtils.isBlank(request.getSessionId())) {
-            return Result.error(ResultCode.BAD_REQUEST.getCode(), "会话ID不能为空");
+            return Result.error(ResultCodeEnum.BAD_REQUEST.getCode(), "会话 ID 不能为空");
         }
         String role = StringUtils.defaultIfBlank(request.getRole(), "assistant");
         String content = StringUtils.isNotBlank(request.getContent()) ? request.getContent() : "";
@@ -81,7 +87,7 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
             return Result.success("消息保存成功", null);
         } catch (Exception e) {
             log.error("保存消息失败: {}", e.getMessage(), e);
-            return Result.error(ResultCode.ERROR.getCode(), "消息保存失败");
+            return Result.error(ResultCodeEnum.ERROR.getCode(), "消息保存失败");
         }
     }
 
@@ -91,12 +97,12 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
         try {
             ConversationSessionVO sessionVO = conversationService.getSessionDetail(sessionId, userId);
             if (sessionVO == null) {
-                return Result.error(ResultCode.BAD_REQUEST.getCode(), "会话不存在或无权限访问");
+                return Result.error(ResultCodeEnum.BAD_REQUEST.getCode(), "会话不存在或无权限访问");
             }
             return Result.success(sessionVO.getMessages());
         } catch (Exception e) {
             log.error("获取会话消息失败: {}", e.getMessage(), e);
-            return Result.error(ResultCode.ERROR.getCode(), "获取失败");
+            return Result.error(ResultCodeEnum.ERROR.getCode(), "获取失败");
         }
     }
 
@@ -108,7 +114,7 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
             return Result.success("会话已删除", null);
         } catch (Exception e) {
             log.error("删除会话失败: {}", e.getMessage(), e);
-            return Result.error(ResultCode.ERROR.getCode(), "删除失败");
+            return Result.error(ResultCodeEnum.ERROR.getCode(), "删除失败");
         }
     }
 

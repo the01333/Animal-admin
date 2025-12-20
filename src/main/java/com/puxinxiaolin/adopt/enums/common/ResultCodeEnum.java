@@ -1,4 +1,4 @@
-package com.puxinxiaolin.adopt.common;
+package com.puxinxiaolin.adopt.enums.common;
 
 import lombok.Getter;
 
@@ -8,7 +8,7 @@ import lombok.Getter;
  * @Date: 2025/11/15 15:56
  */
 @Getter
-public enum ResultCode {
+public enum ResultCodeEnum {
 
     SUCCESS(200, "操作成功"),
 
@@ -76,7 +76,7 @@ public enum ResultCode {
     private final Integer code;
     private final String message;
 
-    ResultCode(Integer code, String message) {
+    ResultCodeEnum(Integer code, String message) {
         this.code = code;
         this.message = message;
     }

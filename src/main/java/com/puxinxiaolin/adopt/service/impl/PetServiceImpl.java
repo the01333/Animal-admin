@@ -3,7 +3,7 @@ package com.puxinxiaolin.adopt.service.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.entity.dto.PetDTO;
 import com.puxinxiaolin.adopt.entity.dto.PetQueryDTO;
@@ -155,7 +155,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
 
         Pet pet = this.getById(id);
         if (pet == null) {
-            throw new BizException(ResultCode.PET_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.PET_NOT_FOUND);
         }
 
         // 尝试获取用户ID（未登录时为null）
@@ -345,7 +345,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void incrementViewCount(Long id) {
-        // 已改为通过Redis增量统计与定时任务入库
+        // 已改为通过 Redis 增量统计与定时任务入库
         viewCountService.incrementPetView(id);
     }
 
@@ -363,7 +363,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
 
         Pet pet = this.getById(id);
         if (pet == null) {
-            throw new BizException(ResultCode.PET_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.PET_NOT_FOUND);
         }
 
         pet.setShelfStatus(shelfStatus);
@@ -384,7 +384,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
 
         Pet pet = this.getById(id);
         if (pet == null) {
-            throw new BizException(ResultCode.PET_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.PET_NOT_FOUND);
         }
 
         pet.setAdoptionStatus(adoptionStatus);
@@ -398,7 +398,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
 
         Pet pet = this.getById(id);
         if (pet == null) {
-            throw new BizException(ResultCode.PET_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.PET_NOT_FOUND);
         }
 
         pet.setAdoptionStatus(adoptionStatus);
@@ -411,7 +411,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
     public String uploadPetImage(Long id, MultipartFile file) {
         Pet pet = this.getById(id);
         if (pet == null) {
-            throw new BizException(ResultCode.PET_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.PET_NOT_FOUND);
         }
         String imageUrl = fileUploadService.uploadFile(file, "pet-images");
         return imageUrl;
@@ -422,7 +422,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
     public String uploadPetCover(Long id, MultipartFile file) {
         Pet pet = this.getById(id);
         if (pet == null) {
-            throw new BizException(ResultCode.PET_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.PET_NOT_FOUND);
         }
         String coverUrl = fileUploadService.uploadFile(file, "pet-covers");
         return coverUrl;

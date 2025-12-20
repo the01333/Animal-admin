@@ -26,6 +26,7 @@ public class CustomerServiceSessionVO implements Serializable {
      * 用户信息
      */
     private Long userId;
+    private String userUsername;
     private String userNickname;
     private String userAvatar;
 

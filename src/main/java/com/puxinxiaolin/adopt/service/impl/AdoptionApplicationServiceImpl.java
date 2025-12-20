@@ -7,7 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.constants.DateConstant;
 import com.puxinxiaolin.adopt.entity.dto.AdoptionApplicationDTO;
 import com.puxinxiaolin.adopt.entity.dto.AdoptionApplicationPageQueryDTO;
@@ -55,17 +55,17 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         // 检查宠物是否存在
         Pet pet = petService.getById(applicationDTO.getPetId());
         if (pet == null) {
-            throw new BizException(ResultCode.PET_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.PET_NOT_FOUND);
         }
 
         // 检查宠物是否可领养
         if (!"available".equals(pet.getAdoptionStatus())) {
-            throw new BizException(ResultCode.PET_ALREADY_ADOPTED);
+            throw new BizException(ResultCodeEnum.PET_ALREADY_ADOPTED);
         }
 
         // 检查用户是否已申请该宠物
         if (hasApplied(applicationDTO.getPetId())) {
-            throw new BizException(ResultCode.ADOPTION_ALREADY_EXISTS);
+            throw new BizException(ResultCodeEnum.ADOPTION_ALREADY_EXISTS);
         }
 
         // 生成申请编号
@@ -159,7 +159,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
     public AdoptionApplicationVO getApplicationDetail(Long id) {
         AdoptionApplication application = this.getById(id);
         if (application == null) {
-            throw new BizException(ResultCode.ADOPTION_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.ADOPTION_NOT_FOUND);
         }
         return assembleApplicationVOs(List.of(application)).stream().findFirst().orElse(null);
     }
@@ -174,18 +174,18 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         // 查询申请
         AdoptionApplication application = this.getById(id);
         if (application == null) {
-            throw new BizException(ResultCode.ADOPTION_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.ADOPTION_NOT_FOUND);
         }
 
         // 检查申请状态
         if (!ApplicationStatusEnum.PENDING.getCode().equals(application.getStatus())) {
-            throw new BizException(ResultCode.ADOPTION_STATUS_ERROR);
+            throw new BizException(ResultCodeEnum.ADOPTION_STATUS_ERROR);
         }
 
         // 验证状态参数
         ApplicationStatusEnum targetStatus = ApplicationStatusEnum.getByCode(status.toLowerCase(Locale.ROOT));
         if (targetStatus == null || targetStatus == ApplicationStatusEnum.PENDING) {
-            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "无效的审核状态");
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "无效的审核状态");
         }
 
         // 更新申请状态
@@ -225,17 +225,17 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         // 查询申请
         AdoptionApplication application = this.getById(id);
         if (application == null) {
-            throw new BizException(ResultCode.ADOPTION_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.ADOPTION_NOT_FOUND);
         }
 
         // 检查申请是否属于该用户
         if (!application.getUserId().equals(userId)) {
-            throw new BizException(ResultCode.FORBIDDEN);
+            throw new BizException(ResultCodeEnum.FORBIDDEN);
         }
 
         // 只有待审核状态可以撤销
         if (!ApplicationStatusEnum.PENDING.getCode().equals(application.getStatus())) {
-            throw new BizException(ResultCode.ADOPTION_STATUS_ERROR);
+            throw new BizException(ResultCodeEnum.ADOPTION_STATUS_ERROR);
         }
 
         // 更新状态为已撤销

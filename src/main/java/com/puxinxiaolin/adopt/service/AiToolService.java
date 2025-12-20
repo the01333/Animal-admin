@@ -14,6 +14,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+/**
+ * @Description: 系统相关的 Function Call（Tool） 提供
+ * @Author: YCcLin
+ * @Date: 2025/12/15 23:12
+ */
 @Service
 @RequiredArgsConstructor
 public class AiToolService {
@@ -47,11 +52,11 @@ public class AiToolService {
         PetQueryDTO query = new PetQueryDTO();
         query.setCategory(category);
         query.setAdoptionStatus(adoptionStatus);
-        
+
         // personality 为自由文本, 前端数据结构为 Pet.personality 文本包含
         query.setSize(Long.valueOf(limit));
         Page<PetVO> result = petService.queryPetPage(query);
-        
+
         List<PetVO> records = result.getRecords();
         if (personality != null && !personality.isEmpty()) {
             records = records.stream()
@@ -171,29 +176,29 @@ public class AiToolService {
      */
     private String mapUserPersonalityToPetPersonality(String userPersonality) {
         if (userPersonality == null) return null;
-        
+
         String lower = userPersonality.toLowerCase();
-        
+
         // 内向的人适合温顺、独立的宠物
         if (lower.contains("内向") || lower.contains("安静") || lower.contains("宅")) {
             return "温顺,独立";
         }
-        
+
         // 外向的人适合活泼、亲人的宠物
         if (lower.contains("外向") || lower.contains("活泼") || lower.contains("社交")) {
             return "活泼,亲人";
         }
-        
+
         // 有耐心的人可以养需要训练的宠物
         if (lower.contains("耐心") || lower.contains("细心")) {
             return "聪慧,需要训练";
         }
-        
+
         // 忙碌的人适合独立的宠物
         if (lower.contains("忙碌") || lower.contains("工作") || lower.contains("出差")) {
             return "独立,自理";
         }
-        
+
         return null;
     }
 
@@ -202,29 +207,29 @@ public class AiToolService {
      */
     private String mapLifestyleToPetPersonality(String lifestyle) {
         if (lifestyle == null) return null;
-        
+
         String lower = lifestyle.toLowerCase();
-        
+
         // 住公寓的人适合安静、不需要大空间的宠物
         if (lower.contains("公寓") || lower.contains("小房间") || lower.contains("城市")) {
             return "温顺,安静";
         }
-        
+
         // 有院子的人可以养活泼、需要运动的宠物
         if (lower.contains("院子") || lower.contains("别墅") || lower.contains("郊区")) {
             return "活泼,好动";
         }
-        
+
         // 有小孩的家庭需要温顺、耐心的宠物
         if (lower.contains("小孩") || lower.contains("家庭") || lower.contains("孩子")) {
             return "温顺,亲人,耐心";
         }
-        
+
         // 经常出差的人需要独立的宠物
         if (lower.contains("出差") || lower.contains("旅游") || lower.contains("经常外出")) {
             return "独立,自理";
         }
-        
+
         return null;
     }
 

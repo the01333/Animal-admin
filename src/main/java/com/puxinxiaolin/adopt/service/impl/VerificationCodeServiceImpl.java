@@ -30,14 +30,13 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
     private final EmailSendUtils emailSendUtils;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private static final int CODE_LENGTH = 6;
     private static final int EXPIRE_MINUTES = 5;
 
     @Override
     public boolean sendEmailCode(String email, String purpose) {
         try {
             // 生成验证码
-            String code = RandomUtil.randomNumbers(CODE_LENGTH);
+            String code = RandomUtil.randomNumbers(6);
             log.info("邮箱验证码: {}", code);
 
             // 保存验证码到数据库
@@ -73,7 +72,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
     public boolean sendPhoneCode(String phone, String purpose) {
         try {
             // 生成验证码
-            String code = RandomUtil.randomNumbers(CODE_LENGTH);
+            String code = RandomUtil.randomNumbers(6);
             log.info("手机验证码: {}", code);
 
             // 保存验证码到数据库

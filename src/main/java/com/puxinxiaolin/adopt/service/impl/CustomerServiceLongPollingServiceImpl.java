@@ -1,6 +1,6 @@
 package com.puxinxiaolin.adopt.service.impl;
 
-import com.puxinxiaolin.adopt.common.Result;
+import com.puxinxiaolin.adopt.entity.common.Result;
 import com.puxinxiaolin.adopt.entity.vo.CustomerServiceMessageVO;
 import com.puxinxiaolin.adopt.service.CustomerServiceLongPollingService;
 import lombok.extern.slf4j.Slf4j;

@@ -5,7 +5,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.puxinxiaolin.adopt.common.ResultCode;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.constants.DateConstant;
 import com.puxinxiaolin.adopt.constants.MessageConstant;
 import com.puxinxiaolin.adopt.entity.dto.ContentDTO;
@@ -140,12 +140,12 @@ public class ContentServiceImpl implements ContentService {
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             affected = guideMapper.deleteById(id);
             if (affected == 0) {
-                throw new BizException(ResultCode.NOT_FOUND.getCode(), MessageConstant.GUIDE_NOT_FOUND);
+                throw new BizException(ResultCodeEnum.NOT_FOUND.getCode(), MessageConstant.GUIDE_NOT_FOUND);
             }
         } else {
             affected = storyMapper.deleteById(id);
             if (affected == 0) {
-                throw new BizException(ResultCode.NOT_FOUND.getCode(), MessageConstant.STORY_NOT_FOUND);
+                throw new BizException(ResultCodeEnum.NOT_FOUND.getCode(), MessageConstant.STORY_NOT_FOUND);
             }
         }
     }
@@ -209,7 +209,7 @@ public class ContentServiceImpl implements ContentService {
     private Guide applyGuideFields(ContentDTO dto, Guide source) {
         String guideCategory = StrUtil.emptyToDefault(dto.getGuideCategory(), null);
         if (StrUtil.isBlank(guideCategory)) {
-            throw new BizException(ResultCode.PARAM_ERROR.getCode(), "指南分类不能为空");
+            throw new BizException(ResultCodeEnum.PARAM_ERROR.getCode(), "指南分类不能为空");
         }
 
         Guide guide = source != null ? source : new Guide();
@@ -230,7 +230,7 @@ public class ContentServiceImpl implements ContentService {
 
     private Story applyStoryFields(ContentDTO dto, Story source) {
         if (StrUtil.isBlank(dto.getAuthor())) {
-            throw new BizException(ResultCode.PARAM_ERROR.getCode(), "故事作者不能为空");
+            throw new BizException(ResultCodeEnum.PARAM_ERROR.getCode(), "故事作者不能为空");
         }
 
         Story story = source != null ? source : new Story();
@@ -475,7 +475,7 @@ public class ContentServiceImpl implements ContentService {
 
     private void ensureUserLoggedIn(Long userId) {
         if (userId == null) {
-            throw new BizException(ResultCode.UNAUTHORIZED.getCode(), "请先登录");
+            throw new BizException(ResultCodeEnum.UNAUTHORIZED.getCode(), "请先登录");
         }
     }
 
@@ -642,7 +642,7 @@ public class ContentServiceImpl implements ContentService {
     private Guide requireGuide(Long id) {
         Guide guide = guideMapper.selectById(id);
         if (guide == null) {
-            throw new BizException(ResultCode.NOT_FOUND.getCode(), MessageConstant.GUIDE_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.NOT_FOUND.getCode(), MessageConstant.GUIDE_NOT_FOUND);
         }
         return guide;
     }
@@ -650,7 +650,7 @@ public class ContentServiceImpl implements ContentService {
     private Story requireStory(Long id) {
         Story story = storyMapper.selectById(id);
         if (story == null) {
-            throw new BizException(ResultCode.NOT_FOUND.getCode(), MessageConstant.STORY_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.NOT_FOUND.getCode(), MessageConstant.STORY_NOT_FOUND);
         }
         return story;
     }

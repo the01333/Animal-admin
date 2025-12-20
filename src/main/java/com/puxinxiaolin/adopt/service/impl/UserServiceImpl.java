@@ -7,14 +7,8 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.puxinxiaolin.adopt.common.ResultCode;
-import com.puxinxiaolin.adopt.entity.dto.AdminUpdateUserDTO;
-import com.puxinxiaolin.adopt.entity.dto.LoginDTO;
-import com.puxinxiaolin.adopt.entity.dto.RegisterDTO;
-import com.puxinxiaolin.adopt.entity.dto.EmailCodeLoginDTO;
-import com.puxinxiaolin.adopt.entity.dto.PhoneCodeLoginDTO;
-import com.puxinxiaolin.adopt.entity.dto.ChangePasswordDTO;
-import com.puxinxiaolin.adopt.entity.dto.UpdateUserStatusDTO;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
+import com.puxinxiaolin.adopt.entity.dto.*;
 import com.puxinxiaolin.adopt.entity.entity.User;
 import com.puxinxiaolin.adopt.entity.vo.LoginVO;
 import com.puxinxiaolin.adopt.entity.vo.UserVO;
@@ -24,8 +18,8 @@ import com.puxinxiaolin.adopt.mapper.UserMapper;
 import com.puxinxiaolin.adopt.service.FileUploadService;
 import com.puxinxiaolin.adopt.service.UserService;
 import com.puxinxiaolin.adopt.service.VerificationCodeService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,10 +29,13 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
-    private final VerificationCodeService verificationCodeService;
-    private final FileUploadService fileUploadService;
+    
+    @Autowired
+    private VerificationCodeService verificationCodeService;
+    
+    @Autowired
+    private FileUploadService fileUploadService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -49,17 +46,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         wrapper.eq(User::getUsername, loginDTO.getUsername());
         User user = this.getOne(wrapper);
         if (user == null) {
-            throw new BizException(ResultCode.USER_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.USER_NOT_FOUND);
         }
 
         // 验证密码
         if (!BCrypt.checkpw(loginDTO.getPassword(), user.getPassword())) {
-            throw new BizException(ResultCode.PASSWORD_ERROR);
+            throw new BizException(ResultCodeEnum.PASSWORD_ERROR);
         }
 
         // 检查用户状态
         if (user.getStatus() == 0) {
-            throw new BizException(ResultCode.USER_DISABLED);
+            throw new BizException(ResultCodeEnum.USER_DISABLED);
         }
 
         // 登录
@@ -80,14 +77,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public LoginVO loginByEmailCode(EmailCodeLoginDTO dto) {
         log.info("邮箱验证码登录: {}", dto.getEmail());
         if (!verificationCodeService.verifyEmailCode(dto.getEmail(), dto.getCode(), dto.getPurpose())) {
-            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "验证码错误或已过期");
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "验证码错误或已过期");
         }
 
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getEmail, dto.getEmail());
         User user = this.getOne(wrapper);
         if (user != null && user.getStatus() != null && user.getStatus() == 0) {
-            throw new BizException(ResultCode.USER_DISABLED);
+            throw new BizException(ResultCodeEnum.USER_DISABLED);
         }
         if (user == null) {
             user = new User();
@@ -112,13 +109,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public LoginVO loginByPhoneCode(PhoneCodeLoginDTO dto) {
         log.info("手机验证码登录: {}", dto.getPhone());
         if (!verificationCodeService.verifyPhoneCode(dto.getPhone(), dto.getCode(), dto.getPurpose())) {
-            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "验证码错误或已过期");
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "验证码错误或已过期");
         }
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getPhone, dto.getPhone());
         User user = this.getOne(wrapper);
         if (user != null && user.getStatus() != null && user.getStatus() == 0) {
-            throw new BizException(ResultCode.USER_DISABLED);
+            throw new BizException(ResultCodeEnum.USER_DISABLED);
         }
         if (user == null) {
             user = new User();
@@ -152,7 +149,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, registerDTO.getUsername());
         if (this.count(wrapper) > 0) {
-            throw new BizException(ResultCode.USER_ALREADY_EXISTS);
+            throw new BizException(ResultCodeEnum.USER_ALREADY_EXISTS);
         }
 
         // 检查手机号是否已存在
@@ -160,7 +157,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(User::getPhone, registerDTO.getPhone());
             if (this.count(wrapper) > 0) {
-                throw new BizException(ResultCode.BAD_REQUEST.getCode(), "手机号已被使用");
+                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "手机号已被使用");
             }
         }
 
@@ -169,7 +166,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(User::getEmail, registerDTO.getEmail());
             if (this.count(wrapper) > 0) {
-                throw new BizException(ResultCode.BAD_REQUEST.getCode(), "邮箱已被使用");
+                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "邮箱已被使用");
             }
         }
 
@@ -202,7 +199,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Long userId = StpUtil.getLoginIdAsLong();
         User user = this.getById(userId);
         if (user == null) {
-            throw new BizException(ResultCode.USER_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.USER_NOT_FOUND);
         }
 
         return buildUserVO(user);
@@ -222,7 +219,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         User user = this.getById(userId);
         if (user == null) {
-            throw new BizException(ResultCode.USER_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.USER_NOT_FOUND);
         }
 
         if (StrUtil.isNotBlank(userVO.getUsername())) {
@@ -273,14 +270,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         User user = this.getById(userId);
         if (user == null) {
-            throw new BizException(ResultCode.USER_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.USER_NOT_FOUND);
         }
 
         boolean hasExistingPassword = StrUtil.isNotBlank(user.getPassword());
 
         if (hasExistingPassword) {
             if (StrUtil.isBlank(dto.getOldPassword()) || !BCrypt.checkpw(dto.getOldPassword(), user.getPassword())) {
-                throw new BizException(ResultCode.PASSWORD_ERROR);
+                throw new BizException(ResultCodeEnum.PASSWORD_ERROR);
             }
         }
 
@@ -301,7 +298,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         User user = this.getById(userId);
         if (user == null) {
-            throw new BizException(ResultCode.USER_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.USER_NOT_FOUND);
         }
 
         return buildUserVO(user);
@@ -320,18 +317,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("上传用户头像, 用户ID: {}", userId);
 
         if (file == null || file.isEmpty()) {
-            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "文件不能为空");
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "文件不能为空");
         }
 
         // 验证文件类型
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "只支持图片文件");
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "只支持图片文件");
         }
 
         // 验证文件大小（限制为 5MB）
         if (file.getSize() > 5 * 1024 * 1024) {
-            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "文件大小不能超过 5MB");
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "文件大小不能超过 5MB");
         }
 
         try {
@@ -340,7 +337,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             // 更新用户头像
             User user = this.getById(userId);
             if (user == null) {
-                throw new BizException(ResultCode.USER_NOT_FOUND);
+                throw new BizException(ResultCodeEnum.USER_NOT_FOUND);
             }
 
             user.setAvatar(avatarUrl);
@@ -350,7 +347,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return avatarUrl;
         } catch (Exception e) {
             log.error("上传用户头像失败, 用户ID: {}", userId, e);
-            throw new BizException(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "上传头像失败");
+            throw new BizException(ResultCodeEnum.INTERNAL_SERVER_ERROR.getCode(), "上传头像失败");
         }
     }
 
@@ -408,7 +405,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             log.warn("Token验证失败: {}", e.getMessage());
 //            Map<String, Object> data = new HashMap<>();
 //            data.put("valid", false);
-            throw new BizException(ResultCode.UNAUTHORIZED.getCode(), "Token已过期或无效");
+            throw new BizException(ResultCodeEnum.UNAUTHORIZED.getCode(), "Token已过期或无效");
         }
     }
 
@@ -434,7 +431,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return data;
         } catch (Exception e) {
             log.warn("Token续约失败: {}", e.getMessage());
-            throw new BizException(ResultCode.UNAUTHORIZED.getCode(), "Token续约失败");
+            throw new BizException(ResultCodeEnum.UNAUTHORIZED.getCode(), "Token续约失败");
         }
     }
 
@@ -462,7 +459,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public void updateUserStatus(Long id, UpdateUserStatusDTO dto) {
         User user = this.getById(id);
         if (user == null) {
-            throw new BizException(ResultCode.USER_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.USER_NOT_FOUND);
         }
 
         Integer oldStatus = user.getStatus();
@@ -496,7 +493,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public void adminUpdateUser(Long id, AdminUpdateUserDTO dto) {
         User user = this.getById(id);
         if (user == null) {
-            throw new BizException(ResultCode.USER_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.USER_NOT_FOUND);
         }
 
         // 唯一性校验
@@ -505,7 +502,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                     .eq(User::getUsername, dto.getUsername())
                     .ne(User::getId, id)) > 0;
             if (exists) {
-                throw new BizException(ResultCode.BAD_REQUEST.getCode(), "用户名已被占用");
+                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "用户名已被占用");
             }
             user.setUsername(dto.getUsername());
         }
@@ -514,7 +511,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                     .eq(User::getPhone, dto.getPhone())
                     .ne(User::getId, id)) > 0;
             if (exists) {
-                throw new BizException(ResultCode.BAD_REQUEST.getCode(), "手机号已被占用");
+                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "手机号已被占用");
             }
             user.setPhone(dto.getPhone());
         }
@@ -523,7 +520,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                     .eq(User::getEmail, dto.getEmail())
                     .ne(User::getId, id)) > 0;
             if (exists) {
-                throw new BizException(ResultCode.BAD_REQUEST.getCode(), "邮箱已被占用");
+                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "邮箱已被占用");
             }
             user.setEmail(dto.getEmail());
         }
@@ -546,7 +543,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (StrUtil.isNotBlank(dto.getRole())) {
             UserRoleEnum roleEnum = UserRoleEnum.getByCode(dto.getRole());
             if (roleEnum == null) {
-                throw new BizException(ResultCode.BAD_REQUEST.getCode(), "角色编码无效");
+                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "角色编码无效");
             }
 
             // 限制系统中最多只有一个超级管理员
@@ -555,7 +552,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                         .eq(User::getRole, UserRoleEnum.SUPER_ADMIN.getCode())
                         .ne(User::getId, id));
                 if (superAdminCount > 0) {
-                    throw new BizException(ResultCode.BAD_REQUEST.getCode(), "系统中已存在超级管理员, 无法创建第二个超级管理员");
+                    throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "系统中已存在超级管理员, 无法创建第二个超级管理员");
                 }
             }
 

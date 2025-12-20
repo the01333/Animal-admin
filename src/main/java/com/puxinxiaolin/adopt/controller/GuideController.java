@@ -1,6 +1,6 @@
 package com.puxinxiaolin.adopt.controller;
 
-import com.puxinxiaolin.adopt.common.Result;
+import com.puxinxiaolin.adopt.entity.common.Result;
 import com.puxinxiaolin.adopt.constants.MessageConstant;
 import com.puxinxiaolin.adopt.entity.vo.GuideVO;
 import com.puxinxiaolin.adopt.service.GuideService;

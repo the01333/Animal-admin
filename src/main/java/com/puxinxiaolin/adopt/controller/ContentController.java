@@ -2,7 +2,7 @@ package com.puxinxiaolin.adopt.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.annotation.SaMode;
-import com.puxinxiaolin.adopt.common.Result;
+import com.puxinxiaolin.adopt.entity.common.Result;
 import com.puxinxiaolin.adopt.entity.dto.ContentDTO;
 import com.puxinxiaolin.adopt.entity.dto.ContentQueryDTO;
 import com.puxinxiaolin.adopt.entity.dto.ContentUserQueryDTO;
