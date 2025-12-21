@@ -261,7 +261,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
     private String generateApplicationNo() {
         String dateStr = LocalDateTime.now().format(DateConstant.YMD);
         String randomStr = IdUtil.randomUUID().substring(0, 4).toUpperCase();
-        
+
         return "AP" + dateStr + randomStr;
     }
 
@@ -288,9 +288,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         allUserIds.addAll(applicantIds);
         allUserIds.addAll(reviewerIds);
 
-        Map<Long, User> userMap = allUserIds.isEmpty()
-                ? Collections.emptyMap()
-                : userService.listByIds(allUserIds).stream()
+        Map<Long, User> userMap = allUserIds.isEmpty() ? Collections.emptyMap() : userService.listByIds(allUserIds).stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(User::getId, Function.identity()));
 
