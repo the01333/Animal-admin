@@ -11,7 +11,7 @@
  Target Server Version : 80034 (8.0.34)
  File Encoding         : 65001
 
- Date: 20/12/2025 20:35:22
+ Date: 21/12/2025 00:11:00
 */
 
 SET NAMES utf8mb4;
@@ -75,7 +75,7 @@ CREATE TABLE `t_chat_message`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_session_id`(`session_id` ASC) USING BTREE,
   INDEX `idx_sender_id`(`sender_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 316 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '聊天消息表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 351 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '聊天消息表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of t_chat_message
@@ -395,6 +395,41 @@ INSERT INTO `t_chat_message` VALUES (312, 5, 7, NULL, '12', 'text', 0, 1, NULL, 
 INSERT INTO `t_chat_message` VALUES (313, 5, 1, NULL, '13', 'text', 0, 7, NULL, '2025-12-20 20:23:33', 0);
 INSERT INTO `t_chat_message` VALUES (314, 5, 7, NULL, '14', 'text', 0, 1, NULL, '2025-12-20 20:24:28', 0);
 INSERT INTO `t_chat_message` VALUES (315, 5, 7, NULL, '15', 'text', 0, 1, NULL, '2025-12-20 20:27:36', 0);
+INSERT INTO `t_chat_message` VALUES (316, 5, 1, NULL, '16', 'text', 0, 7, NULL, '2025-12-20 20:42:11', 0);
+INSERT INTO `t_chat_message` VALUES (317, 5, 7, NULL, '17', 'text', 0, 1, NULL, '2025-12-20 20:42:30', 0);
+INSERT INTO `t_chat_message` VALUES (318, 5, 1, NULL, '18', 'text', 0, 7, NULL, '2025-12-20 20:42:36', 0);
+INSERT INTO `t_chat_message` VALUES (319, 5, 7, NULL, '19', 'text', 0, 1, NULL, '2025-12-20 20:42:39', 0);
+INSERT INTO `t_chat_message` VALUES (320, 5, 7, NULL, '20', 'text', 0, 1, NULL, '2025-12-20 20:42:44', 0);
+INSERT INTO `t_chat_message` VALUES (321, 5, 7, NULL, '21', 'text', 0, 1, NULL, '2025-12-20 20:43:36', 0);
+INSERT INTO `t_chat_message` VALUES (322, 5, 7, NULL, '22', 'text', 0, 1, NULL, '2025-12-20 20:44:39', 0);
+INSERT INTO `t_chat_message` VALUES (323, 5, 7, NULL, '23', 'text', 0, 1, NULL, '2025-12-20 20:44:42', 0);
+INSERT INTO `t_chat_message` VALUES (324, 5, 7, NULL, '24', 'text', 0, 1, NULL, '2025-12-20 20:44:48', 0);
+INSERT INTO `t_chat_message` VALUES (325, 5, 7, NULL, '25', 'text', 0, 1, NULL, '2025-12-20 20:45:28', 0);
+INSERT INTO `t_chat_message` VALUES (326, 5, 7, NULL, '26', 'text', 0, 1, NULL, '2025-12-20 20:45:44', 0);
+INSERT INTO `t_chat_message` VALUES (327, 5, 7, NULL, '27', 'text', 0, 1, NULL, '2025-12-20 20:45:48', 0);
+INSERT INTO `t_chat_message` VALUES (328, 5, 7, NULL, '28', 'text', 0, 1, NULL, '2025-12-20 20:45:54', 0);
+INSERT INTO `t_chat_message` VALUES (329, 5, 7, NULL, '29', 'text', 0, 1, NULL, '2025-12-20 20:47:34', 0);
+INSERT INTO `t_chat_message` VALUES (330, 5, 7, NULL, '30', 'text', 0, 1, NULL, '2025-12-20 20:48:10', 0);
+INSERT INTO `t_chat_message` VALUES (331, 5, 1, NULL, '31', 'text', 0, 7, NULL, '2025-12-20 20:55:59', 0);
+INSERT INTO `t_chat_message` VALUES (332, 5, 7, NULL, '32', 'text', 0, 1, NULL, '2025-12-20 20:56:34', 0);
+INSERT INTO `t_chat_message` VALUES (333, 5, 7, NULL, '33', 'text', 0, 1, NULL, '2025-12-20 20:56:38', 0);
+INSERT INTO `t_chat_message` VALUES (334, 5, 1, NULL, '34', 'text', 0, 7, NULL, '2025-12-20 20:56:41', 0);
+INSERT INTO `t_chat_message` VALUES (335, 5, 7, NULL, '35', 'text', 0, 1, NULL, '2025-12-20 20:56:45', 0);
+INSERT INTO `t_chat_message` VALUES (336, 5, 7, NULL, '36', 'text', 0, 1, NULL, '2025-12-20 21:04:28', 0);
+INSERT INTO `t_chat_message` VALUES (337, 5, 7, NULL, '37', 'text', 0, 1, NULL, '2025-12-20 21:10:14', 0);
+INSERT INTO `t_chat_message` VALUES (338, 5, 7, NULL, '38', 'text', 0, 1, NULL, '2025-12-20 21:12:00', 0);
+INSERT INTO `t_chat_message` VALUES (339, 5, 7, NULL, '39', 'text', 0, 1, NULL, '2025-12-20 21:12:19', 0);
+INSERT INTO `t_chat_message` VALUES (340, 5, 7, NULL, '40', 'text', 0, 1, NULL, '2025-12-20 21:12:36', 0);
+INSERT INTO `t_chat_message` VALUES (341, 5, 7, NULL, '41', 'text', 0, 1, NULL, '2025-12-20 21:13:06', 0);
+INSERT INTO `t_chat_message` VALUES (342, 5, 1, NULL, '42', 'text', 0, 7, NULL, '2025-12-20 21:13:13', 0);
+INSERT INTO `t_chat_message` VALUES (343, 5, 7, NULL, '43', 'text', 0, 1, NULL, '2025-12-20 21:13:16', 0);
+INSERT INTO `t_chat_message` VALUES (344, 5, 7, NULL, '44', 'text', 0, 1, NULL, '2025-12-20 21:13:22', 0);
+INSERT INTO `t_chat_message` VALUES (345, 5, 1, NULL, '45', 'text', 0, 7, NULL, '2025-12-20 21:21:52', 0);
+INSERT INTO `t_chat_message` VALUES (346, 5, 7, NULL, '46', 'text', 0, 1, NULL, '2025-12-20 21:29:00', 0);
+INSERT INTO `t_chat_message` VALUES (347, 5, 1, NULL, '47', 'text', 0, 7, NULL, '2025-12-20 21:29:04', 0);
+INSERT INTO `t_chat_message` VALUES (348, 5, 7, NULL, '48', 'text', 0, 1, NULL, '2025-12-20 21:29:07', 0);
+INSERT INTO `t_chat_message` VALUES (349, 5, 7, NULL, '49', 'text', 0, 1, NULL, '2025-12-20 21:29:14', 0);
+INSERT INTO `t_chat_message` VALUES (350, 5, 1, NULL, '50', 'text', 0, 7, NULL, '2025-12-20 21:29:30', 0);
 
 -- ----------------------------
 -- Table structure for t_conversation_history
@@ -538,7 +573,7 @@ INSERT INTO `t_cs_session` VALUES (1, 4, 1, 'OPEN', '好的，我们已为您记
 INSERT INTO `t_cs_session` VALUES (2, 1, 1, 'OPEN', NULL, NULL, 0, 0, '2025-12-09 00:15:59', '2025-12-09 00:15:59', 0);
 INSERT INTO `t_cs_session` VALUES (3, 5, 1, 'OPEN', '你好', '2025-12-11 19:06:35', 0, 0, '2025-12-11 19:05:49', '2025-12-11 19:05:49', 0);
 INSERT INTO `t_cs_session` VALUES (4, 6, 1, 'OPEN', '1111', '2025-12-15 21:15:21', 2, 0, '2025-12-11 19:22:02', '2025-12-11 19:22:02', 0);
-INSERT INTO `t_cs_session` VALUES (5, 7, 1, 'OPEN', '15', '2025-12-20 20:27:36', 0, 1, '2025-12-14 22:43:24', '2025-12-14 22:43:24', 0);
+INSERT INTO `t_cs_session` VALUES (5, 7, 1, 'OPEN', '50', '2025-12-20 21:29:30', 0, 0, '2025-12-14 22:43:24', '2025-12-14 22:43:24', 0);
 
 -- ----------------------------
 -- Table structure for t_dict_item
@@ -558,7 +593,7 @@ CREATE TABLE `t_dict_item`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_dict_type_key`(`dict_type` ASC, `dict_key` ASC) USING BTREE,
   INDEX `idx_dict_type`(`dict_type` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 19 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 30 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of t_dict_item
@@ -581,6 +616,11 @@ INSERT INTO `t_dict_item` VALUES (15, 'pet_category', 'squirrel', '松鼠', 5, 1
 INSERT INTO `t_dict_item` VALUES (16, 'pet_category', 'hamster', '仓鼠', 6, 1, '仓鼠', '2025-12-07 19:12:55', '2025-12-07 19:12:55', 0);
 INSERT INTO `t_dict_item` VALUES (17, 'pet_category', '熊', '熊', 7, 1, NULL, '2025-12-07 19:29:03', '2025-12-07 19:45:23', 1);
 INSERT INTO `t_dict_item` VALUES (18, 'pet_category', 'bear', '熊', 7, 1, NULL, '2025-12-07 20:30:33', '2025-12-07 23:34:47', 1);
+INSERT INTO `t_dict_item` VALUES (19, 'guide_category', '行为问题', '行为问题', 1, 1, NULL, '2025-12-20 20:53:57', '2025-12-20 20:53:57', 0);
+INSERT INTO `t_dict_item` VALUES (20, 'guide_category', '领养准备', '领养准备', 2, 1, NULL, '2025-12-20 20:53:57', '2025-12-20 20:53:57', 0);
+INSERT INTO `t_dict_item` VALUES (21, 'guide_category', '日常护理', '日常护理', 3, 1, NULL, '2025-12-20 20:53:57', '2025-12-20 20:53:57', 0);
+INSERT INTO `t_dict_item` VALUES (22, 'guide_category', '训练教育', '训练教育', 4, 1, NULL, '2025-12-20 20:53:57', '2025-12-20 20:53:57', 0);
+INSERT INTO `t_dict_item` VALUES (23, 'guide_category', '健康管理', '健康管理', 5, 1, NULL, '2025-12-20 20:53:57', '2025-12-20 20:53:57', 0);
 
 -- ----------------------------
 -- Table structure for t_guide
@@ -600,7 +640,7 @@ CREATE TABLE `t_guide`  (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_category`(`category` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '领养指南表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '领养指南表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of t_guide
@@ -609,7 +649,7 @@ INSERT INTO `t_guide` VALUES (1, '领养前的准备工作', '详细介绍领养
 INSERT INTO `t_guide` VALUES (2, '新宠物到家的第一周', '帮助新领养的宠物适应新环境的实用指南，包括饮食、作息和互动建议。', '# 新宠物到家的第一周\r\r\n\r\r新宠物到家的第一周是适应期，需要特别的关注和照顾。\r\r\n\r\r## 第一天：安静适应\r\r\n\r\r第一天不要过度互动，给宠物一个安静的空间适应环境。准备好食物和水，但不要强迫进食。\r\r\n\r\r## 第2-3天：建立信任\r\r\n\r\r开始轻声说话和温和互动，用手喂食建立信任关系。观察宠物的行为和健康状况。\r\r\n\r\r## 第4-7天：逐步熟悉\r\r\n\r\r逐步增加互动时间，引导宠物熟悉家中各个区域。开始建立基本的作息规律。\r\r\n\r\r记住，每只宠物的适应速度不同，要有耐心，不要急于求成。', 'https://192.168.99.228:9000/animal-adopt/2.png', '日常护理', 1029, 1, 1, '2025-11-20 22:53:07', '2025-12-08 01:02:15');
 INSERT INTO `t_guide` VALUES (3, '基础服从训练技巧', '教授基本的服从指令训练方法，帮助建立良好的人宠关系。', '# 基础服从训练技巧\r\r\n\r\r训练宠物不仅能让它们更好地融入家庭生活，还能增进与主人的感情。\r\r\n\r\r## 基本原则\r\r\n\r\r训练要遵循正向强化原则，多鼓励少惩罚。每次训练时间不宜过长，保持在10-15分钟为宜。\r\r\n\r\r## 常用指令\r\r\n\r\r- **坐下：** 手持零食，引导宠物坐下，给予奖励\r\r\n- **趴下：** 在坐下的基础上，将零食往地面移动\r\r\n- **过来：** 用欢快的语气叫名字，宠物靠近时给予奖励\r\r\n- **握手：** 轻轻抬起宠物的爪子，说\"握手\"并奖励\r\r\n\r\r## 注意事项\r\r\n\r\r训练要有耐心和一致性，全家人使用相同的指令和手势。训练后要及时奖励，让宠物建立正确的条件反射。', 'https://192.168.99.228:9000/animal-adopt/3.png', '训练教育', 770, 2, 1, '2025-11-20 22:53:07', '2025-12-07 23:45:00');
 INSERT INTO `t_guide` VALUES (4, '常见疾病预防与处理', '介绍宠物常见疾病的症状识别、预防措施和应急处理方法。', '# 常见疾病预防与处理\r\r\n\r\r了解宠物常见疾病，及早发现和预防，是每个宠物主人的必备知识。\r\r\n\r\r## 预防接种\r\r\n\r\r按时接种疫苗是预防疾病的最佳方式。幼年宠物需要接种多联疫苗和狂犬病疫苗，成年后每年加强免疫。\r\r\n\r\r## 常见症状\r\r\n\r\r- 食欲不振、精神萎靡\r\r\n- 呕吐、腹泻\r\r\n- 咳嗽、流鼻涕\r\r\n- 皮肤瘙痒、脱毛\r\r\n- 频繁舔爪或某个部位\r\r\n\r\r## 日常保健\r\r\n\r\r定期驱虫，保持环境清洁，提供均衡营养，适量运动。发现异常及时就医，不要自行用药。', 'https://192.168.99.228:9000/animal-adopt/4.png', '健康管理', 1110, 1, 1, '2025-11-20 22:53:07', '2025-12-05 21:40:00');
-INSERT INTO `t_guide` VALUES (5, '分离焦虑症的应对', '分析宠物分离焦虑的原因和表现，并提供有效的缓解方法。', '# 分离焦虑症的应对\r\r\n\r\r分离焦虑是许多宠物常见的行为问题，表现为主人离开后出现焦虑和破坏行为。\r\r\n\r\r## 症状表现\r\r\n\r\r- 主人离开时过度吠叫或哀鸣\r\r\n- 破坏家具或物品\r\r\n- 在不该的地方大小便\r\r\n- 过度舔毛或咬爪子\r\r\n- 主人回来时过度兴奋\r\r\n\r\r## 缓解方法\r\r\n\r\r渐进式脱敏训练：开始时短时间离开，逐步延长时间。离开和回来时保持平静，不要过度安抚。\r\r\n\r\r## 其他建议\r\r\n\r\r提供足够的玩具和活动空间，确保宠物在独处时有事可做。考虑使用安抚玩具或背景音乐。严重情况建议咨询专业训练师或兽医。', 'https://192.168.99.228:9000/animal-adopt/5.png', '行为问题', 831, 1, 1, '2025-11-20 22:53:07', '2025-12-06 11:30:00');
+INSERT INTO `t_guide` VALUES (5, '分离焦虑症的应对', '分析宠物分离焦虑的原因和表现，并提供有效的缓解方法。', '# 分离焦虑症的应对\r\r\n\r\r分离焦虑是许多宠物常见的行为问题，表现为主人离开后出现焦虑和破坏行为。\r\r\n\r\r## 症状表现\r\r\n\r\r- 主人离开时过度吠叫或哀鸣\r\r\n- 破坏家具或物品\r\r\n- 在不该的地方大小便\r\r\n- 过度舔毛或咬爪子\r\r\n- 主人回来时过度兴奋\r\r\n\r\r## 缓解方法\r\r\n\r\r渐进式脱敏训练：开始时短时间离开，逐步延长时间。离开和回来时保持平静，不要过度安抚。\r\r\n\r\r## 其他建议\r\r\n\r\r提供足够的玩具和活动空间，确保宠物在独处时有事可做。考虑使用安抚玩具或背景音乐。严重情况建议咨询专业训练师或兽医。', 'https://192.168.99.228:9000/animal-adopt/5.png', '行为问题', 832, 1, 1, '2025-11-20 22:53:07', '2025-12-20 20:55:00');
 INSERT INTO `t_guide` VALUES (6, '营养饮食搭配指南', '根据不同年龄和健康状况的宠物，提供科学的饮食搭配建议。', '# 营养饮食搭配指南\r\r\n\r\r合理的饮食搭配是宠物健康的基础，不同年龄段的宠物有不同的营养需求。\r\r\n\r\r## 幼年期（0-1岁）\r\r\n\r\r需要高蛋白、高能量的食物支持快速生长。每天3-4餐，选择专门的幼年宠物粮。\r\r\n\r\r## 成年期（1-7岁）\r\r\n\r\r每天1-2餐，保持营养均衡。蛋白质占30-40%，脂肪10-20%，碳水化合物30-50%。\r\r\n\r\r## 老年期（7岁以上）\r\r\n\r\r降低热量摄入，增加易消化的优质蛋白。考虑添加关节保健成分和抗氧化剂。\r\r\n\r\r## 禁忌食物\r\r\n\r\r- 巧克力、咖啡因\r\r\n- 葡萄、洋葱、大蒜\r\r\n- 生肉、生鸡蛋\r\r\n- 高盐、高糖食物\r\r\n\r\r记得提供充足的清洁饮水，根据宠物的活动量调整食物份量。', 'https://192.168.99.228:9000/animal-adopt/6.png', '日常护理', 669, 1, 1, '2025-11-20 22:53:07', '2025-12-07 23:50:00');
 
 -- ----------------------------
@@ -785,7 +825,7 @@ INSERT INTO `t_pet` VALUES (26, '小松', '松鼠', '美洲红松鼠', 2, 3, 6.0
 INSERT INTO `t_pet` VALUES (27, '大松', '松鼠', '美洲红松鼠', 1, 2, 2.00, '红棕色', 0, 0, 'healthy', NULL, '活泼', '松鼠', '[\"http://localhost:9000/animal-adopt/pet-images/d755515cc94b4185ac57897f5a056431.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/53695e368c5e4024a39b8a2f220d89bb.png', NULL, NULL, NULL, 'available', NULL, 1, 0, 0, 0, 0, 0, 1, '2025-11-24 15:49:12', '2025-11-24 15:55:56', 1);
 INSERT INTO `t_pet` VALUES (28, '大松', '松鼠', '美洲红松鼠', 1, 2, 2.00, '红棕色', 0, 0, 'healthy', NULL, '胆小', '胆小的松鼠', '[\"http://localhost:9000/animal-adopt/pet-images/97c11e865e914da691a4700f6751db27.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/c06a6676216847af8c1794ba188c63f8.png', NULL, NULL, NULL, 'available', NULL, 1, 0, 0, 0, 0, 0, 1, '2025-11-24 15:56:49', '2025-11-24 19:15:02', 1);
 INSERT INTO `t_pet` VALUES (29, '大松', '松鼠', '美洲红松鼠', 1, 3, 4.00, '红棕色', 0, 0, 'healthy', NULL, '谨慎', '谨慎的松鼠', '[\"http://localhost:9000/animal-adopt/pet-images/ab25cef1966448e6ab9d15c5f3c2f703.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/50e686e36754405497e7ca53f4e6954e.png', NULL, NULL, NULL, 'available', NULL, 1, 0, 0, 0, 0, 0, 1, '2025-11-24 19:15:56', '2025-11-26 14:54:34', 1);
-INSERT INTO `t_pet` VALUES (33, '仓仓', '仓鼠', '仓鼠', 1, 2, 2.00, '白色', 0, 0, 'healthy', NULL, '胆小、谨慎', '小心的仓鼠', '[\"http://localhost:9000/animal-adopt/pet-images/5dbea0668a4342de8ddf71da8b9bc530.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/5af36d9a6bcf4fbe983d78da208e0b19.png', NULL, NULL, NULL, 'available', NULL, 1, 14, 1, 1, 0, 0, 1, '2025-11-24 22:38:51', '2025-12-20 12:06:50', 0);
+INSERT INTO `t_pet` VALUES (33, '仓仓', '仓鼠', '仓鼠', 1, 2, 2.00, '白色', 0, 0, 'healthy', NULL, '胆小、谨慎', '小心的仓鼠', '[\"http://localhost:9000/animal-adopt/pet-images/5dbea0668a4342de8ddf71da8b9bc530.png\"]', 'http://localhost:9000/animal-adopt/pet-covers/5af36d9a6bcf4fbe983d78da208e0b19.png', NULL, NULL, NULL, 'available', NULL, 1, 15, 1, 1, 0, 0, 1, '2025-11-24 22:38:51', '2025-12-21 00:10:00', 0);
 INSERT INTO `t_pet` VALUES (34, '熊大', 'cat', '熊', 1, 6, 200.00, '棕白色', 0, 0, 'healthy', NULL, '凶猛', '熊大', '[\"http://localhost:9000/animal-adopt/pet-images/68b633d3d7ef4421a402e64111aa34eb.jpg\"]', 'http://localhost:9000/animal-adopt/pet-covers/95f1b8e2488a4762b99007aea0d6c25b.jpg', NULL, NULL, NULL, 'available', NULL, 1, 0, 0, 0, 0, 0, 1, '2025-12-07 19:27:27', '2025-12-07 19:34:06', 1);
 INSERT INTO `t_pet` VALUES (35, '熊大2', '熊', '熊', 1, 6, 300.00, '棕白色', 0, 0, 'healthy', NULL, '凶猛', '熊大', '[\"http://localhost:9000/animal-adopt/pet-images/cf122c4211714b58a3a8418d31a17346.jpg\"]', 'http://localhost:9000/animal-adopt/pet-covers/b14528717e1d4d1c81b4ca25025b5798.jpg', NULL, NULL, NULL, 'available', NULL, 1, 0, 0, 0, 0, 0, 1, '2025-12-07 19:29:42', '2025-12-07 19:33:54', 1);
 INSERT INTO `t_pet` VALUES (36, '熊大', 'bear', '狗熊', 1, 7, 300.00, '棕白色', 0, 0, 'healthy', NULL, '凶猛', '凶猛的熊大', '[\"http://localhost:9000/animal-adopt/pet-images/7b7044333d374cf79424eb58d3d4370a.jpg\"]', 'http://localhost:9000/animal-adopt/pet-covers/e54fce360dc14b64bc3c3ffefa782165.jpg', NULL, NULL, NULL, 'available', NULL, 1, 0, 0, 0, 0, 0, 1, '2025-12-07 20:31:37', '2025-12-07 23:34:47', 1);
@@ -875,12 +915,12 @@ CREATE TABLE `t_story`  (
 -- Records of t_story
 -- ----------------------------
 INSERT INTO `t_story` VALUES (1, '从小流浪到幸福家庭', '小黄在街头流浪了两年，直到遇到了爱心志愿者...', '# 从小流浪到幸福家庭\r\r\n\r\r小黄是一只金毛犬，在街头流浪了整整两年。它的毛发变得脏乱，身体也瘦弱不堪，但它依然保持着对人类的友善。\r\r\n\r\r## 遇见希望\r\r\n\r\r2023年的冬天，志愿者小王在巡查时发现了蜷缩在街角的小黄。看到它瑟瑟发抖的样子，小王毫不犹豫地将它带回了救助站。\r\r\n\r\r在救助站，兽医为小黄做了全面检查，发现它除了营养不良外，身体健康状况良好。经过一个月的精心照料，小黄恢复了往日的活力。\r\r\n\r\r## 寻找新家\r\r\n\r\r救助站工作人员开始为小黄寻找合适的领养家庭。他们收到了许多领养申请，经过仔细筛选和家访，最终选择了一家有爱心且有养犬经验的家庭。\r\r\n\r\r新主人是一对年轻夫妇，他们有一个宽敞的院子，非常适合小黄活动。第一次见面时，小黄就表现出了极大的热情，摇着尾巴围着他们转圈。\r\r\n\r\r## 幸福新生活\r\r\n\r\r如今的小黄已经完全融入了新家庭，它有了自己的小窝、玩具和定期的散步时间。主人说，小黄给他们带来了无尽的欢乐，是家庭不可缺少的一员。\r\r\n\r\r这个故事告诉我们，每一只流浪动物都值得被关爱，它们只是缺少一个机会去展现自己的美好。', 'https://192.168.99.228:9000/animal-adopt/7.png', '志愿者小王', '成功领养,狗狗', 136, 0, 0, '2025-11-20 22:53:07', '2025-12-08 00:05:00');
-INSERT INTO `t_story` VALUES (2, '失散三年终重聚', '猫咪咪咪走失三年后，通过救助站的帮助终于与主人团聚...', '# 失散三年终重聚\r\r\n\r\r咪咪是一只英短蓝猫，三年前在一次搬家过程中意外走失。主人李先生和家人四处寻找，但始终没有找到它的踪迹。\r\r\n\r\r## 意外发现\r\r\n\r\r三年后的某天，救助站接收了一只流浪猫，经过检查发现它脖子上有一个模糊的 tattoo，经过仔细辨认，工作人员确认这就是走失的咪咪。\r\r\n\r\r通过 tattoo 上的信息，救助站联系到了李先生。当李先生听到这个消息时，简直不敢相信自己的耳朵。三年了，他从未放弃过寻找咪咪的希望。\r\r\n\r\r## 重逢时刻\r\r\n\r\r在救助站的重逢现场，李先生激动得热泪盈眶。而咪咪在看到主人的那一刻，也发出了熟悉的叫声，仿佛在说：\"我终于找到你了！\"\r\r\n\r\r经过检查，咪咪虽然瘦了一些，但身体健康状况良好。三年的流浪生活并没有磨灭它对主人的记忆和感情。\r\r\n\r\r## 珍惜当下\r\r\n\r\r回到家中，咪咪很快就适应了环境，它重新占据了自己最喜欢的沙发位置，仿佛从未离开过。\r\r\n\r\r李先生表示，这次重逢让他们更加珍惜彼此。他们为咪咪做了全面的健康检查，并决定以后无论去哪里都要更加小心，绝不再让它走失。', 'https://192.168.99.228:9000/animal-adopt/8.png', '救助站', '失散重聚,猫咪', 106, 1, 1, '2025-11-20 22:53:07', '2025-12-08 00:05:00');
+INSERT INTO `t_story` VALUES (2, '失散三年终重聚', '猫咪咪咪走失三年后，通过救助站的帮助终于与主人团聚...', '# 失散三年终重聚\r\r\n\r\r咪咪是一只英短蓝猫，三年前在一次搬家过程中意外走失。主人李先生和家人四处寻找，但始终没有找到它的踪迹。\r\r\n\r\r## 意外发现\r\r\n\r\r三年后的某天，救助站接收了一只流浪猫，经过检查发现它脖子上有一个模糊的 tattoo，经过仔细辨认，工作人员确认这就是走失的咪咪。\r\r\n\r\r通过 tattoo 上的信息，救助站联系到了李先生。当李先生听到这个消息时，简直不敢相信自己的耳朵。三年了，他从未放弃过寻找咪咪的希望。\r\r\n\r\r## 重逢时刻\r\r\n\r\r在救助站的重逢现场，李先生激动得热泪盈眶。而咪咪在看到主人的那一刻，也发出了熟悉的叫声，仿佛在说：\"我终于找到你了！\"\r\r\n\r\r经过检查，咪咪虽然瘦了一些，但身体健康状况良好。三年的流浪生活并没有磨灭它对主人的记忆和感情。\r\r\n\r\r## 珍惜当下\r\r\n\r\r回到家中，咪咪很快就适应了环境，它重新占据了自己最喜欢的沙发位置，仿佛从未离开过。\r\r\n\r\r李先生表示，这次重逢让他们更加珍惜彼此。他们为咪咪做了全面的健康检查，并决定以后无论去哪里都要更加小心，绝不再让它走失。', 'https://192.168.99.228:9000/animal-adopt/8.png', '救助站', '失散重聚,猫咪', 107, 1, 1, '2025-11-20 22:53:07', '2025-12-21 00:10:00');
 INSERT INTO `t_story` VALUES (3, '从病重到康复', '受伤的流浪狗豆豆被救助后，经过精心治疗重获新生...', '# 从病重到康复\r\r\n\r\r豆豆是一只三岁的混血狗，被发现时已经奄奄一息。它的后腿被车撞伤，伤口感染严重，几乎没有人认为它能活下来。\r\r\n\r\r## 紧急救治\r\r\n\r\r救助站的医生为豆豆进行了紧急手术。手术过程中，医生们发现豆豆的伤情比预想的更严重，但他们没有放弃。经过6小时的手术，豆豆终于脱离了危险。\r\r\n\r\r## 康复之路\r\r\n\r\r康复期间，豆豆经历了巨大的痛苦。但在医护人员和志愿者的精心照料下，它逐渐恢复了精神。虽然后腿永久性受损，但豆豆学会了用前腿行走。\r\r\n\r\r## 新的开始\r\r\n\r\r一个月后，豆豆被一个充满爱心的家庭领养了。新主人为它配备了特殊的轮椅，豆豆现在可以像其他狗狗一样快乐地奔跑。', 'https://192.168.99.228:9000/animal-adopt/9.png', '宠物医生李医生', '救助故事,狗狗', 157, 1, 1, '2025-11-20 22:53:07', '2025-12-06 19:25:00');
 INSERT INTO `t_story` VALUES (4, '高龄猫咪的新家', '八岁的老猫花花在救助站等待了半年，终于遇到了理解它的新主人...', '# 高龄猫咪的新家\r\r\n\r\r花花是一只八岁的波斯猫，因为主人搬家无法照顾而被送到了救助站。高龄的它在救助站里显得有些孤独，很少有人愿意领养一只老猫。\r\r\n\r\r## 漫长的等待\r\r\n\r\r半年过去了，花花在救助站里度过了它最孤独的日子。它每天都趴在窗边，看着来来往往的访客，希望有人能带它回家。\r\r\n\r\r## 命运的相遇\r\r\n\r\r直到有一天，一位退休的老奶奶来到了救助站。她说她也很孤独，需要一个伴侣。当她看到花花时，两个孤独的灵魂瞬间产生了共鸣。\r\r\n\r\r## 完美的匹配\r\r\n\r\r现在，花花和老奶奶每天都在一起。老奶奶为花花准备了最舒适的窝，花花则用温暖的陪伴填补了老奶奶心中的空缺。这是一个完美的匹配。', 'https://192.168.99.228:9000/animal-adopt/10.png', '领养者张女士', '成功领养,猫咪', 89, 1, 1, '2025-11-20 22:53:07', '2025-12-05 13:55:00');
 INSERT INTO `t_story` VALUES (5, '残疾狗狗的逆袭', '三条腿的狗狗小黑通过训练成为了一只优秀的治疗犬...', '# 残疾狗狗的逆袭\r\r\n\r\r小黑原本是一只流浪狗，在一次车祸中失去了一条前腿。人们都认为它的人生已经完结，但小黑用行动证明了生命的韧性。\r\r\n\r\r## 不放弃的精神\r\r\n\r\r被救助后，小黑虽然失去了一条腿，但它从未放弃过。它用三条腿学会了走路、跑步，甚至可以跳跃。它的坚强感动了每一个见到它的人。\r\r\n\r\r## 特殊的训练\r\r\n\r\r一位专业的训练师看到了小黑的潜力，决定将它训练成一只治疗犬。经过六个月的训练，小黑成功了。\r\r\n\r\r## 新的使命\r\r\n\r\r现在，小黑在医院里工作，为患者们带去欢乐和治疗。它用自己的故事告诉每一个人：残疾不是终点，而是新的开始。', 'https://192.168.99.228:9000/animal-adopt/11.png', '训练师刘老师', '救助故事,狗狗', 215, 0, 0, '2025-11-20 22:53:07', '2025-12-08 01:05:00');
 INSERT INTO `t_story` VALUES (6, '从恐惧到信任', '受过伤害的猫咪小白如何在新主人的关爱下重新学会信任...', '# 从恐惧到信任\r\r\n\r\r小白是一只曾经被虐待的猫咪。当它被救助站救出时，它对人类充满了恐惧和不信任。它躲在角落里，拒绝任何人的接近。\r\r\n\r\r## 漫长的治愈\r\r\n\r\r救助站的工作人员没有放弃。他们每天都坐在小白身边，用耐心和爱心慢慢接近它。几个月过去了，小白终于敢于接受抚摸。\r\r\n\r\r## 遇见真爱\r\r\n\r\r一位心理咨询师来到救助站，她看到了小白眼中的恐惧，也看到了它渴望被爱的渴望。她决定领养小白。\r\r\n\r\r## 重生\r\r\n\r\r在新主人的关爱下，小白逐渐打开了心扉。它学会了信任，学会了撒娇，学会了享受被爱的感觉。现在，小白是一只充满活力和爱心的猫咪，它用自己的故事告诉我们：爱可以治愈一切。', 'https://192.168.99.228:9000/animal-adopt/12.png', '心理咨询师赵老师', '成功领养,猫咪', 148, 0, 1, '2025-11-20 22:53:07', '2025-12-06 22:05:00');
-INSERT INTO `t_story` VALUES (9, '被遗弃的希望', '暴雨天被弃桥洞的小狗小黑遭外卖小哥救助后重拾信任，如今成骑手身边的小明星，以经历诠释温暖能抵过伤害。', '# 从绝望到新生\n\n小黑是一只在暴雨天被遗弃在桥洞下的小狗。那天，它全身湿透，瑟瑟发抖，眼神中满是绝望与无助。\n\n## 意外的温暖\n\n一位路过的外卖小哥发现了小黑。他撑起伞，小心地抱起它，用身上的外套为它取暖。虽然小黑已经几乎失去了力气，但它依然努力摇着尾巴回应善意。\n\n## 重拾信任\n\n在随后的一个月里，小哥带着小黑去看医生，给它洗澡、梳毛，陪它散步。起初，小黑害怕接触人类，每次看到陌生人都会躲进桌子底下。但一次次温柔的抚摸与耐心的鼓励，让它重新感受到了安全。\n\n## 新的家\n\n如今，小黑已经成为骑手中的小明星。它每天都跟着主人跑单，见到熟悉的店家会主动摇尾巴问好。它的故事告诉我们：*世界上再多伤害，也抵不过一次真正的温暖。*\n', 'images/f4cfb61a6f934691ab36699fd35885b8.png', '外卖小哥', '温暖救助,生命救赎', 18, 2, 1, '2025-11-26 21:22:41', '2025-12-05 21:30:00');
+INSERT INTO `t_story` VALUES (9, '被遗弃的希望', '暴雨天被弃桥洞的小狗小黑遭外卖小哥救助后重拾信任，如今成骑手身边的小明星，以经历诠释温暖能抵过伤害。', '# 从绝望到新生\n\n小黑是一只在暴雨天被遗弃在桥洞下的小狗。那天，它全身湿透，瑟瑟发抖，眼神中满是绝望与无助。\n\n## 意外的温暖\n\n一位路过的外卖小哥发现了小黑。他撑起伞，小心地抱起它，用身上的外套为它取暖。虽然小黑已经几乎失去了力气，但它依然努力摇着尾巴回应善意。\n\n## 重拾信任\n\n在随后的一个月里，小哥带着小黑去看医生，给它洗澡、梳毛，陪它散步。起初，小黑害怕接触人类，每次看到陌生人都会躲进桌子底下。但一次次温柔的抚摸与耐心的鼓励，让它重新感受到了安全。\n\n## 新的家\n\n如今，小黑已经成为骑手中的小明星。它每天都跟着主人跑单，见到熟悉的店家会主动摇尾巴问好。它的故事告诉我们：*世界上再多伤害，也抵不过一次真正的温暖。*\n', 'images/f4cfb61a6f934691ab36699fd35885b8.png', '外卖小哥', '温暖救助,生命救赎', 20, 2, 1, '2025-11-26 21:22:41', '2025-12-20 21:00:00');
 
 -- ----------------------------
 -- Table structure for t_story_favorite

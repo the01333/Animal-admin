@@ -66,9 +66,10 @@ public class StatsController {
 
     /**
      * 手动触发浏览次数同步任务
-     * 仅管理员在系统工具页中手动执行
+     * 仅超级管理员在系统工具页中手动执行
      */
     @PostMapping("/view-count/sync")
+    @SaCheckRole("super_admin")
     public Result<Void> manualSyncViewCount() {
         log.info("手动触发浏览次数同步任务");
         viewCountSyncTask.manualSync();

@@ -57,7 +57,7 @@ public class UserCertificationController {
      * 管理端分页查询认证列表
      */
     @GetMapping("/admin/list")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    @SaCheckRole("super_admin")
     public Result<Page<UserCertificationAdminVO>> listCertifications(@ModelAttribute CertificationPageQueryDTO queryDTO) {
         return Result.success(userCertificationService.queryAdminCertifications(queryDTO));
     }
@@ -66,7 +66,7 @@ public class UserCertificationController {
      * 管理端认证详情
      */
     @GetMapping("/admin/{id}")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    @SaCheckRole("super_admin")
     public Result<UserCertificationAdminVO> getCertificationDetail(@PathVariable Long id) {
         return Result.success(userCertificationService.getAdminCertificationDetail(id));
     }
@@ -75,7 +75,7 @@ public class UserCertificationController {
      * 管理端审核认证
      */
     @PutMapping("/admin/{id}/review")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    @SaCheckRole("super_admin")
     public Result<String> reviewCertification(@PathVariable Long id, @RequestBody CertificationReviewDTO reviewDTO) {
         userCertificationService.reviewCertification(id, reviewDTO.getStatus(), reviewDTO.getRejectReason());
         return Result.success("审核完成", null);

@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @Validated
 @RestController
-@RequestMapping({"/adoption", "/application"})
+@RequestMapping("/application")
 public class AdoptionApplicationController {
     
     @Autowired
@@ -30,7 +30,7 @@ public class AdoptionApplicationController {
     /**
      * 提交领养申请
      */
-    @PostMapping({"/apply", ""})
+    @PostMapping("")
     public Result<Long> submitApplication(@Valid @RequestBody AdoptionApplicationDTO applicationDTO) {
         return Result.success("申请提交成功", adoptionApplicationService.submitApplication(applicationDTO));
     }
@@ -46,7 +46,7 @@ public class AdoptionApplicationController {
     /**
      * 查询所有领养申请（管理员）
      */
-    @GetMapping({"/all", "/list"})
+    @GetMapping("/list")
     @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
     public Result<Page<AdoptionApplicationVO>> queryAllApplications(@Valid @ModelAttribute AdoptionApplicationPageQueryDTO queryDTO) {
         return Result.success(adoptionApplicationService.queryAllApplications(queryDTO));

@@ -40,7 +40,7 @@ public class EmailSendUtils {
      * @param specifiedCode
      * @param ttlSeconds
      */
-    @Async
+    @Async("bizExecutor")
     public void sendVerificationEmail(String targetMail, String specifiedCode, long ttlSeconds) {
         cacheCode(targetMail, specifiedCode, ttlSeconds);
         doSend(targetMail, specifiedCode);

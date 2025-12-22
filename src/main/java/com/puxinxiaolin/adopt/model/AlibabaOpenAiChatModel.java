@@ -60,6 +60,8 @@ public class AlibabaOpenAiChatModel extends AbstractToolCallSupport implements C
 
     private static final ToolCallingManager DEFAULT_TOOL_CALLING_MANAGER = ToolCallingManager.builder().build();
 
+    private static final int MAX_TOOL_EXECUTION_DEPTH = 3;
+
     /**
      * The default options used for the chat completion requests.
      */
@@ -198,6 +200,10 @@ public class AlibabaOpenAiChatModel extends AbstractToolCallSupport implements C
     }
 
     public ChatResponse internalCall(Prompt prompt, ChatResponse previousChatResponse) {
+        return internalCall(prompt, previousChatResponse, 0);
+    }
+
+    private ChatResponse internalCall(Prompt prompt, ChatResponse previousChatResponse, int depth) {
 
         OpenAiApi.ChatCompletionRequest request = createRequest(prompt, false);
 
@@ -255,22 +261,26 @@ public class AlibabaOpenAiChatModel extends AbstractToolCallSupport implements C
 
                 });
 
-        if (ToolCallingChatOptions.isInternalToolExecutionEnabled(prompt.getOptions()) && response != null
-                && response.hasToolCalls()) {
+        if (ToolCallingChatOptions.isInternalToolExecutionEnabled(prompt.getOptions())
+                && response != null
+                && response.hasToolCalls()
+                && depth < MAX_TOOL_EXECUTION_DEPTH) {
             var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, response);
+
+            // 达到最大工具调用层数或工具要求直接返回时，不再继续递归调用模型，直接把工具结果返回给前端
             if (toolExecutionResult.returnDirect()) {
-                // Return tool execution result directly to the client.
                 return ChatResponse.builder()
                         .from(response)
                         .generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
                         .build();
-            } else {
-                // Send the tool execution result back to the model.
-                return this.internalCall(new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()),
-                        response);
             }
+
+            // 继续向模型发送工具执行结果，递归深度 +1
+            return this.internalCall(new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()),
+                    response, depth + 1);
         }
 
+        // 深度已达上限或未启用内部工具执行时，直接返回当前模型回复
         return response;
     }
 
@@ -283,6 +293,10 @@ public class AlibabaOpenAiChatModel extends AbstractToolCallSupport implements C
     }
 
     public Flux<ChatResponse> internalStream(Prompt prompt, ChatResponse previousChatResponse) {
+        return internalStream(prompt, previousChatResponse, 0);
+    }
+
+    private Flux<ChatResponse> internalStream(Prompt prompt, ChatResponse previousChatResponse, int depth) {
         return Flux.deferContextual(contextView -> {
             OpenAiApi.ChatCompletionRequest request = createRequest(prompt, true);
 
@@ -377,26 +391,30 @@ public class AlibabaOpenAiChatModel extends AbstractToolCallSupport implements C
             // @formatter:off
             Flux<ChatResponse> flux = chatResponse.flatMap(response -> {
 
-                        if (ToolCallingChatOptions.isInternalToolExecutionEnabled(prompt.getOptions()) && response.hasToolCalls()) {
-                            var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, response);
-                            if (toolExecutionResult.returnDirect()) {
-                                // Return tool execution result directly to the client.
-                                return Flux.just(ChatResponse.builder().from(response)
-                                        .generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
-                                        .build());
-                            } else {
-                                // Send the tool execution result back to the model.
-                                return this.internalStream(new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()),
-                                        response);
-                            }
+                    if (ToolCallingChatOptions.isInternalToolExecutionEnabled(prompt.getOptions())
+                            && response.hasToolCalls()
+                            && depth < MAX_TOOL_EXECUTION_DEPTH) {
+                        var toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, response);
+
+                        // 达到最大工具调用层数或工具要求直接返回时，不再继续递归调用模型，直接把工具结果返回给前端
+                        if (toolExecutionResult.returnDirect()) {
+                            return Flux.just(ChatResponse.builder().from(response)
+                                    .generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
+                                    .build());
                         }
-                        else {
-                            return Flux.just(response);
-                        }
-                    })
-                    .doOnError(observation::error)
-                    .doFinally(s -> observation.stop())
-                    .contextWrite(ctx -> ctx.put(ObservationThreadLocalAccessor.KEY, observation));
+
+                        // 继续将工具执行结果发回模型，递归深度 +1
+                        return this.internalStream(new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()),
+                                response, depth + 1);
+                    }
+                    else {
+                        // 深度已达上限或未启用内部工具执行时，直接返回当前模型回复
+                        return Flux.just(response);
+                    }
+                })
+                .doOnError(observation::error)
+                .doFinally(s -> observation.stop())
+                .contextWrite(ctx -> ctx.put(ObservationThreadLocalAccessor.KEY, observation));
             // @formatter:on
 
             return new MessageAggregator().aggregate(flux, observationContext::setResponse);

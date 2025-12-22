@@ -7,12 +7,13 @@ import lombok.NoArgsConstructor;
 
 /**
  * 用户上下文
- * 使用 TransmittableThreadLocal 存储当前请求的用户信息
- * 支持异步线程池传递
+ * <p>
+ * 使用 TransmittableThreadLocal 以支持异步线程池传递
  */
 public class UserContext {
 
-    private static final TransmittableThreadLocal<UserInfo> USER_INFO = new TransmittableThreadLocal<>();
+    private static final TransmittableThreadLocal<UserInfo> USER_INFO
+            = new TransmittableThreadLocal<>();
 
     /**
      * 设置用户信息
@@ -29,7 +30,7 @@ public class UserContext {
     }
 
     /**
-     * 获取当前用户ID
+     * 获取当前用户 ID
      */
     public static Long getUserId() {
         UserInfo userInfo = getUserInfo();

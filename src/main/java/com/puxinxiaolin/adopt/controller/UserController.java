@@ -76,15 +76,6 @@ public class UserController {
     }
 
     /**
-     * 获取当前登录用户信息
-     */
-    @GetMapping("/current")
-    public Result<UserVO> getCurrentUser() {
-        UserVO userVO = userService.getCurrentUser();
-        return Result.success(userVO);
-    }
-
-    /**
      * 获取当前登录用户信息（兼容前端接口）
      */
     @GetMapping("/info")
