@@ -6,7 +6,6 @@ import com.puxinxiaolin.adopt.entity.common.Result;
 import com.puxinxiaolin.adopt.entity.dto.PetDTO;
 import com.puxinxiaolin.adopt.entity.dto.PetQueryDTO;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
-import com.puxinxiaolin.adopt.service.DictService;
 import com.puxinxiaolin.adopt.service.PetService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.validation.Valid;
@@ -30,7 +29,6 @@ import java.util.Map;
 public class PetController {
 
     private final PetService petService;
-    private final DictService dictService;
 
     @GetMapping("/getPetCategories")
     public Result<Map<String, String>> getPetCategories() {
@@ -87,9 +85,6 @@ public class PetController {
     @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
     public Result<Boolean> updatePet(@PathVariable Long id, @Valid @RequestBody PetDTO petDTO) {
         boolean success = petService.updatePet(id, petDTO);
-        // 更新宠物可能会调整类别, 刷新缓存
-        dictService.refreshCache();
-
         return success ? Result.success(true) : Result.error("更新失败");
     }
 

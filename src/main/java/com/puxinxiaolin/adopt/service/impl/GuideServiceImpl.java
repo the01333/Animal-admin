@@ -54,7 +54,8 @@ public class GuideServiceImpl extends ServiceImpl<GuideMapper, Guide> implements
         if (guide == null) {
             return null;
         }
-
+        // 查看详情时增加浏览次数
+        increaseViews(id);
         return convertToVO(guide, userId);
     }
 

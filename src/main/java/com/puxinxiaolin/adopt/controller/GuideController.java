@@ -39,8 +39,6 @@ public class GuideController {
         if (guide == null) {
             return Result.error(MessageConstant.GUIDE_NOT_FOUND);
         }
-        
-        guideService.increaseViews(id);
         return Result.success(guide);
     }
     
