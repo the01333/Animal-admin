@@ -52,11 +52,6 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
     private final DictItemMapper dictItemMapper;
 
     @Override
-    public Map<String, String> getPetCategories() {
-        return dictService.getPetCategories();
-    }
-
-    @Override
     public Page<PetVO> queryPetPage(PetQueryDTO queryDTO) {
         log.info("分页查询宠物列表, 查询条件: {}", queryDTO);
 

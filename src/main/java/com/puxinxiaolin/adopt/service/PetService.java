@@ -9,17 +9,11 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 宠物服务接口
  */
 public interface PetService extends IService<Pet> {
-
-    /**
-     * 获取宠物分类
-     */
-    Map<String, String> getPetCategories();
 
     /**
      * 分页查询宠物列表

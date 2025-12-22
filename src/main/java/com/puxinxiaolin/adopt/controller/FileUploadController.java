@@ -26,31 +26,4 @@ public class FileUploadController {
         String fileUrl = fileUploadService.uploadFile(file, "images");
         return Result.success("上传成功", fileUrl);
     }
-    
-    /**
-     * 上传头像
-     */
-    @PostMapping("/upload/avatar")
-    public Result<String> uploadAvatar(@RequestParam("file") MultipartFile file) {
-        String fileUrl = fileUploadService.uploadFile(file, "avatars");
-        return Result.success("上传成功", fileUrl);
-    }
-    
-    /**
-     * 上传文档
-     */
-    @PostMapping("/upload/document")
-    public Result<String> uploadDocument(@RequestParam("file") MultipartFile file) {
-        String fileUrl = fileUploadService.uploadFile(file, "documents");
-        return Result.success("上传成功", fileUrl);
-    }
-    
-    /**
-     * 删除文件
-     */
-    @DeleteMapping("/delete")
-    public Result<String> deleteFile(@RequestParam String fileUrl) {
-        boolean success = fileUploadService.deleteFile(fileUrl);
-        return success ? Result.success("删除成功", null) : Result.error("删除失败");
-    }
 }

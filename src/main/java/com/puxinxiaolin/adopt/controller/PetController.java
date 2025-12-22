@@ -29,12 +29,7 @@ import java.util.Map;
 public class PetController {
 
     private final PetService petService;
-
-    @GetMapping("/getPetCategories")
-    public Result<Map<String, String>> getPetCategories() {
-        return Result.success(petService.getPetCategories());
-    }
-
+    
     /**
      * 分页查询宠物列表
      * 统一使用此接口, 移除了冗余的 /list 接口
