@@ -18,8 +18,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // 注册认证拦截器
-        // 只拦截需要认证的操作接口, 其他请求完全不经过拦截器
         registry.addInterceptor(authInterceptor)
                 .addPathPatterns(
                         // AI 服务

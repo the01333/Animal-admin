@@ -40,7 +40,7 @@ public class ModelSystemPrompt {
                处理思路:
                  - 优先调用 searchPets 工具, 根据用户描述的性格特征、偏好查询当前可领养宠物
                  - 然后在模型侧对查询结果进行二次筛选和排序, 并给出推荐理由
-               参数说明: 
+               参数说明:
                  - category: 宠物类别（cat/dog/rabbit等）
                  - personality: 性格关键词（活泼/温顺/独立/亲人等）
                  - adoptionStatus: 领养状态（available=可领养）
@@ -96,7 +96,7 @@ public class ModelSystemPrompt {
             【格式要求】
             - 使用换行符分段, 每个段落之间空一行
             - 对于列表项, 每项单独一行
-            - 对于宠物推荐, 格式必须为: 
+            - 对于宠物推荐, 格式必须为:
               🐾 **宠物名字 - 品种**
               性格描述...
               适合...

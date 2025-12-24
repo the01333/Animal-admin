@@ -546,16 +546,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "角色编码无效");
             }
 
-            // 限制系统中最多只有一个超级管理员
-            if (roleEnum == UserRoleEnum.SUPER_ADMIN) {
-                long superAdminCount = this.count(new LambdaQueryWrapper<User>()
-                        .eq(User::getRole, UserRoleEnum.SUPER_ADMIN.getCode())
-                        .ne(User::getId, id));
-                if (superAdminCount > 0) {
-                    throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "系统中已存在超级管理员, 无法创建第二个超级管理员");
-                }
+            String currentRole = user.getRole();
+
+            // 后端强校验：不允许通过接口创建新的超级管理员，也不允许修改现有超级管理员的角色
+            boolean isCurrentSuperAdmin = UserRoleEnum.SUPER_ADMIN.getCode().equals(currentRole);
+            boolean willBeSuperAdmin = (roleEnum == UserRoleEnum.SUPER_ADMIN);
+
+            // 1) 如果当前是超级管理员，禁止改成任何其他角色
+            if (isCurrentSuperAdmin && !willBeSuperAdmin) {
+                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "超级管理员角色不允许通过接口修改");
             }
 
+            // 2) 如果当前不是超级管理员，禁止通过接口将其设为超级管理员
+            if (!isCurrentSuperAdmin && willBeSuperAdmin) {
+                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "不允许通过接口创建或提升为超级管理员");
+            }
+
+            // 3) 其余情况（普通用户与管理员之间互相调整）允许修改
             user.setRole(roleEnum.getCode());
         }
 

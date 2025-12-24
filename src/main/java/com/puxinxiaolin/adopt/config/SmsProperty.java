@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "aliyun.sms")
-public class SmsConfig {
+public class SmsProperty {
     
     private String accessKey;
     private String secretKey;

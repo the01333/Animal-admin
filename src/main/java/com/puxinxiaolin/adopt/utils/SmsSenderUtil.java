@@ -4,7 +4,7 @@ import com.aliyun.sdk.service.dysmsapi20170525.AsyncClient;
 import com.aliyun.sdk.service.dysmsapi20170525.models.SendSmsRequest;
 import com.aliyun.sdk.service.dysmsapi20170525.models.SendSmsResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.puxinxiaolin.adopt.config.SmsConfig;
+import com.puxinxiaolin.adopt.config.SmsProperty;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
 import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class SmsSenderUtil {
 
-    private final SmsConfig smsConfig;
+    private final SmsProperty smsProperty;
     private final ObjectMapper objectMapper;
     private final AsyncClient asyncClient;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -50,8 +50,8 @@ public class SmsSenderUtil {
 
             SendSmsRequest sendSmsRequest = SendSmsRequest.builder()
                     .phoneNumbers(phoneNumbers)
-                    .signName(smsConfig.getSignName())
-                    .templateCode(smsConfig.getTemplateCode())
+                    .signName(smsProperty.getSignName())
+                    .templateCode(smsProperty.getTemplateCode())
                     .templateParam(objectMapper.writeValueAsString(templateParam))
                     .build();
             CompletableFuture<SendSmsResponse> response = asyncClient.sendSms(sendSmsRequest);

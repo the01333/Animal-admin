@@ -24,6 +24,7 @@ public class ThreadPoolConfig {
     @Bean("bizExecutor")
     public Executor bizExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        
         int processors = Runtime.getRuntime().availableProcessors();
         executor.setCorePoolSize(Math.max(2, processors));
         executor.setMaxPoolSize(Math.max(4, processors * 2));
@@ -34,6 +35,7 @@ public class ThreadPoolConfig {
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(30);
         executor.initialize();
+        
         return executor;
     }
 }

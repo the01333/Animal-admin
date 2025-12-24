@@ -22,16 +22,7 @@ public enum UserRoleEnum {
      * 管理员
      */
     ADMIN("admin", "管理员"),
-
-    /**
-     * 审核员
-     */
-    APPLICATION_AUDITOR("application_auditor", "审核员"),
-
-    /**
-     * 管家
-     */
-    HOUSEKEEPER("housekeeper", "管家");
+    ;
 
     private final String code;
     private final String desc;
@@ -42,7 +33,7 @@ public enum UserRoleEnum {
     }
 
     /**
-     * 根据code获取枚举
+     * 根据 code 获取枚举
      */
     public static UserRoleEnum getByCode(String code) {
         for (UserRoleEnum role : UserRoleEnum.values()) {

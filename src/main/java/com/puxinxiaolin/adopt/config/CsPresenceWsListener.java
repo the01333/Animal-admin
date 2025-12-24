@@ -3,6 +3,7 @@ package com.puxinxiaolin.adopt.config;
 import com.puxinxiaolin.adopt.entity.dto.CsWsPresenceDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -50,7 +51,7 @@ public class CsPresenceWsListener {
         if (principal == null) {
             try {
                 StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
-                if (sessionId == null || sessionId.isBlank()) {
+                if (StringUtils.isBlank(sessionId)) {
                     sessionId = accessor.getSessionId();
                 }
                 principal = accessor.getUser();

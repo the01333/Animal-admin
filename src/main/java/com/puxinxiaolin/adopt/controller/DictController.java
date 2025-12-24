@@ -1,7 +1,6 @@
 package com.puxinxiaolin.adopt.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
-import cn.dev33.satoken.annotation.SaMode;
 import com.puxinxiaolin.adopt.entity.common.Result;
 import com.puxinxiaolin.adopt.entity.dto.DictItemDTO;
 import com.puxinxiaolin.adopt.entity.vo.DictItemVO;
@@ -84,6 +83,16 @@ public class DictController {
     public Result<Map<String, String>> getArticleCategories() {
         log.debug("获取文章分类字典");
         return Result.success(dictService.getArticleCategories());
+    }
+
+    /**
+     * 获取用户角色选项（带缓存）
+     * 供后台用户管理页渲染角色下拉使用
+     */
+    @GetMapping("/userRoles")
+    public Result<Map<String, String>> getUserRoles() {
+        log.debug("获取用户角色字典");
+        return Result.success(dictService.getUserRoles());
     }
 
     /**
