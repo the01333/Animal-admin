@@ -21,13 +21,13 @@ public interface ConversationHistoryCassandraRepository
     List<ConversationHistoryCassandra> findBySessionId(String sessionId);
 
     /**
-     * 根据会话ID和用户ID查询对话历史
+     * 根据会话 ID 和用户 ID 查询对话历史
      */
     @Query("SELECT * FROM conversation_history WHERE session_id = ?0 AND user_id = ?1 ALLOW FILTERING")
     List<ConversationHistoryCassandra> findBySessionIdAndUserId(String sessionId, Long userId);
 
     /**
-     * 根据会话ID查询最近N条消息
+     * 根据会话 ID 查询最近 N 条消息
      */
     @Query("SELECT * FROM conversation_history WHERE session_id = ?0 ORDER BY timestamp DESC LIMIT ?1")
     List<ConversationHistoryCassandra> findRecentMessages(String sessionId, int limit);

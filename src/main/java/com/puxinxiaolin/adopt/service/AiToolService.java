@@ -80,7 +80,7 @@ public class AiToolService {
 
     @Tool(description = "根据图片URL简单识别动物类别(占位)，再从系统中查询可领养宠物")
     public List<PetVO> recognizeAndSearchPets(
-            @ToolParam(description = "图片URL", required = true) String imageUrl,
+            @ToolParam(description = "图片URL") String imageUrl,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         String lower = imageUrl == null ? "" : imageUrl.toLowerCase();
         String category = null;

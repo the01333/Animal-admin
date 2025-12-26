@@ -11,13 +11,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @RequiredArgsConstructor
 public class ALiSmsConfig {
-    private final SmsConfig smsConfig;
+    private final SmsProperty smsProperty;
 
     @Bean
     public AsyncClient asyncClient() {
         StaticCredentialProvider provider = StaticCredentialProvider.create(Credential.builder()
-                .accessKeyId(smsConfig.getAccessKey())
-                .accessKeySecret(smsConfig.getSecretKey())
+                .accessKeyId(smsProperty.getAccessKey())
+                .accessKeySecret(smsProperty.getSecretKey())
                 .build());
 
         return AsyncClient.builder()

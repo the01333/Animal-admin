@@ -14,6 +14,7 @@ import com.puxinxiaolin.adopt.service.DictService;
 import com.puxinxiaolin.adopt.service.TranslationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.puxinxiaolin.adopt.enums.UserRoleEnum;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -60,10 +61,46 @@ public class DictServiceImpl implements DictService {
         result.put("adoptionStatuses", getAdoptionStatuses());
         result.put("healthStatuses", getHealthStatuses());
         result.put("articleCategories", getArticleCategories());
+        result.put("userRoles", getUserRoles());
 
         // 3. 写入缓存
         redisTemplate.opsForValue().set(RedisConstant.DICT_ALL, result, CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
         log.debug("所有字典数据已缓存");
+
+        return result;
+    }
+
+    @Override
+    public Map<String, String> getUserRoles() {
+        // 1. 尝试从缓存获取（使用Hash结构）
+        try {
+            Map<Object, Object> cachedData = redisTemplate.opsForHash().entries("dict:user_role");
+            if (!cachedData.isEmpty()) {
+                log.debug("从缓存获取用户角色字典");
+                return convertToStringMap(cachedData);
+            }
+        } catch (Exception e) {
+            log.warn("缓存格式错误, 清除缓存: {}", "dict:user_role");
+            redisTemplate.delete("dict:user_role");
+        }
+
+        // 2. 优先从通用字典表读取
+        Map<String, String> result = loadDictFromTable("user_role");
+
+        // 3. 如果字典表没有配置, 则回退到 UserRoleEnum 默认值
+        if (result.isEmpty()) {
+            log.debug("通用字典表未配置用户角色, 使用 UserRoleEnum 默认配置");
+            for (UserRoleEnum value : UserRoleEnum.values()) {
+                result.put(value.getCode(), value.getDesc());
+            }
+        }
+
+        // 4. 写入缓存
+        if (!result.isEmpty()) {
+            redisTemplate.opsForHash().putAll("dict:user_role", result);
+            redisTemplate.expire("dict:user_role", CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
+            log.debug("用户角色字典已缓存, 数量: {}", result.size());
+        }
 
         return result;
     }
@@ -255,6 +292,7 @@ public class DictServiceImpl implements DictService {
         redisTemplate.delete(RedisConstant.DICT_ADOPTION_STATUS);
         redisTemplate.delete(RedisConstant.DICT_HEALTH_STATUS);
         redisTemplate.delete(RedisConstant.DICT_ARTICLE_CATEGORY);
+        redisTemplate.delete(RedisConstant.DICT_USER_ROLE);
     }
 
     /**

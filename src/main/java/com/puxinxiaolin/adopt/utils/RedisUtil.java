@@ -1,6 +1,6 @@
 package com.puxinxiaolin.adopt.utils;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -13,10 +13,10 @@ import java.util.concurrent.TimeUnit;
  * Redis 工具类
  */
 @Component
-@RequiredArgsConstructor
 public class RedisUtil {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
     
     /**
      * 指定缓存失效时间

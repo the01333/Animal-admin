@@ -59,6 +59,14 @@ public interface DictService {
     Map<String, String> getArticleCategories();
 
     /**
+     * 获取用户角色字典（带缓存）
+     * 主要用于后台用户管理中的角色下拉
+     *
+     * @return Map<code, label>
+     */
+    Map<String, String> getUserRoles();
+
+    /**
      * 刷新字典缓存
      */
     void refreshCache();

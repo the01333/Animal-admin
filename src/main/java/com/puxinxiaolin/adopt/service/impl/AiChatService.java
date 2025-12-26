@@ -75,7 +75,7 @@ public class AiChatService {
         return chatClient.prompt(prompt)
                 .stream()
                 .content();
-        // 注意: 完整的AI回复内容由前端收集后通过 /save-message 接口保存
+        // TODO: 完整的AI回复内容由前端收集后通过 /save-message 接口保存
     }
 
     /**
