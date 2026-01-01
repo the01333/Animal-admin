@@ -24,14 +24,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/ai/service/chat-with-memory-stream",
                         "/ai/service/save-message",
                         "/ai/service/session/**",
-                        // 点赞、收藏 - 只拦截 check 和操作接口, 不拦截 count 接口
-                        "/api/like/check/**",
-                        "/api/like",
-                        "/api/pet/like/**",
+                        // 宠物点赞 - 需要登录的接口
+                        "/api/pet/like/check/**",
+                        "/api/pet/like/my",
+                        // 宠物收藏 - 需要登录的接口
                         "/api/favorite/check/**",
-                        "/api/favorite",
+                        "/api/favorite/my",
+                        "/api/favorite/my/**",
                         "/api/collect/**",
-                        // 文章点赞、收藏 - 只拦截 check 和操作接口, 不拦截 count 接口
+                        // 文章点赞、收藏
                         "/content/**/like/check",
                         "/content/**/like",
                         "/content/**/favorite/check",

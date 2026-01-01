@@ -1,7 +1,9 @@
 package com.puxinxiaolin.adopt.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
-import com.puxinxiaolin.adopt.constants.RedisConstant;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.puxinxiaolin.adopt.entity.dto.PetLikePageQueryDTO;
 import com.puxinxiaolin.adopt.entity.entity.Pet;
 import com.puxinxiaolin.adopt.entity.entity.PetLike;
@@ -9,9 +11,6 @@ import com.puxinxiaolin.adopt.entity.vo.PetVO;
 import com.puxinxiaolin.adopt.mapper.PetLikeMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.service.PetLikeService;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -36,31 +35,33 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
     @Transactional(rollbackFor = Exception.class)
     public boolean likePet(Long petId) {
         Long userId = StpUtil.getLoginIdAsLong();
-        // 检查是否已点赞
-        LambdaQueryWrapper<PetLike> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(PetLike::getUserId, userId)
-                .eq(PetLike::getPetId, petId);
-        PetLike existing = this.getOne(wrapper);
         
-        if (existing != null) {
+        // 查找记录（包括已删除的），绕过逻辑删除，否则下面插入记录时会报错
+        PetLike existing = baseMapper.selectByUserAndPetIgnoreDeleted(userId, petId);
+        
+        // 如果记录存在且未删除，说明已点赞
+        if (existing != null && existing.getDeleted() == 0) {
             log.warn("该宠物已点赞, 用户ID: {}, 宠物ID: {}", userId, petId);
             return true;
         }
+        
+        // 如果记录存在但已删除，恢复它
+        if (existing != null && existing.getDeleted() == 1) {
+            baseMapper.restoreById(existing.getId());
+            petMapper.incrementLikeCount(petId);
+            log.info("用户 {} 恢复点赞宠物 {}", userId, petId);
+            return true;
+        }
 
-        // 添加点赞记录
+        // 没有记录，新增
         PetLike petLike = new PetLike();
         petLike.setUserId(userId);
         petLike.setPetId(petId);
         
         try {
             this.save(petLike);
-
-            // 使用增量更新, 避免并发问题
             int updated = petMapper.incrementLikeCount(petId);
-            
             if (updated > 0) {
-                // 删除Redis缓存, 下次查询时重新加载
-                redisTemplate.delete(RedisConstant.buildPetLikeCountKey(petId));
                 log.info("用户 {} 点赞宠物 {}", userId, petId);
                 return true;
             } else {
@@ -68,7 +69,6 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
                 throw new RuntimeException("更新点赞数失败");
             }
         } catch (Exception e) {
-            // 处理唯一键冲突异常 - 可能是并发操作导致的
             if (e.getCause() != null && e.getCause().getMessage() != null 
                     && e.getCause().getMessage().contains("Duplicate entry")) {
                 log.warn("点赞记录已存在（并发操作）, 用户ID: {}, 宠物ID: {}", userId, petId);
@@ -92,15 +92,11 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
             return false;
         }
 
-        // 删除点赞记录（逻辑删除）
+        // 删除点赞记录
         this.removeById(petLike.getId());
-
         // 使用减量更新
         int updated = petMapper.decrementLikeCount(petId);
-        
         if (updated > 0) {
-            // 删除Redis缓存
-            redisTemplate.delete(RedisConstant.buildPetLikeCountKey(petId));
             log.info("用户 {} 取消点赞宠物 {}", userId, petId);
             return true;
         } else {
@@ -121,23 +117,12 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
     
     @Override
     public long getLikeCount(Long petId) {
-        // 先从 Redis 缓存获取
-        String key = RedisConstant.buildPetLikeCountKey(petId);
-        Object cached = redisTemplate.opsForValue().get(key);
-        if (cached instanceof Number) {
-            return ((Number) cached).longValue();
-        }
-        
-        // 从数据库获取
+        // 直接从数据库获取
         Pet pet = petMapper.selectById(petId);
         if (pet == null) {
             return 0;
         }
-        
-        long count = pet.getLikeCount();
-        // 缓存到 Redis
-        redisTemplate.opsForValue().set(key, count);
-        return count;
+        return pet.getLikeCount();
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.puxinxiaolin.adopt.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.puxinxiaolin.adopt.entity.common.Result;
 import com.puxinxiaolin.adopt.entity.dto.FavoritePageQueryDTO;
@@ -26,6 +27,7 @@ public class FavoriteController {
     /**
      * 添加收藏
      */
+    @SaCheckLogin
     @PostMapping("/{petId}")
     public Result<String> addFavorite(@PathVariable Long petId) {
         favoriteService.addFavorite(petId);
@@ -35,6 +37,7 @@ public class FavoriteController {
     /**
      * 取消收藏
      */
+    @SaCheckLogin
     @DeleteMapping("/{petId}")
     public Result<String> removeFavorite(@PathVariable Long petId) {
         favoriteService.removeFavorite(petId);
@@ -53,6 +56,7 @@ public class FavoriteController {
     /**
      * 检查是否已收藏（需要认证）
      */
+    @SaCheckLogin
     @GetMapping("/check/{petId}")
     public Result<Boolean> isFavorite(@PathVariable Long petId) {
         return Result.success(favoriteService.isFavorite(petId));
@@ -61,6 +65,7 @@ public class FavoriteController {
     /**
      * 查询当前用户的收藏列表
      */
+    @SaCheckLogin
     @GetMapping("/my")
     public Result<Page<FavoriteVO>> queryMyFavorites(@ModelAttribute FavoritePageQueryDTO queryDTO) {
         return Result.success(favoriteService.queryUserFavorites(queryDTO));
@@ -69,6 +74,7 @@ public class FavoriteController {
     /**
      * 查询当前用户收藏的宠物列表（包含完整宠物信息）
      */
+    @SaCheckLogin
     @GetMapping("/my/pets")
     public Result<Page<PetVO>> queryMyFavoritePets(@ModelAttribute FavoritePageQueryDTO queryDTO) {
         return Result.success(favoriteService.queryUserFavoritePets(queryDTO));

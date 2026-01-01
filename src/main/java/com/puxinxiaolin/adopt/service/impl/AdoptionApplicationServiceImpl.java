@@ -275,7 +275,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         if (applications == null || applications.isEmpty()) {
             return Collections.emptyList();
         }
-
+        
         Set<Long> applicantIds = applications.stream()
                 .map(AdoptionApplication::getUserId)
                 .filter(Objects::nonNull)

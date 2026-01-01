@@ -53,18 +53,24 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
             throw new BizException(ResultCodeEnum.PET_NOT_FOUND);
         }
         
-        // 检查是否已收藏
-        LambdaQueryWrapper<Favorite> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Favorite::getUserId, userId)
-                .eq(Favorite::getPetId, petId);
+        // 查找记录（包括已删除的），绕过逻辑删除
+        Favorite existing = baseMapper.selectByUserAndPetIgnoreDeleted(userId, petId);
         
-        Favorite existing = this.getOne(wrapper);
-        if (existing != null) {
+        // 如果记录存在且未删除，说明已收藏
+        if (existing != null && existing.getDeleted() == 0) {
             log.warn("该宠物已收藏, 用户ID: {}, 宠物ID: {}", userId, petId);
             return true;
         }
         
-        // 创建收藏记录
+        // 如果记录存在但已删除，恢复它
+        if (existing != null && existing.getDeleted() == 1) {
+            baseMapper.restoreById(existing.getId());
+            petMapper.incrementFavoriteCount(petId);
+            log.info("用户 {} 恢复收藏宠物 {}", userId, petId);
+            return true;
+        }
+        
+        // 没有记录，新增
         Favorite favorite = new Favorite();
         favorite.setUserId(userId);
         favorite.setPetId(petId);
@@ -72,14 +78,10 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         try {
             boolean saved = this.save(favorite);
             if (saved) {
-                int updated = petMapper.incrementFavoriteCount(petId);
-                if (updated > 0) {
-                    redisTemplate.delete(RedisConstant.buildPetFavoriteCountKey(petId));
-                }
+                petMapper.incrementFavoriteCount(petId);
             }
             return saved;
         } catch (Exception e) {
-            // 处理唯一键冲突异常 - 可能是并发操作导致的
             if (e.getCause() != null && e.getCause().getMessage() != null 
                     && e.getCause().getMessage().contains("Duplicate entry")) {
                 log.warn("收藏记录已存在（并发操作）, 用户ID: {}, 宠物ID: {}", userId, petId);
@@ -101,10 +103,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         
         boolean removed = this.remove(wrapper);
         if (removed) {
-            int updated = petMapper.decrementFavoriteCount(petId);
-            if (updated > 0) {
-                redisTemplate.delete(RedisConstant.buildPetFavoriteCountKey(petId));
-            }
+            petMapper.decrementFavoriteCount(petId);
         }
         return removed;
     }
@@ -194,23 +193,12 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     
     @Override
     public long getFavoriteCount(Long petId) {
-        // 先从 Redis 缓存获取
-        String key = RedisConstant.buildPetFavoriteCountKey(petId);
-        Object cached = redisTemplate.opsForValue().get(key);
-        if (cached instanceof Number) {
-            return ((Number) cached).longValue();
-        }
-        
-        // 从数据库获取
+        // 直接从数据库获取
         Pet pet = petService.getById(petId);
         if (pet == null) {
             return 0;
         }
-        
-        long count = pet.getFavoriteCount();
-        // 缓存到 Redis
-        redisTemplate.opsForValue().set(key, count);
-        return count;
+        return pet.getFavoriteCount();
     }
 }
 

@@ -23,6 +23,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -83,7 +84,7 @@ public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
         chatMessageMapper.insert(msg);
 
         session.setLastMessage(dto.getContent());
-        session.setLastTime(java.time.LocalDateTime.now());
+        session.setLastTime(LocalDateTime.now());
 
         if (session.getUserId() != null && currentUserId.equals(session.getUserId())) {
             int unreadForAgent = session.getUnreadForAgent() == null ? 0 : session.getUnreadForAgent();
@@ -94,7 +95,7 @@ public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
         }
         customerServiceSessionService.updateById(session);
 
-        CustomerServiceMessageVO.CustomerServiceMessageVOBuilder builder = CustomerServiceMessageVO.builder()
+        CustomerServiceMessageVO.CustomerServiceMessageVOBuilder messageVO = CustomerServiceMessageVO.builder()
                 .id(msg.getId())
                 .sessionId(session.getId())
                 .senderId(msg.getSenderId())
@@ -110,8 +111,8 @@ public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
                 senderRole = "AGENT";
             }
         }
-        builder.senderRole(senderRole);
-        CustomerServiceMessageVO vo = builder.build();
+        messageVO.senderRole(senderRole);
+        CustomerServiceMessageVO vo = messageVO.build();
 
         // 同步通知长轮询等待者
         customerServiceLongPollingService.publishNewMessage(session.getId(), vo);

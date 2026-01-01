@@ -15,6 +15,7 @@ import com.puxinxiaolin.adopt.service.StoryService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -184,9 +185,9 @@ public class StoryServiceImpl extends ServiceImpl<StoryMapper, Story> implements
         if (dictItems != null && !dictItems.isEmpty()) {
             return dictItems.stream()
                     .map(DictItemVO::getDictKey)
-                    .filter(tag -> tag != null && !tag.isEmpty())
+                    .filter(StringUtils::isNotBlank)
                     .distinct()
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         // 2. 字典为空时, 回退到从故事表中提取不重复标签
@@ -195,12 +196,12 @@ public class StoryServiceImpl extends ServiceImpl<StoryMapper, Story> implements
 
         List<String> categories = stories.stream()
                 .map(Story::getTags)
-                .filter(tags -> tags != null && !tags.isEmpty())
+                .filter(StringUtils::isNotBlank)
                 .flatMap(tags -> Arrays.stream(tags.split(","))
                         .map(String::trim)
-                        .filter(tag -> !tag.isEmpty()))
+                        .filter(StringUtils::isNotBlank))
                 .distinct()
-                .collect(Collectors.toList());
+                .toList();
 
         log.info("获取到的故事分类: {}", categories);
         return categories;
