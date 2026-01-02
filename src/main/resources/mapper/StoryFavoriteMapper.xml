@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.puxinxiaolin.adopt.mapper.StoryFavoriteMapper">
+
+    <!-- 检查用户是否收藏过故事 -->
+    <select id="checkUserFavorited" resultType="int">
+        SELECT COUNT(*) FROM t_story_favorite 
+        WHERE user_id = #{userId} AND story_id = #{storyId}
+    </select>
+
+    <!-- 获取故事收藏总数 -->
+    <select id="getStoryFavoriteCount" resultType="int">
+        SELECT COUNT(*) FROM t_story_favorite 
+        WHERE story_id = #{storyId}
+    </select>
+
+</mapper>

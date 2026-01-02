@@ -1,33 +1,37 @@
 package com.puxinxiaolin.adopt.utils;
 
+import cn.hutool.core.util.StrUtil;
 import com.aliyun.sdk.service.dysmsapi20170525.AsyncClient;
 import com.aliyun.sdk.service.dysmsapi20170525.models.SendSmsRequest;
 import com.aliyun.sdk.service.dysmsapi20170525.models.SendSmsResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.puxinxiaolin.adopt.config.SmsProperty;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
-import cn.hutool.core.util.StrUtil;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class SmsSenderUtil {
 
-    private final SmsProperty smsProperty;
-    private final ObjectMapper objectMapper;
-    private final AsyncClient asyncClient;
-    private final RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private SmsProperty smsProperty;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
+    
+    @Autowired
+    private AsyncClient asyncClient;
+    
+    @Autowired
+    private RedisUtil redisUtil;
 
     /**
      * 发送短信验证码
@@ -78,6 +82,6 @@ public class SmsSenderUtil {
         }
         
         String redisKey = RedisConstant.buildPhoneCodeKey(phoneNumbers, StrUtil.blankToDefault(purpose, "default"));
-        redisTemplate.opsForValue().set(redisKey, code, 60, TimeUnit.SECONDS);
+        redisUtil.set(redisKey, code, 60);
     }
 }

@@ -6,9 +6,9 @@ import com.puxinxiaolin.adopt.enums.ContentCategoryEnum;
 import com.puxinxiaolin.adopt.mapper.GuideMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.mapper.StoryMapper;
+import com.puxinxiaolin.adopt.utils.RedisUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -23,19 +23,13 @@ import java.util.Set;
  */
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class ViewCountSyncTask {
     
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-    
-    @Autowired
-    private PetMapper petMapper;
-    
-    @Autowired
-    private GuideMapper guideMapper;
-    
-    @Autowired
-    private StoryMapper storyMapper;
+    private final RedisUtil redisUtil;
+    private final PetMapper petMapper;
+    private final GuideMapper guideMapper;
+    private final StoryMapper storyMapper;
 
     /**
      * 同步浏览量到 DB
@@ -67,7 +61,7 @@ public class ViewCountSyncTask {
     }
 
     private int syncPetViewCount() {
-        Set<String> keys = redisTemplate.keys(RedisConstant.PET_VIEW_COUNT_PREFIX + "*");
+        Set<String> keys = redisUtil.keys(RedisConstant.PET_VIEW_COUNT_PREFIX + "*");
         if (CollUtil.isEmpty(keys)) {
             log.debug("没有需要同步的宠物浏览数据");
             return 0;
@@ -80,12 +74,12 @@ public class ViewCountSyncTask {
 
         for (String key : keys) {
             try {
-                String countStr = redisTemplate.opsForValue().get(key);
-                if (countStr == null || "0".equals(countStr)) {
+                Object countObj = redisUtil.get(key);
+                if (countObj == null || "0".equals(countObj.toString())) {
                     continue;
                 }
 
-                int increment = Integer.parseInt(countStr);
+                int increment = Integer.parseInt(countObj.toString());
                 if (increment <= 0) {
                     continue;
                 }
@@ -96,7 +90,7 @@ public class ViewCountSyncTask {
                 int updated = petMapper.incrementViewCount(petId, increment);
 
                 if (updated > 0) {
-                    redisTemplate.delete(key);
+                    redisUtil.delete(key);
                     successCount++;
                     log.debug("同步宠物{}浏览次数成功: +{}", petId, increment);
                 } else {
@@ -121,7 +115,7 @@ public class ViewCountSyncTask {
     }
 
     private int syncContentStats() {
-        Set<String> keys = redisTemplate.keys(RedisConstant.CONTENT_STAT_HASH_PREFIX + "*");
+        Set<String> keys = redisUtil.keys(RedisConstant.CONTENT_STAT_HASH_PREFIX + "*");
 
         if (CollUtil.isEmpty(keys)) {
             log.debug("没有需要同步的内容互动数据");
@@ -145,9 +139,9 @@ public class ViewCountSyncTask {
                 ContentCategoryEnum category = ContentCategoryEnum.getByCode(parts[0]);
                 Long contentId = Long.parseLong(parts[1]);
 
-                Map<Object, Object> statMap = redisTemplate.opsForHash().entries(key);
+                Map<String, Object> statMap = redisUtil.hGetAll(key);
                 if (CollUtil.isEmpty(statMap)) {
-                    redisTemplate.delete(key);
+                    redisUtil.delete(key);
                     continue;
                 }
 
@@ -188,7 +182,7 @@ public class ViewCountSyncTask {
                 }
 
                 if (hasChange) {
-                    redisTemplate.delete(key);
+                    redisUtil.delete(key);
                     successCount++;
                     log.debug("同步{}内容{}互动数据成功: view+{}, like{}, favorite{}",
                             category, contentId, viewIncrement, formatDelta(likeIncrement), formatDelta(favoriteIncrement));

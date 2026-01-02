@@ -3,10 +3,10 @@ package com.puxinxiaolin.adopt.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.puxinxiaolin.adopt.entity.entity.GuideFavorite;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Param;
 
 /**
- * 指南收藏Mapper
+ * 指南收藏 Mapper
  */
 @Mapper
 public interface GuideFavoriteMapper extends BaseMapper<GuideFavorite> {
@@ -14,12 +14,10 @@ public interface GuideFavoriteMapper extends BaseMapper<GuideFavorite> {
     /**
      * 检查用户是否收藏过指南
      */
-    @Select("SELECT COUNT(*) FROM t_guide_favorite WHERE user_id = #{userId} AND guide_id = #{guideId}")
-    int checkUserFavorited(Long userId, Long guideId);
+    int checkUserFavorited(@Param("userId") Long userId, @Param("guideId") Long guideId);
 
     /**
      * 获取指南收藏总数
      */
-    @Select("SELECT COUNT(*) FROM t_guide_favorite WHERE guide_id = #{guideId}")
-    int getGuideFavoriteCount(Long guideId);
+    int getGuideFavoriteCount(@Param("guideId") Long guideId);
 }

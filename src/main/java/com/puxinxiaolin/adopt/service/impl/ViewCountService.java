@@ -2,12 +2,11 @@ package com.puxinxiaolin.adopt.service.impl;
 
 import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.enums.ContentCategoryEnum;
+import com.puxinxiaolin.adopt.utils.RedisUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.TimeUnit;
 import java.util.function.IntSupplier;
 
 /**
@@ -22,10 +21,10 @@ import java.util.function.IntSupplier;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ViewCountService {
 
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
+    private final RedisUtil redisUtil;
 
     /**
      * 增加宠物浏览次数
@@ -41,7 +40,7 @@ public class ViewCountService {
 
         try {
             // Redis的INCR命令是原子操作, 线程安全
-            redisTemplate.opsForValue().increment(key, 1);
+            redisUtil.increment(key);
             log.debug("宠物{}浏览次数+1", petId);
         } catch (Exception e) {
             log.error("增加宠物浏览次数失败: petId={}", petId, e);
@@ -64,14 +63,13 @@ public class ViewCountService {
         if (userId != null) {
             String limitKey = RedisConstant.PET_VIEW_LIMIT_PREFIX + petId + ":" + userId;
 
-            Boolean exists = redisTemplate.hasKey(limitKey);
-            if (exists) {
+            if (redisUtil.hasKey(limitKey)) {
                 log.debug("用户{}在5分钟内已浏览过宠物{}, 不重复计数", userId, petId);
                 return;
             }
 
             // 设置限制（5分钟过期）
-            redisTemplate.opsForValue().set(limitKey, "1", 5, TimeUnit.MINUTES);
+            redisUtil.set(limitKey, "1", 300);
         }
 
         // 增加浏览次数
@@ -90,14 +88,14 @@ public class ViewCountService {
         }
 
         String key = RedisConstant.PET_VIEW_COUNT_PREFIX + petId;
-        String value = redisTemplate.opsForValue().get(key);
+        Object value = redisUtil.get(key);
 
         if (value == null) {
             return 0;
         }
 
         try {
-            return Integer.parseInt(value);
+            return Integer.parseInt(value.toString());
         } catch (NumberFormatException e) {
             log.error("解析Redis浏览次数失败: key={}, value={}", key, value, e);
             return 0;
@@ -123,11 +121,11 @@ public class ViewCountService {
         }
         if (userId != null) {
             String limitKey = RedisConstant.buildContentViewLimitKey(category, contentId, userId);
-            if (redisTemplate.hasKey(limitKey)) {
+            if (redisUtil.hasKey(limitKey)) {
                 log.debug("用户{}在5分钟内已浏览过{}-{}, 不重复计数", userId, category, contentId);
                 return;
             }
-            redisTemplate.opsForValue().set(limitKey, "1", 5, TimeUnit.MINUTES);
+            redisUtil.set(limitKey, "1", 300);
         }
         incrementContentView(category, contentId);
     }
@@ -174,7 +172,7 @@ public class ViewCountService {
         }
         String key = RedisConstant.buildContentStatKey(category, contentId);
         try {
-            redisTemplate.opsForHash().increment(key, field, delta);
+            redisUtil.hIncrement(key, field, delta);
             log.debug("内容{}-{} 字段{} 增量{}", category, contentId, field, delta);
         } catch (Exception e) {
             log.error("更新内容统计失败: category={}, id={}, field={}, delta={}", category, contentId, field, delta, e);
@@ -183,7 +181,7 @@ public class ViewCountService {
 
     private int getContentFieldIncrement(ContentCategoryEnum category, Long contentId, String field) {
         String key = RedisConstant.buildContentStatKey(category, contentId);
-        Object value = redisTemplate.opsForHash().get(key, field);
+        Object value = redisUtil.hGet(key, field);
         if (value == null) {
             return 0;
         }
@@ -194,6 +192,4 @@ public class ViewCountService {
             return 0;
         }
     }
-
-    // No need to materialize base values in Redis for like/favorite counts;
 }

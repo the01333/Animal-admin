@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.puxinxiaolin.adopt.mapper.GuideLikeMapper">
+
+    <!-- 检查用户是否点赞过指南 -->
+    <select id="checkUserLiked" resultType="int">
+        SELECT COUNT(*) FROM t_guide_like 
+        WHERE user_id = #{userId} AND guide_id = #{guideId}
+    </select>
+
+    <!-- 获取指南的点赞总数 -->
+    <select id="getGuideLikeCount" resultType="int">
+        SELECT COUNT(*) FROM t_guide_like 
+        WHERE guide_id = #{guideId}
+    </select>
+
+</mapper>

@@ -16,11 +16,11 @@ import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.mapper.UserMapper;
 import com.puxinxiaolin.adopt.mapper.VisitLogMapper;
 import com.puxinxiaolin.adopt.service.StatsService;
+import com.puxinxiaolin.adopt.utils.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.redis.core.RedisTemplate;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 统计数据服务实现
@@ -42,7 +41,7 @@ public class StatsServiceImpl implements StatsService {
     private final UserMapper userMapper;
     private final AdoptionApplicationMapper adoptionApplicationMapper;
     private final VisitLogMapper visitLogMapper;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisUtil redisUtil;
 
     @Override
     public void recordVisit(Long userId) {
@@ -54,7 +53,7 @@ public class StatsServiceImpl implements StatsService {
             LocalDate today = LocalDate.now();
             String redisKey = RedisConstant.VISIT_UV_PREFIX + today + ":" + userId;
             // 如果当日已记录过, 直接返回
-            if (redisTemplate.hasKey(redisKey)) {
+            if (redisUtil.hasKey(redisKey)) {
                 return;
             }
 
@@ -64,7 +63,7 @@ public class StatsServiceImpl implements StatsService {
             visitLogMapper.insert(log);
 
             // 写入Redis防重复, 过期时间 2 天（覆盖跨时区或延迟场景）
-            redisTemplate.opsForValue().set(redisKey, 1, 2, TimeUnit.DAYS);
+            redisUtil.set(redisKey, 1, 2 * 24 * 3600);
         } catch (DuplicateKeyException e) {
             // 已存在当日记录, 忽略
         } catch (Exception e) {

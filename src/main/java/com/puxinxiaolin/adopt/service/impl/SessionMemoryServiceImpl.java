@@ -6,12 +6,12 @@ import com.puxinxiaolin.adopt.entity.entity.ConversationSession;
 import com.puxinxiaolin.adopt.mapper.ConversationSessionMapper;
 import com.puxinxiaolin.adopt.repository.ConversationHistoryCassandraRepository;
 import com.puxinxiaolin.adopt.service.SessionMemoryService;
+import com.puxinxiaolin.adopt.utils.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -38,7 +38,7 @@ public class SessionMemoryServiceImpl implements SessionMemoryService {
 
     private final ConversationHistoryCassandraRepository cassandraRepository;
     private final ConversationSessionMapper sessionMapper;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisUtil redisUtil;
 
     private static final long CACHE_EXPIRE_HOURS = 24;
 
@@ -55,7 +55,7 @@ public class SessionMemoryServiceImpl implements SessionMemoryService {
         // 2. 尝试从缓存获取
         String cacheKey = RedisConstant.buildSessionMemoryKey(sessionId);
         @SuppressWarnings("unchecked")
-        List<Message> cachedMessages = (List<Message>) redisTemplate.opsForValue().get(cacheKey);
+        List<Message> cachedMessages = redisUtil.get(cacheKey);
         if (cachedMessages != null && !cachedMessages.isEmpty()) {
             log.debug("从缓存获取会话历史 - 会话ID: {}", sessionId);
             // 返回最近的 N 条消息
@@ -78,7 +78,7 @@ public class SessionMemoryServiceImpl implements SessionMemoryService {
 
         // 4. 缓存到 Redis
         if (!messages.isEmpty()) {
-            redisTemplate.opsForValue().set(cacheKey, messages, Duration.ofHours(CACHE_EXPIRE_HOURS));
+            redisUtil.set(cacheKey, messages, Duration.ofHours(CACHE_EXPIRE_HOURS));
         }
 
         log.debug("从 Cassandra 获取会话历史 - 会话ID: {}, 消息数: {}", sessionId, messages.size());
@@ -212,7 +212,7 @@ public class SessionMemoryServiceImpl implements SessionMemoryService {
      */
     private void clearCache(String sessionId) {
         String cacheKey = RedisConstant.buildSessionMemoryKey(sessionId);
-        redisTemplate.delete(cacheKey);
+        redisUtil.delete(cacheKey);
         log.debug("缓存已清除 - 会话ID: {}", sessionId);
     }
 }

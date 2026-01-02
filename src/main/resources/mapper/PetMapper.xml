@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.puxinxiaolin.adopt.mapper.PetMapper">
+
+    <!-- 增加浏览次数 -->
+    <update id="incrementViewCount">
+        UPDATE t_pet 
+        SET view_count = view_count + #{increment} 
+        WHERE id = #{petId} AND deleted = 0
+    </update>
+
+    <!-- 增加点赞次数 -->
+    <update id="incrementLikeCount">
+        UPDATE t_pet 
+        SET like_count = like_count + 1 
+        WHERE id = #{petId} AND deleted = 0
+    </update>
+
+    <!-- 减少点赞次数 -->
+    <update id="decrementLikeCount">
+        UPDATE t_pet 
+        SET like_count = like_count - 1 
+        WHERE id = #{petId} AND deleted = 0 AND like_count > 0
+    </update>
+
+    <!-- 增加收藏次数 -->
+    <update id="incrementFavoriteCount">
+        UPDATE t_pet 
+        SET favorite_count = favorite_count + 1 
+        WHERE id = #{petId} AND deleted = 0
+    </update>
+
+    <!-- 减少收藏次数 -->
+    <update id="decrementFavoriteCount">
+        UPDATE t_pet 
+        SET favorite_count = favorite_count - 1 
+        WHERE id = #{petId} AND deleted = 0 AND favorite_count > 0
+    </update>
+
+    <!-- 增加申请次数 -->
+    <update id="incrementApplicationCount">
+        UPDATE t_pet 
+        SET application_count = application_count + 1 
+        WHERE id = #{petId} AND deleted = 0
+    </update>
+
+    <!-- 查询所有宠物类型（去重） -->
+    <select id="selectDistinctCategories" resultType="java.lang.String">
+        SELECT DISTINCT category 
+        FROM t_pet 
+        WHERE deleted = 0 AND category IS NOT NULL 
+        ORDER BY category
+    </select>
+
+    <!-- 查询所有领养状态（去重） -->
+    <select id="selectDistinctAdoptionStatuses" resultType="java.lang.String">
+        SELECT DISTINCT adoption_status 
+        FROM t_pet 
+        WHERE deleted = 0 AND adoption_status IS NOT NULL 
+        ORDER BY adoption_status
+    </select>
+
+</mapper>

@@ -5,22 +5,19 @@ import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * 发送邮箱验证码工具类
  */
 @Service
 @RequiredArgsConstructor
-public class EmailSendUtils {
+public class EmailSendUtil {
     private final JavaMailSender mailSender;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisUtil redisUtil;
 
     @Value("${spring.mail.username}")
     private String userName;
@@ -67,8 +64,7 @@ public class EmailSendUtils {
     }
 
     private void cacheCode(String targetMail, String code, long ttlSeconds) {
-        redisTemplate.opsForValue()
-                .set(RedisConstant.buildEmailCodeKey(targetMail), code, ttlSeconds, TimeUnit.SECONDS);
+        redisUtil.set(RedisConstant.buildEmailCodeKey(targetMail), code, ttlSeconds);
     }
 
     private void doSend(String targetMail, String code) {

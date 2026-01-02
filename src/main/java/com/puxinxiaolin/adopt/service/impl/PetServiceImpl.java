@@ -23,7 +23,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
+import com.puxinxiaolin.adopt.utils.RedisUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -45,7 +44,7 @@ import java.util.Set;
 public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetService {
 
     private final ViewCountService viewCountService;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisUtil redisUtil;
     private final OssUrlService ossUrlService;
     private final DictService dictService;
     private final FileUploadService fileUploadService;
@@ -123,19 +122,19 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
             p.setAdoptionStatusText(adoptionStatusEnum != null ? adoptionStatusEnum.getDesc() : p.getAdoptionStatus());
 
             String likeKey = RedisConstant.buildPetLikeCountKey(pid);
-            Object likeVal = redisTemplate.opsForValue().get(likeKey);
-            if (likeVal instanceof Number) {
-                p.setLikeCount(((Number) likeVal).intValue());
+            Integer likeVal = redisUtil.get(likeKey, Integer.class);
+            if (likeVal != null) {
+                p.setLikeCount(likeVal);
             } else {
-                redisTemplate.opsForValue().set(likeKey, p.getLikeCount());
+                redisUtil.set(likeKey, p.getLikeCount());
             }
 
             String favKey = RedisConstant.buildPetFavoriteCountKey(pid);
-            Object favVal = redisTemplate.opsForValue().get(favKey);
-            if (favVal instanceof Number) {
-                p.setFavoriteCount(((Number) favVal).intValue());
+            Integer favVal = redisUtil.get(favKey, Integer.class);
+            if (favVal != null) {
+                p.setFavoriteCount(favVal);
             } else {
-                redisTemplate.opsForValue().set(favKey, p.getFavoriteCount());
+                redisUtil.set(favKey, p.getFavoriteCount());
             }
 
             ossUrlService.normalizePetVO(p);
@@ -176,19 +175,19 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         vo.setViewCount(pet.getViewCount() + inc);
         // 点赞/收藏计数读缓存
         String likeKey = RedisConstant.buildPetLikeCountKey(id);
-        Object likeVal = redisTemplate.opsForValue().get(likeKey);
-        if (likeVal instanceof Number) {
-            vo.setLikeCount(((Number) likeVal).intValue());
+        Integer likeVal = redisUtil.get(likeKey, Integer.class);
+        if (likeVal != null) {
+            vo.setLikeCount(likeVal);
         } else {
-            redisTemplate.opsForValue().set(likeKey, pet.getLikeCount());
+            redisUtil.set(likeKey, pet.getLikeCount());
             vo.setLikeCount(pet.getLikeCount());
         }
         String favKey = RedisConstant.buildPetFavoriteCountKey(id);
-        Object favVal = redisTemplate.opsForValue().get(favKey);
-        if (favVal instanceof Number) {
-            vo.setFavoriteCount(((Number) favVal).intValue());
+        Integer favVal = redisUtil.get(favKey, Integer.class);
+        if (favVal != null) {
+            vo.setFavoriteCount(favVal);
         } else {
-            redisTemplate.opsForValue().set(favKey, pet.getFavoriteCount());
+            redisUtil.set(favKey, pet.getFavoriteCount());
             vo.setFavoriteCount(pet.getFavoriteCount());
         }
         ossUrlService.normalizePetVO(vo);

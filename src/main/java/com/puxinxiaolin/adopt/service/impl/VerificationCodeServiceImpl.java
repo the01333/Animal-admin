@@ -4,13 +4,15 @@ import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.entity.entity.VerificationCode;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
+import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.VerificationCodeMapper;
 import com.puxinxiaolin.adopt.service.VerificationCodeService;
-import com.puxinxiaolin.adopt.utils.EmailSendUtils;
+import com.puxinxiaolin.adopt.utils.EmailSendUtil;
+import com.puxinxiaolin.adopt.utils.RedisUtil;
 import com.puxinxiaolin.adopt.utils.SmsSenderUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -27,15 +29,21 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
 
     private final VerificationCodeMapper verificationCodeMapper;
     private final SmsSenderUtil smsSenderUtil;
-    private final EmailSendUtils emailSendUtils;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final EmailSendUtil emailSendUtil;
+    private final RedisUtil redisUtil;
 
     private static final int EXPIRE_MINUTES = 5;
+    /** 发送间隔（秒） */
+    private static final int SEND_INTERVAL_SECONDS = 60;
+    /** 发送频率限制 key 前缀 */
+    private static final String SEND_LIMIT_PREFIX = "code:limit:";
 
     @Override
     public boolean sendEmailCode(String email, String purpose) {
+        // 频率限制检查
+        checkSendLimit("email", email);
+        
         try {
-            // 生成验证码
             String code = RandomUtil.randomNumbers(6);
             log.info("邮箱验证码: {}", code);
 
@@ -50,28 +58,28 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             verificationCodeMapper.insert(verificationCode);
 
             // 发送邮件并缓存验证码
-            emailSendUtils.sendVerificationEmail(email, code, EXPIRE_MINUTES * 60L);
+            emailSendUtil.sendVerificationEmail(email, code, EXPIRE_MINUTES * 60L);
+            
+            // 设置发送频率限制
+            setSendLimit("email", email);
 
             log.info("邮箱验证码发送成功: {}", email);
             return true;
 
+        } catch (BizException e) {
+            throw e;
         } catch (Exception e) {
             log.error("邮箱验证码发送失败", e);
             return false;
         }
     }
 
-    /**
-     * 发送手机验证码
-     *
-     * @param phone   手机号
-     * @param purpose 用途 (register/login/reset_password/bind)
-     * @return
-     */
     @Override
     public boolean sendPhoneCode(String phone, String purpose) {
+        // 频率限制检查
+        checkSendLimit("phone", phone);
+        
         try {
-            // 生成验证码
             String code = RandomUtil.randomNumbers(6);
             log.info("手机验证码: {}", code);
 
@@ -88,8 +96,16 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             Map<String, String> templateParam = new HashMap<>();
             templateParam.put("code", code);
             boolean sent = smsSenderUtil.sendSmsCode(phone, purpose, templateParam);
+            
+            if (sent) {
+                // 设置发送频率限制
+                setSendLimit("phone", phone);
+            }
+            
             log.info("手机验证码发送结果: {} -> {}", phone, sent);
             return sent;
+        } catch (BizException e) {
+            throw e;
         } catch (Exception e) {
             log.error("手机验证码发送失败", e);
             return false;
@@ -97,19 +113,31 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
     }
 
     /**
-     * 验证邮箱验证码
-     *
-     * @param email   邮箱地址
-     * @param code    验证码
-     * @param purpose 用途
-     * @return
+     * 检查发送频率限制
      */
+    private void checkSendLimit(String type, String target) {
+        String limitKey = SEND_LIMIT_PREFIX + type + ":" + target;
+        if (redisUtil.hasKey(limitKey)) {
+            long ttl = redisUtil.getExpire(limitKey);
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), 
+                    "发送过于频繁，请" + ttl + "秒后再试");
+        }
+    }
+
+    /**
+     * 设置发送频率限制
+     */
+    private void setSendLimit(String type, String target) {
+        String limitKey = SEND_LIMIT_PREFIX + type + ":" + target;
+        redisUtil.set(limitKey, "1", SEND_INTERVAL_SECONDS);
+    }
+
     @Override
     public boolean verifyEmailCode(String email, String code, String purpose) {
         String redisKey = RedisConstant.buildEmailCodeKey(email);
-        Object cached = redisTemplate.opsForValue().get(redisKey);
-        if (cached != null && code.equalsIgnoreCase(cached.toString())) {
-            redisTemplate.delete(redisKey);
+        String cached = redisUtil.get(redisKey);
+        if (cached != null && code.equalsIgnoreCase(cached)) {
+            redisUtil.delete(redisKey);
             markLatestCodeUsed("email", email, code, purpose);
             return true;
         }
@@ -119,19 +147,15 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
     @Override
     public boolean verifyPhoneCode(String phone, String code, String purpose) {
         String redisKey = RedisConstant.buildPhoneCodeKey(phone, purpose);
-        Object cached = redisTemplate.opsForValue().get(redisKey);
-        if (cached != null && code.equals(cached.toString())) {
-            redisTemplate.delete(redisKey);
-            // 同步标记数据库中的最新验证码记录
+        String cached = redisUtil.get(redisKey);
+        if (cached != null && code.equals(cached)) {
+            redisUtil.delete(redisKey);
             markLatestCodeUsed("phone", phone, code, purpose);
             return true;
         }
         return verifyCode("phone", phone, code, purpose);
     }
 
-    /**
-     * 验证验证码
-     */
     private boolean verifyCode(String codeType, String target, String code, String purpose) {
         LambdaQueryWrapper<VerificationCode> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(VerificationCode::getCodeType, codeType)
@@ -146,7 +170,6 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
         VerificationCode verificationCode = verificationCodeMapper.selectOne(wrapper);
 
         if (verificationCode != null) {
-            // 标记为已使用
             verificationCode.setIsUsed(true);
             verificationCodeMapper.updateById(verificationCode);
             return true;
