@@ -8,15 +8,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 /**
  * 发送邮箱验证码工具类
  */
-@Service
+@Component
 @RequiredArgsConstructor
 public class EmailSendUtil {
-    private final JavaMailSender mailSender;
+    
+    private final JavaMailSender javaMailSender;
     private final RedisUtil redisUtil;
 
     @Value("${spring.mail.username}")
@@ -74,7 +75,7 @@ public class EmailSendUtil {
             message.setTo(targetMail);
             message.setSubject(MailConstant.EMAIL_TITLE);
             message.setText(MailConstant.EMAIL_MESSAGE + code + MailConstant.EMAIL_TIMEOUT_TEN);
-            mailSender.send(message);
+            javaMailSender.send(message);
         } catch (Exception e) {
             throw new BizException(e);
         }

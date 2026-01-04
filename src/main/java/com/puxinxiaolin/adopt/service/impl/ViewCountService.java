@@ -131,7 +131,7 @@ public class ViewCountService {
     }
 
     /**
-     * 获取内容的Redis增量浏览次数
+     * 获取内容的 Redis 增量浏览次数
      */
     public int getContentViewIncrement(ContentCategoryEnum category, Long contentId) {
         if (category == null || contentId == null) {

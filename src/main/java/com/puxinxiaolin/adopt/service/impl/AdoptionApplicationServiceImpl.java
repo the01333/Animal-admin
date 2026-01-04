@@ -7,7 +7,6 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.constants.DateConstant;
 import com.puxinxiaolin.adopt.entity.dto.AdoptionApplicationDTO;
 import com.puxinxiaolin.adopt.entity.dto.AdoptionApplicationPageQueryDTO;
@@ -19,14 +18,15 @@ import com.puxinxiaolin.adopt.entity.vo.AdoptionApplicationVO;
 import com.puxinxiaolin.adopt.enums.AdoptionStatusEnum;
 import com.puxinxiaolin.adopt.enums.ApplicationStatusEnum;
 import com.puxinxiaolin.adopt.enums.PetCategoryEnum;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.AdoptionApplicationMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.service.AdoptionApplicationService;
 import com.puxinxiaolin.adopt.service.PetService;
 import com.puxinxiaolin.adopt.service.UserService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,11 +40,16 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicationMapper, AdoptionApplication> implements AdoptionApplicationService {
-    private final PetService petService;
-    private final PetMapper petMapper;
-    private final UserService userService;
+    
+    @Autowired
+    private PetService petService;
+    
+    @Autowired
+    private PetMapper petMapper;
+    
+    @Autowired
+    private UserService userService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -198,7 +203,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
 
         // 如果审核通过, 更新宠物状态为已领养, 并设置领养者 ID
         if (success && ApplicationStatusEnum.APPROVED.getCode().equals(targetStatus.getCode())) {
-            petService.updateAdoptionStatusAndAdoptedBy(application.getPetId(), "adopted", application.getUserId());
+            petService.updateAdoptionStatusAndAdoptedBy(application.getPetId(), AdoptionStatusEnum.ADOPTED.getCode(), application.getUserId());
             // 自动拒绝该宠物的其它待审核申请
             LambdaQueryWrapper<AdoptionApplication> otherWrapper = new LambdaQueryWrapper<>();
             otherWrapper.eq(AdoptionApplication::getPetId, application.getPetId())

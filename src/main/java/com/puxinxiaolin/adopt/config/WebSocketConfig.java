@@ -34,45 +34,6 @@ import java.util.Map;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private static String trimBearerPrefix(String token) {
-        if (token == null) {
-            return null;
-        }
-        String t = token.trim();
-        if (t.startsWith("Bearer ")) {
-            return t.substring("Bearer ".length()).trim();
-        }
-        return t;
-    }
-
-    private static String getQueryParamFromUri(URI uri, String key) {
-        if (uri == null || key == null) {
-            return null;
-        }
-        String query = uri.getQuery();
-        if (query == null || query.isBlank()) {
-            return null;
-        }
-        try {
-            String[] pairs = query.split("&");
-            for (String pair : pairs) {
-                int idx = pair.indexOf('=');
-                if (idx <= 0) {
-                    continue;
-                }
-                String k = pair.substring(0, idx);
-                if (!key.equals(k)) {
-                    continue;
-                }
-                String raw = pair.substring(idx + 1);
-                return URLDecoder.decode(raw, StandardCharsets.UTF_8);
-            }
-        } catch (Exception ignore) {
-            return null;
-        }
-        return null;
-    }
-
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
@@ -202,5 +163,45 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setApplicationDestinationPrefixes("/app");
         // 点对点前缀
         registry.setUserDestinationPrefix("/user");
+    }
+
+    private static String trimBearerPrefix(String token) {
+        if (token == null) {
+            return null;
+        }
+        String t = token.trim();
+        if (t.startsWith("Bearer ")) {
+            return t.substring("Bearer ".length()).trim();
+        }
+        return t;
+    }
+
+    private static String getQueryParamFromUri(URI uri, String key) {
+        if (uri == null || key == null) {
+            return null;
+        }
+        String query = uri.getQuery();
+        if (query == null || query.isBlank()) {
+            return null;
+        }
+        
+        try {
+            String[] pairs = query.split("&");
+            for (String pair : pairs) {
+                int idx = pair.indexOf('=');
+                if (idx <= 0) {
+                    continue;
+                }
+                String k = pair.substring(0, idx);
+                if (!key.equals(k)) {
+                    continue;
+                }
+                String raw = pair.substring(idx + 1);
+                return URLDecoder.decode(raw, StandardCharsets.UTF_8);
+            }
+        } catch (Exception ignore) {
+            return null;
+        }
+        return null;
     }
 }

@@ -33,16 +33,20 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
     private final RedisUtil redisUtil;
 
     private static final int EXPIRE_MINUTES = 5;
-    /** 发送间隔（秒） */
+    /**
+     * 发送间隔（秒）
+     */
     private static final int SEND_INTERVAL_SECONDS = 60;
-    /** 发送频率限制 key 前缀 */
+    /**
+     * 发送频率限制 key 前缀
+     */
     private static final String SEND_LIMIT_PREFIX = "code:limit:";
 
     @Override
     public boolean sendEmailCode(String email, String purpose) {
         // 频率限制检查
         checkSendLimit("email", email);
-        
+
         try {
             String code = RandomUtil.randomNumbers(6);
             log.info("邮箱验证码: {}", code);
@@ -59,7 +63,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
 
             // 发送邮件并缓存验证码
             emailSendUtil.sendVerificationEmail(email, code, EXPIRE_MINUTES * 60L);
-            
+
             // 设置发送频率限制
             setSendLimit("email", email);
 
@@ -78,7 +82,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
     public boolean sendPhoneCode(String phone, String purpose) {
         // 频率限制检查
         checkSendLimit("phone", phone);
-        
+
         try {
             String code = RandomUtil.randomNumbers(6);
             log.info("手机验证码: {}", code);
@@ -96,12 +100,12 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             Map<String, String> templateParam = new HashMap<>();
             templateParam.put("code", code);
             boolean sent = smsSenderUtil.sendSmsCode(phone, purpose, templateParam);
-            
+
             if (sent) {
                 // 设置发送频率限制
                 setSendLimit("phone", phone);
             }
-            
+
             log.info("手机验证码发送结果: {} -> {}", phone, sent);
             return sent;
         } catch (BizException e) {
@@ -119,7 +123,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
         String limitKey = SEND_LIMIT_PREFIX + type + ":" + target;
         if (redisUtil.hasKey(limitKey)) {
             long ttl = redisUtil.getExpire(limitKey);
-            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), 
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(),
                     "发送过于频繁，请" + ttl + "秒后再试");
         }
     }
@@ -172,6 +176,13 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
         if (verificationCode != null) {
             verificationCode.setIsUsed(true);
             verificationCodeMapper.updateById(verificationCode);
+            
+            // 验证成功后删除 Redis 缓存（如果存在）
+            String redisKey = "email".equals(codeType)
+                    ? RedisConstant.buildEmailCodeKey(target)
+                    : RedisConstant.buildPhoneCodeKey(target, purpose);
+            redisUtil.delete(redisKey);
+            
             return true;
         }
 

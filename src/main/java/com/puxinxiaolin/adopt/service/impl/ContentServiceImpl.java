@@ -82,8 +82,10 @@ public class ContentServiceImpl implements ContentService {
     @Override
     public ContentVO getContentDetail(String category, Long id) {
         Long userId = StpUtil.isLogin() ? StpUtil.getLoginIdAsLong() : null;
+
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
         viewCountService.incrementContentView(contentCategoryEnum, id);
+
         return switch (contentCategoryEnum) {
             case GUIDE -> toContentVO(requireGuide(id), userId);
             case STORY -> toContentVO(requireStory(id), userId);
@@ -287,6 +289,13 @@ public class ContentServiceImpl implements ContentService {
         return vo;
     }
 
+    /**
+     * Entity -> VO
+     *
+     * @param story
+     * @param userId
+     * @return
+     */
     private ContentVO toContentVO(Story story, Long userId) {
         if (story == null) {
             return null;
@@ -632,7 +641,7 @@ public class ContentServiceImpl implements ContentService {
         }
         return result;
     }
-    
+
     private <T> Set<Long> extractIds(List<T> relations, Function<T, Long> idGetter) {
         return relations.stream()
                 .map(idGetter)
