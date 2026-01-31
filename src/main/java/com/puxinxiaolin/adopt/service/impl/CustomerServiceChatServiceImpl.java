@@ -1,6 +1,7 @@
 package com.puxinxiaolin.adopt.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.puxinxiaolin.adopt.entity.common.Result;
 import com.puxinxiaolin.adopt.entity.dto.CsSendMessageDTO;
@@ -113,7 +114,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         wrapper.orderByAsc(ChatMessage::getCreateTime);
 
         List<ChatMessage> messages = chatMessageMapper.selectList(wrapper);
-        if (!messages.isEmpty()) {
+        if (CollUtil.isNotEmpty(messages)) {
             List<CustomerServiceMessageVO> voList = messages.stream()
                     .map(msg -> buildMessageVO(session, msg))
                     .collect(Collectors.toList());

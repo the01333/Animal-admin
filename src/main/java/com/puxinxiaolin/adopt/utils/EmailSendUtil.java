@@ -5,22 +5,20 @@ import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-
-import java.util.concurrent.TimeUnit;
+import org.springframework.stereotype.Component;
 
 /**
  * 发送邮箱验证码工具类
  */
-@Service
+@Component
 @RequiredArgsConstructor
-public class EmailSendUtils {
-    private final JavaMailSender mailSender;
-    private final RedisTemplate<String, Object> redisTemplate;
+public class EmailSendUtil {
+    
+    private final JavaMailSender javaMailSender;
+    private final RedisUtil redisUtil;
 
     @Value("${spring.mail.username}")
     private String userName;
@@ -45,11 +43,23 @@ public class EmailSendUtils {
         cacheCode(targetMail, specifiedCode, ttlSeconds);
         doSend(targetMail, specifiedCode);
     }
-
-    public void sendVerificationEmail(String targetMail, String specifiedCode) {
-        doSend(targetMail, specifiedCode);
+    private void cacheCode(String targetMail, String code, long ttlSeconds) {
+        redisUtil.set(RedisConstant.buildEmailCodeKey(targetMail), code, ttlSeconds);
     }
 
+    private void doSend(String targetMail, String code) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(userName);
+            message.setTo(targetMail);
+            message.setSubject(MailConstant.EMAIL_TITLE);
+            message.setText(MailConstant.EMAIL_MESSAGE + code + MailConstant.EMAIL_TIMEOUT_TEN);
+            javaMailSender.send(message);
+        } catch (Exception e) {
+            throw new BizException(e);
+        }
+    }
+    
     /**
      * 生成验证码
      *
@@ -65,22 +75,9 @@ public class EmailSendUtils {
         }
         return emailCode.toString();
     }
-
-    private void cacheCode(String targetMail, String code, long ttlSeconds) {
-        redisTemplate.opsForValue()
-                .set(RedisConstant.buildEmailCodeKey(targetMail), code, ttlSeconds, TimeUnit.SECONDS);
+    
+    public void sendVerificationEmail(String targetMail, String specifiedCode) {
+        doSend(targetMail, specifiedCode);
     }
-
-    private void doSend(String targetMail, String code) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(userName);
-            message.setTo(targetMail);
-            message.setSubject(MailConstant.EMAIL_TITLE);
-            message.setText(MailConstant.EMAIL_MESSAGE + code + MailConstant.EMAIL_TIMEOUT_TEN);
-            mailSender.send(message);
-        } catch (Exception e) {
-            throw new BizException(e);
-        }
-    }
+    
 }

@@ -1,5 +1,6 @@
 package com.puxinxiaolin.adopt.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.puxinxiaolin.adopt.entity.common.Result;
 import com.puxinxiaolin.adopt.entity.dto.PetLikePageQueryDTO;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
@@ -26,6 +27,7 @@ public class PetLikeController {
     /**
      * 点赞宠物
      */
+    @SaCheckLogin
     @PostMapping("/{petId}")
     public Result<Boolean> likePet(@PathVariable Long petId) {
         boolean success = petLikeService.likePet(petId);
@@ -35,6 +37,7 @@ public class PetLikeController {
     /**
      * 取消点赞
      */
+    @SaCheckLogin
     @DeleteMapping("/{petId}")
     public Result<Boolean> unlikePet(@PathVariable Long petId) {
         boolean success = petLikeService.unlikePet(petId);
@@ -53,6 +56,7 @@ public class PetLikeController {
     /**
      * 检查是否已点赞（需要认证）
      */
+    @SaCheckLogin
     @GetMapping("/check/{petId}")
     public Result<Boolean> isLiked(@PathVariable Long petId) {
         return Result.success(petLikeService.isLiked(petId));
@@ -61,6 +65,7 @@ public class PetLikeController {
     /**
      * 查询当前用户点赞的宠物列表
      */
+    @SaCheckLogin
     @GetMapping("/my")
     public Result<Page<PetVO>> queryMyLikes(@ModelAttribute PetLikePageQueryDTO queryDTO) {
         return Result.success(petLikeService.queryUserLikedPets(queryDTO));

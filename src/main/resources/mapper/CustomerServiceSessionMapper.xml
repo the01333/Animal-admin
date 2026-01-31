@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.puxinxiaolin.adopt.mapper.CustomerServiceSessionMapper">
+
+    <!-- 统计客服未读消息数 -->
+    <select id="sumUnreadForAgent" resultType="java.lang.Integer">
+        SELECT COALESCE(SUM(unread_for_agent), 0) 
+        FROM t_cs_session 
+        WHERE deleted = 0 AND status = 'OPEN' AND agent_id = #{agentId}
+    </select>
+
+    <!-- 统计所有客服未读消息数 -->
+    <select id="sumUnreadForAllAgents" resultType="java.lang.Integer">
+        SELECT COALESCE(SUM(unread_for_agent), 0) 
+        FROM t_cs_session 
+        WHERE deleted = 0 AND status = 'OPEN'
+    </select>
+
+    <!-- 统计用户未读消息数 -->
+    <select id="sumUnreadForUser" resultType="java.lang.Integer">
+        SELECT COALESCE(SUM(unread_for_user), 0) 
+        FROM t_cs_session 
+        WHERE deleted = 0 AND status = 'OPEN' AND user_id = #{userId}
+    </select>
+
+</mapper>

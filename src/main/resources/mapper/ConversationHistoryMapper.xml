@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.puxinxiaolin.adopt.mapper.ConversationHistoryMapper">
+
+    <!-- 根据会话ID获取所有对话记录 -->
+    <select id="getBySessionId" resultType="com.puxinxiaolin.adopt.entity.entity.ConversationHistory">
+        SELECT * FROM t_conversation_history 
+        WHERE session_id = #{sessionId} AND deleted = 0 
+        ORDER BY create_time ASC
+    </select>
+
+    <!-- 删除会话的所有对话记录 -->
+    <delete id="deleteBySessionId">
+        DELETE FROM t_conversation_history 
+        WHERE session_id = #{sessionId}
+    </delete>
+
+</mapper>

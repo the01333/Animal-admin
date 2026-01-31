@@ -2,39 +2,33 @@ package com.puxinxiaolin.adopt.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.entity.dto.PetDTO;
 import com.puxinxiaolin.adopt.entity.dto.PetQueryDTO;
+import com.puxinxiaolin.adopt.entity.entity.DictItem;
 import com.puxinxiaolin.adopt.entity.entity.Pet;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
 import com.puxinxiaolin.adopt.enums.AdoptionStatusEnum;
 import com.puxinxiaolin.adopt.enums.PetCategoryEnum;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.exception.BizException;
-import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.mapper.DictItemMapper;
-import com.puxinxiaolin.adopt.entity.entity.DictItem;
-import com.puxinxiaolin.adopt.service.PetService;
+import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.service.DictService;
 import com.puxinxiaolin.adopt.service.FileUploadService;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.puxinxiaolin.adopt.service.PetService;
+import com.puxinxiaolin.adopt.utils.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 宠物服务实现类
@@ -45,7 +39,7 @@ import java.util.Set;
 public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetService {
 
     private final ViewCountService viewCountService;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisUtil redisUtil;
     private final OssUrlService ossUrlService;
     private final DictService dictService;
     private final FileUploadService fileUploadService;
@@ -123,19 +117,19 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
             p.setAdoptionStatusText(adoptionStatusEnum != null ? adoptionStatusEnum.getDesc() : p.getAdoptionStatus());
 
             String likeKey = RedisConstant.buildPetLikeCountKey(pid);
-            Object likeVal = redisTemplate.opsForValue().get(likeKey);
-            if (likeVal instanceof Number) {
-                p.setLikeCount(((Number) likeVal).intValue());
+            Integer likeVal = redisUtil.get(likeKey, Integer.class);
+            if (likeVal != null) {
+                p.setLikeCount(likeVal);
             } else {
-                redisTemplate.opsForValue().set(likeKey, p.getLikeCount());
+                redisUtil.set(likeKey, p.getLikeCount());
             }
 
             String favKey = RedisConstant.buildPetFavoriteCountKey(pid);
-            Object favVal = redisTemplate.opsForValue().get(favKey);
-            if (favVal instanceof Number) {
-                p.setFavoriteCount(((Number) favVal).intValue());
+            Integer favVal = redisUtil.get(favKey, Integer.class);
+            if (favVal != null) {
+                p.setFavoriteCount(favVal);
             } else {
-                redisTemplate.opsForValue().set(favKey, p.getFavoriteCount());
+                redisUtil.set(favKey, p.getFavoriteCount());
             }
 
             ossUrlService.normalizePetVO(p);
@@ -176,19 +170,19 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         vo.setViewCount(pet.getViewCount() + inc);
         // 点赞/收藏计数读缓存
         String likeKey = RedisConstant.buildPetLikeCountKey(id);
-        Object likeVal = redisTemplate.opsForValue().get(likeKey);
-        if (likeVal instanceof Number) {
-            vo.setLikeCount(((Number) likeVal).intValue());
+        Integer likeVal = redisUtil.get(likeKey, Integer.class);
+        if (likeVal != null) {
+            vo.setLikeCount(likeVal);
         } else {
-            redisTemplate.opsForValue().set(likeKey, pet.getLikeCount());
+            redisUtil.set(likeKey, pet.getLikeCount());
             vo.setLikeCount(pet.getLikeCount());
         }
         String favKey = RedisConstant.buildPetFavoriteCountKey(id);
-        Object favVal = redisTemplate.opsForValue().get(favKey);
-        if (favVal instanceof Number) {
-            vo.setFavoriteCount(((Number) favVal).intValue());
+        Integer favVal = redisUtil.get(favKey, Integer.class);
+        if (favVal != null) {
+            vo.setFavoriteCount(favVal);
         } else {
-            redisTemplate.opsForValue().set(favKey, pet.getFavoriteCount());
+            redisUtil.set(favKey, pet.getFavoriteCount());
             vo.setFavoriteCount(pet.getFavoriteCount());
         }
         ossUrlService.normalizePetVO(vo);
@@ -245,7 +239,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
     @Transactional(rollbackFor = Exception.class)
     public void batchDeletePet(List<Long> ids) {
         log.info("批量删除宠物, 数量: {}", ids.size());
-        if (ids == null || ids.isEmpty()) {
+        if (CollUtil.isEmpty(ids)) {
             return;
         }
 
@@ -345,47 +339,13 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
     }
 
     /**
-     * 更新宠物上架状态
+     * 更新宠物领养状态和领养者
      *
-     * @param id          宠物ID
-     * @param shelfStatus 上架状态
-     * @return
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean updateShelfStatus(Long id, Integer shelfStatus) {
-        log.info("更新宠物上架状态, ID: {}, 状态: {}", id, shelfStatus);
-
-        Pet pet = this.getById(id);
-        if (pet == null) {
-            throw new BizException(ResultCodeEnum.PET_NOT_FOUND);
-        }
-
-        pet.setShelfStatus(shelfStatus);
-        return this.updateById(pet);
-    }
-
-    /**
-     * 更新宠物领养状态
-     *
-     * @param id             宠物ID
+     * @param id 宠物ID
      * @param adoptionStatus 领养状态
-     * @return
+     * @param adoptedBy 领养者ID
+     * @return 是否更新成功
      */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean updateAdoptionStatus(Long id, String adoptionStatus) {
-        log.info("更新宠物领养状态, ID: {}, 状态: {}", id, adoptionStatus);
-
-        Pet pet = this.getById(id);
-        if (pet == null) {
-            throw new BizException(ResultCodeEnum.PET_NOT_FOUND);
-        }
-
-        pet.setAdoptionStatus(adoptionStatus);
-        return this.updateById(pet);
-    }
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateAdoptionStatusAndAdoptedBy(Long id, String adoptionStatus, Long adoptedBy) {
@@ -399,28 +359,6 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         pet.setAdoptionStatus(adoptionStatus);
         pet.setAdoptedBy(adoptedBy);
         return this.updateById(pet);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String uploadPetImage(Long id, MultipartFile file) {
-        Pet pet = this.getById(id);
-        if (pet == null) {
-            throw new BizException(ResultCodeEnum.PET_NOT_FOUND);
-        }
-        String imageUrl = fileUploadService.uploadFile(file, "pet-images");
-        return imageUrl;
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String uploadPetCover(Long id, MultipartFile file) {
-        Pet pet = this.getById(id);
-        if (pet == null) {
-            throw new BizException(ResultCodeEnum.PET_NOT_FOUND);
-        }
-        String coverUrl = fileUploadService.uploadFile(file, "pet-covers");
-        return coverUrl;
     }
 
     @Override

@@ -36,10 +36,4 @@ public class PetLike implements Serializable {
      */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
-
-    /**
-     * 逻辑删除
-     */
-    @TableLogic
-    private Integer deleted;
 }

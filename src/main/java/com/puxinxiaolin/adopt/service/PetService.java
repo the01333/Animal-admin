@@ -71,24 +71,6 @@ public interface PetService extends IService<Pet> {
     void incrementViewCount(Long id);
 
     /**
-     * 更新宠物上架状态
-     *
-     * @param id          宠物ID
-     * @param shelfStatus 上架状态
-     * @return 是否成功
-     */
-    boolean updateShelfStatus(Long id, Integer shelfStatus);
-
-    /**
-     * 更新宠物领养状态
-     *
-     * @param id             宠物ID
-     * @param adoptionStatus 领养状态
-     * @return 是否成功
-     */
-    boolean updateAdoptionStatus(Long id, String adoptionStatus);
-
-    /**
      * 更新宠物领养状态和领养者
      *
      * @param id             宠物ID
@@ -97,16 +79,6 @@ public interface PetService extends IService<Pet> {
      * @return 是否成功
      */
     boolean updateAdoptionStatusAndAdoptedBy(Long id, String adoptionStatus, Long adoptedBy);
-
-    /**
-     * 上传宠物图片
-     */
-    String uploadPetImage(Long id, MultipartFile file);
-
-    /**
-     * 上传宠物封面图片
-     */
-    String uploadPetCover(Long id, MultipartFile file);
 
     /**
      * 获取随机宠物图片

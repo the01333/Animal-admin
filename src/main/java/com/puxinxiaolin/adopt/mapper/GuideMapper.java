@@ -4,20 +4,25 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.puxinxiaolin.adopt.entity.entity.Guide;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Update;
 
 /**
- * 指南Mapper
+ * 指南 Mapper
  */
 @Mapper
 public interface GuideMapper extends BaseMapper<Guide> {
 
-    @Update("UPDATE t_guide SET views = views + #{increment} WHERE id = #{id}")
+    /**
+     * 增加浏览次数
+     */
     int incrementViewCount(@Param("id") Long id, @Param("increment") int increment);
 
-    @Update("UPDATE t_guide SET like_count = like_count + #{increment} WHERE id = #{id}")
+    /**
+     * 增加点赞次数
+     */
     int incrementLikeCount(@Param("id") Long id, @Param("increment") int increment);
 
-    @Update("UPDATE t_guide SET favorite_count = favorite_count + #{increment} WHERE id = #{id}")
+    /**
+     * 增加收藏次数
+     */
     int incrementFavoriteCount(@Param("id") Long id, @Param("increment") int increment);
 }

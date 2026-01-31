@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 宠物点赞Mapper接口
+ * 宠物点赞 Mapper
  */
 @Mapper
 public interface PetLikeMapper extends BaseMapper<PetLike> {

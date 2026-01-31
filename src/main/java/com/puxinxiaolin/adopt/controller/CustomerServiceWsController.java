@@ -49,6 +49,7 @@ public class CustomerServiceWsController {
         Long currentUserId = resolveCurrentUserId(principal);
         customerServiceWsService.handleReadAck(payload, currentUserId);
     }
+    
     private Long resolveCurrentUserId(Principal principal) {
         if (principal == null || principal.getName() == null) {
             throw new BizException(ResultCodeEnum.UNAUTHORIZED, "WebSocket 会话未登录");

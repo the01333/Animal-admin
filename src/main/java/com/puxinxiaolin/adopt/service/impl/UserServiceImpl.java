@@ -3,16 +3,17 @@ package com.puxinxiaolin.adopt.service.impl;
 import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.entity.dto.*;
 import com.puxinxiaolin.adopt.entity.entity.User;
 import com.puxinxiaolin.adopt.entity.vo.LoginVO;
 import com.puxinxiaolin.adopt.entity.vo.UserVO;
 import com.puxinxiaolin.adopt.enums.UserRoleEnum;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.UserMapper;
 import com.puxinxiaolin.adopt.service.FileUploadService;
@@ -46,7 +47,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         wrapper.eq(User::getUsername, loginDTO.getUsername());
         User user = this.getOne(wrapper);
         if (user == null) {
-            throw new BizException(ResultCodeEnum.USER_NOT_FOUND);
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "用户不存在，请先注册");
         }
 
         // 验证密码
@@ -83,16 +84,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getEmail, dto.getEmail());
         User user = this.getOne(wrapper);
-        if (user != null && user.getStatus() != null && user.getStatus() == 0) {
-            throw new BizException(ResultCodeEnum.USER_DISABLED);
-        }
+        
+        // 用户不存在，提示去注册
         if (user == null) {
-            user = new User();
-            user.setUsername(dto.getEmail());
-            user.setEmail(dto.getEmail());
-            user.setRole("user");
-            user.setStatus(1);
-            this.save(user);
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "该邮箱未注册，请先注册");
+        }
+        
+        // 检查用户状态
+        if (user.getStatus() != null && user.getStatus() == 0) {
+            throw new BizException(ResultCodeEnum.USER_DISABLED);
         }
 
         StpUtil.login(user.getId());
@@ -111,20 +111,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!verificationCodeService.verifyPhoneCode(dto.getPhone(), dto.getCode(), dto.getPurpose())) {
             throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "验证码错误或已过期");
         }
+        
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getPhone, dto.getPhone());
         User user = this.getOne(wrapper);
-        if (user != null && user.getStatus() != null && user.getStatus() == 0) {
+        
+        // 用户不存在，提示去注册
+        if (user == null) {
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "该手机号未注册，请先注册");
+        }
+        
+        // 检查用户状态
+        if (user.getStatus() != null && user.getStatus() == 0) {
             throw new BizException(ResultCodeEnum.USER_DISABLED);
         }
-        if (user == null) {
-            user = new User();
-            user.setUsername(dto.getPhone());
-            user.setPhone(dto.getPhone());
-            user.setRole("user");
-            user.setStatus(1);
-            this.save(user);
-        }
+        
         StpUtil.login(user.getId());
         String token = StpUtil.getTokenValue();
         
@@ -134,57 +135,115 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return loginVO;
     }
 
-    /**
-     * 注册
-     *
-     * @param registerDTO 注册信息
-     * @return
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long register(RegisterDTO registerDTO) {
-        log.info("用户注册, 用户名: {}", registerDTO.getUsername());
-
-        // 检查用户名是否已存在
-        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(User::getUsername, registerDTO.getUsername());
-        if (this.count(wrapper) > 0) {
-            throw new BizException(ResultCodeEnum.USER_ALREADY_EXISTS);
-        }
-
-        // 检查手机号是否已存在
-        if (StrUtil.isNotBlank(registerDTO.getPhone())) {
-            wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(User::getPhone, registerDTO.getPhone());
-            if (this.count(wrapper) > 0) {
-                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "手机号已被使用");
+    public LoginVO registerByCode(CodeRegisterDTO dto) {
+        log.info("验证码注册: phone={}, email={}", dto.getPhone(), dto.getEmail());
+        
+        // 验证码验证
+        boolean codeValid = false;
+        String identifier = null; // 手机号或邮箱
+        
+        if (StrUtil.isNotBlank(dto.getPhone())) {
+            // 手机注册
+            codeValid = verificationCodeService.verifyPhoneCode(dto.getPhone(), dto.getCode(), dto.getPurpose());
+            identifier = dto.getPhone();
+            
+            if (!codeValid) {
+                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "验证码错误或已过期");
             }
-        }
-
-        // 检查邮箱是否已存在
-        if (StrUtil.isNotBlank(registerDTO.getEmail())) {
-            wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(User::getEmail, registerDTO.getEmail());
-            if (this.count(wrapper) > 0) {
-                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "邮箱已被使用");
+            
+            // 检查手机号是否已注册（区分正常用户和禁用用户）
+            // 先检查正常用户（未删除且未禁用）
+            LambdaQueryWrapper<User> normalWrapper = new LambdaQueryWrapper<>();
+            normalWrapper.and(w -> w.eq(User::getPhone, dto.getPhone())
+                                   .or()
+                                   .eq(User::getUsername, dto.getPhone()))
+                         .and(w -> w.isNull(User::getStatus).or().eq(User::getStatus, 1));
+            long normalCount = this.count(normalWrapper);
+            if (normalCount > 0) {
+                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "该手机号已注册，请直接登录");
             }
+            
+            // 检查是否有禁用的用户（未删除但status=0）
+            LambdaQueryWrapper<User> disabledWrapper = new LambdaQueryWrapper<>();
+            disabledWrapper.and(w -> w.eq(User::getPhone, dto.getPhone())
+                                     .or()
+                                     .eq(User::getUsername, dto.getPhone()))
+                           .eq(User::getStatus, 0);
+            long disabledCount = this.count(disabledWrapper);
+            if (disabledCount > 0) {
+                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "该账号已被禁用，请联系管理员");
+            }
+            
+            // 处理已删除用户的唯一索引冲突：将旧记录的手机号和用户名加上时间戳后缀
+            baseMapper.clearDeletedUserPhone(dto.getPhone());
+            
+        } else if (StrUtil.isNotBlank(dto.getEmail())) {
+            // 邮箱注册
+            codeValid = verificationCodeService.verifyEmailCode(dto.getEmail(), dto.getCode(), dto.getPurpose());
+            identifier = dto.getEmail();
+            
+            if (!codeValid) {
+                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "验证码错误或已过期");
+            }
+            
+            // 检查邮箱是否已注册（区分正常用户和禁用用户）
+            log.info("检查邮箱是否已注册: email={}", dto.getEmail());
+            // 先检查正常用户（未删除且未禁用）
+            LambdaQueryWrapper<User> normalWrapper = new LambdaQueryWrapper<>();
+            normalWrapper.and(w -> w.eq(User::getEmail, dto.getEmail())
+                                   .or()
+                                   .eq(User::getUsername, dto.getEmail()))
+                         .and(w -> w.isNull(User::getStatus).or().eq(User::getStatus, 1));
+            long normalCount = this.count(normalWrapper);
+            log.info("正常用户数量: count={}", normalCount);
+            if (normalCount > 0) {
+                log.warn("邮箱已注册: email={}", dto.getEmail());
+                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "该邮箱已注册，请直接登录");
+            }
+            
+            // 检查是否有禁用的用户（未删除但status=0）
+            LambdaQueryWrapper<User> disabledWrapper = new LambdaQueryWrapper<>();
+            disabledWrapper.and(w -> w.eq(User::getEmail, dto.getEmail())
+                                     .or()
+                                     .eq(User::getUsername, dto.getEmail()))
+                           .eq(User::getStatus, 0);
+            long disabledCount = this.count(disabledWrapper);
+            log.info("禁用用户数量: count={}", disabledCount);
+            if (disabledCount > 0) {
+                log.warn("邮箱对应的账号已被禁用: email={}", dto.getEmail());
+                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "该账号已被禁用，请联系管理员");
+            }
+            
+            // 处理已删除用户的唯一索引冲突：将旧记录的邮箱和用户名加上时间戳后缀
+            baseMapper.clearDeletedUserEmail(dto.getEmail());
+            log.info("邮箱可用，继续创建用户");
+            
+        } else {
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "请提供手机号或邮箱");
         }
-
-        // 创建用户
+        
+        // 创建新用户
         User user = new User();
-        user.setUsername(registerDTO.getUsername());
-        user.setPassword(BCrypt.hashpw(registerDTO.getPassword()));
-        user.setNickname("普通用户");
-        user.setPhone(registerDTO.getPhone());
-        user.setEmail(registerDTO.getEmail());
+        user.setUsername(identifier);
+        user.setNickname("用户" + UUID.randomUUID().toString().substring(0, 8));
+        user.setPhone(dto.getPhone());
+        user.setEmail(dto.getEmail());
         user.setRole("user");
         user.setStatus(1);
-        user.setCertified(false);
-
         this.save(user);
-
-        log.info("用户注册成功, 用户ID: {}", user.getId());
-        return user.getId();
+        
+        // 自动登录
+        StpUtil.login(user.getId());
+        String token = StpUtil.getTokenValue();
+        
+        LoginVO loginVO = new LoginVO();
+        loginVO.setToken(token);
+        loginVO.setUserInfo(buildUserVO(user));
+        
+        log.info("验证码注册成功，用户ID: {}", user.getId());
+        return loginVO;
     }
 
     @Override
@@ -577,6 +636,33 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 log.warn("管理员编辑用户禁用时强制下线失败, userId={}, err={}", user.getId(), e.getMessage());
             }
         }
+    }
+
+    /**
+     * 删除用户（管理员）
+     * 删除前强制用户下线
+     *
+     * @param id 用户ID
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteUser(Long id) {
+        User user = this.getById(id);
+        if (user == null) {
+            throw new BizException(ResultCodeEnum.USER_NOT_FOUND);
+        }
+
+        // 删除前强制用户下线
+        try {
+            StpUtil.logout(id);
+            log.info("删除用户前强制下线, userId={}", id);
+        } catch (Exception e) {
+            log.warn("删除用户时强制下线失败, userId={}, err={}", id, e.getMessage());
+        }
+
+        // 删除用户
+        this.removeById(id);
+        log.info("用户已删除, userId={}", id);
     }
 
     /**

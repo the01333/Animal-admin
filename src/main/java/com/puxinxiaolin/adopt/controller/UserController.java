@@ -40,7 +40,7 @@ public class UserController {
     }
 
     /**
-     * 邮箱验证码登录（不存在则自动注册）
+     * 邮箱验证码登录
      */
     @PostMapping("/login/email-code")
     public Result<LoginVO> loginByEmailCode(@Valid @RequestBody EmailCodeLoginDTO dto) {
@@ -49,7 +49,7 @@ public class UserController {
     }
 
     /**
-     * 手机验证码登录（不存在则自动注册）
+     * 手机验证码登录
      */
     @PostMapping("/login/phone-code")
     public Result<LoginVO> loginByPhoneCode(@Valid @RequestBody PhoneCodeLoginDTO dto) {
@@ -58,12 +58,12 @@ public class UserController {
     }
 
     /**
-     * 用户注册
+     * 验证码注册（手机或邮箱）
      */
-    @PostMapping("/register")
-    public Result<Long> register(@Valid @RequestBody RegisterDTO registerDTO) {
-        Long userId = userService.register(registerDTO);
-        return Result.success("注册成功", userId);
+    @PostMapping("/register/code")
+    public Result<LoginVO> registerByCode(@Valid @RequestBody CodeRegisterDTO dto) {
+        LoginVO loginVO = userService.registerByCode(dto);
+        return Result.success("注册成功", loginVO);
     }
 
     /**
@@ -110,14 +110,6 @@ public class UserController {
     }
 
     /**
-     * 检查当前用户是否为管理员/审核员
-     */
-    @GetMapping("/is-admin")
-    public Result<Boolean> isAdmin() {
-        return Result.success(userService.isAdmin());
-    }
-
-    /**
      * 更新用户信息
      */
     @PutMapping("/update")
@@ -161,21 +153,12 @@ public class UserController {
     }
 
     /**
-     * 根据 ID 查询用户信息
-     */
-    @GetMapping("/{id}")
-    public Result<UserVO> getUserById(@PathVariable Long id) {
-        UserVO userVO = userService.getUserById(id);
-        return Result.success(userVO);
-    }
-
-    /**
      * 删除用户（管理员）
      */
     @DeleteMapping("/{id}")
     @SaCheckRole("super_admin")
     public Result<String> deleteUser(@PathVariable Long id) {
-        userService.removeById(id);
+        userService.deleteUser(id);
         return Result.success("删除成功", null);
     }
 

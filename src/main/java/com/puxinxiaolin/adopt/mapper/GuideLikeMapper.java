@@ -3,10 +3,10 @@ package com.puxinxiaolin.adopt.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.puxinxiaolin.adopt.entity.entity.GuideLike;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Param;
 
 /**
- * 指南点赞Mapper
+ * 指南点赞 Mapper
  */
 @Mapper
 public interface GuideLikeMapper extends BaseMapper<GuideLike> {
@@ -14,12 +14,10 @@ public interface GuideLikeMapper extends BaseMapper<GuideLike> {
     /**
      * 检查用户是否点赞过指南
      */
-    @Select("SELECT COUNT(*) FROM t_guide_like WHERE user_id = #{userId} AND guide_id = #{guideId}")
-    int checkUserLiked(Long userId, Long guideId);
+    int checkUserLiked(@Param("userId") Long userId, @Param("guideId") Long guideId);
     
     /**
      * 获取指南的点赞总数
      */
-    @Select("SELECT COUNT(*) FROM t_guide_like WHERE guide_id = #{guideId}")
-    int getGuideLikeCount(Long guideId);
+    int getGuideLikeCount(@Param("guideId") Long guideId);
 }

@@ -78,13 +78,5 @@ public class AdoptionApplicationController {
         adoptionApplicationService.cancelApplication(id);
         return Result.success("申请已撤销", null);
     }
-
-    /**
-     * 检查用户是否已申请该宠物
-     */
-    @GetMapping("/check")
-    public Result<Boolean> hasApplied(@RequestParam Long petId) {
-        return Result.success(adoptionApplicationService.hasApplied(petId));
-    }
 }
 

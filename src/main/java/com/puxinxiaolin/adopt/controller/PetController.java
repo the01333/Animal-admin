@@ -104,56 +104,6 @@ public class PetController {
     }
 
     /**
-     * 更新宠物上架状态
-     */
-    @PutMapping("/{id}/shelf")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
-    public Result<String> updateShelfStatus(
-            @PathVariable Long id,
-            @RequestParam Integer shelfStatus) {
-        petService.updateShelfStatus(id, shelfStatus);
-        return Result.success("状态更新成功", null);
-    }
-
-    /**
-     * 更新宠物领养状态
-     */
-    @PutMapping("/{id}/adoption-status")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
-    public Result<String> updateAdoptionStatus(
-            @PathVariable Long id,
-            @RequestParam String adoptionStatus
-    ) {
-        petService.updateAdoptionStatus(id, adoptionStatus);
-
-        return Result.success("状态更新成功", null);
-    }
-
-    /**
-     * 上传宠物图片
-     */
-    @PostMapping("/{id}/upload-image")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
-    public Result<String> uploadPetImage(
-            @PathVariable Long id,
-            @RequestParam("file") MultipartFile file
-    ) {
-        return Result.success("上传成功", petService.uploadPetImage(id, file));
-    }
-
-    /**
-     * 上传宠物封面图片
-     */
-    @PostMapping("/{id}/upload-cover")
-    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
-    public Result<String> uploadPetCover(
-            @PathVariable Long id,
-            @RequestParam("file") MultipartFile file
-    ) {
-        return Result.success("上传成功", petService.uploadPetCover(id, file));
-    }
-
-    /**
      * 获取随机宠物图片列表（用于前端展示）
      * 每次请求都返回不同的随机图片组合
      */

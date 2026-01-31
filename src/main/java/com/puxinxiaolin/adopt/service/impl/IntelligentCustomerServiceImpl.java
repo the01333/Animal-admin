@@ -12,14 +12,12 @@ import com.puxinxiaolin.adopt.entity.vo.ConversationSessionVO;
 import com.puxinxiaolin.adopt.service.ConversationService;
 import com.puxinxiaolin.adopt.service.IntelligentCustomerService;
 import com.puxinxiaolin.adopt.service.SessionMemoryService;
+import com.puxinxiaolin.adopt.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
-
-import java.time.Duration;
 
 /**
  * 智能客服业务门面实现, 承接限流、会话创建、消息保存等逻辑
@@ -38,7 +36,7 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
     private SessionMemoryService sessionMemoryService;
     
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisUtil redisUtil;
 
     @Override
     public ChatStreamResult chatStream(ChatStreamRequestDTO request, String clientIp) {
@@ -120,11 +118,11 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
 
     private void rateLimit(String ip) {
         String key = "ai:limit:" + ip;
-        if (redisTemplate.hasKey(key)) {
+        if (redisUtil.hasKey(key)) {
             throw new RuntimeException("请求过于频繁, 请稍后再试");
         }
         
-        redisTemplate.opsForValue().set(key, 1, Duration.ofSeconds(10));
+        redisUtil.set(key, 1, 10);
     }
 
     /**

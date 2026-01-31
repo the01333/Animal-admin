@@ -2,9 +2,8 @@ package com.puxinxiaolin.adopt.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.puxinxiaolin.adopt.entity.entity.CustomerServiceSession;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * 人工客服会话 Mapper
@@ -12,12 +11,18 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface CustomerServiceSessionMapper extends BaseMapper<CustomerServiceSession> {
 
-    @Select("SELECT COALESCE(SUM(unread_for_agent), 0) FROM t_cs_session WHERE deleted = 0 AND status = 'OPEN' AND agent_id = #{agentId}")
+    /**
+     * 统计客服未读消息数
+     */
     Integer sumUnreadForAgent(@Param("agentId") Long agentId);
 
-    @Select("SELECT COALESCE(SUM(unread_for_agent), 0) FROM t_cs_session WHERE deleted = 0 AND status = 'OPEN'")
+    /**
+     * 统计所有客服未读消息数
+     */
     Integer sumUnreadForAllAgents();
 
-    @Select("SELECT COALESCE(SUM(unread_for_user), 0) FROM t_cs_session WHERE deleted = 0 AND status = 'OPEN' AND user_id = #{userId}")
+    /**
+     * 统计用户未读消息数
+     */
     Integer sumUnreadForUser(@Param("userId") Long userId);
 }
