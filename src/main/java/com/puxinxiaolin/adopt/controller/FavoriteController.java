@@ -4,7 +4,6 @@ import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.puxinxiaolin.adopt.entity.common.Result;
 import com.puxinxiaolin.adopt.entity.dto.FavoritePageQueryDTO;
-import com.puxinxiaolin.adopt.entity.vo.FavoriteVO;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
 import com.puxinxiaolin.adopt.service.FavoriteService;
 import lombok.RequiredArgsConstructor;
@@ -60,15 +59,6 @@ public class FavoriteController {
     @GetMapping("/check/{petId}")
     public Result<Boolean> isFavorite(@PathVariable Long petId) {
         return Result.success(favoriteService.isFavorite(petId));
-    }
-    
-    /**
-     * 查询当前用户的收藏列表
-     */
-    @SaCheckLogin
-    @GetMapping("/my")
-    public Result<Page<FavoriteVO>> queryMyFavorites(@ModelAttribute FavoritePageQueryDTO queryDTO) {
-        return Result.success(favoriteService.queryUserFavorites(queryDTO));
     }
 
     /**

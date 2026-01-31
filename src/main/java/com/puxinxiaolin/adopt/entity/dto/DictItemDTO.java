@@ -17,8 +17,8 @@ public class DictItemDTO {
 
     /**
      * 字典键, 例如 cat / available / GUIDE
+     * 如果为空，系统会自动调用AI翻译生成
      */
-    @NotBlank(message = "字典键不能为空")
     private String dictKey;
 
     /**

@@ -26,12 +26,15 @@ import com.puxinxiaolin.adopt.service.AdoptionApplicationService;
 import com.puxinxiaolin.adopt.service.PetService;
 import com.puxinxiaolin.adopt.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -50,6 +53,14 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
     
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private RedissonClient redissonClient;
+
+    /**
+     * 宠物审核锁前缀
+     */
+    private static final String PET_REVIEW_LOCK_PREFIX = "lock:pet:review:";
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -193,32 +204,87 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
             throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "无效的审核状态");
         }
 
-        // 更新申请状态
-        application.setStatus(targetStatus.getCode());
-        application.setReviewComment(reviewDTO.getReviewComment());
-        application.setReviewerId(reviewerId);
-        application.setReviewTime(LocalDateTime.now());
-
-        boolean success = this.updateById(application);
-
-        // 如果审核通过, 更新宠物状态为已领养, 并设置领养者 ID
-        if (success && ApplicationStatusEnum.APPROVED.getCode().equals(targetStatus.getCode())) {
-            petService.updateAdoptionStatusAndAdoptedBy(application.getPetId(), AdoptionStatusEnum.ADOPTED.getCode(), application.getUserId());
-            // 自动拒绝该宠物的其它待审核申请
-            LambdaQueryWrapper<AdoptionApplication> otherWrapper = new LambdaQueryWrapper<>();
-            otherWrapper.eq(AdoptionApplication::getPetId, application.getPetId())
-                    .eq(AdoptionApplication::getStatus, ApplicationStatusEnum.PENDING.getCode())
-                    .ne(AdoptionApplication::getId, application.getId());
-            this.list(otherWrapper).forEach(other -> {
-                other.setStatus(ApplicationStatusEnum.REJECTED.getCode());
-                other.setReviewComment("该宠物已被批准领养");
-                other.setReviewerId(reviewerId);
-                other.setReviewTime(LocalDateTime.now());
-                this.updateById(other);
-            });
+        // 如果是批准操作，需要加分布式锁防止并发
+        if (ApplicationStatusEnum.APPROVED.getCode().equals(targetStatus.getCode())) {
+            String lockKey = PET_REVIEW_LOCK_PREFIX + application.getPetId();
+            RLock lock = redissonClient.getLock(lockKey);
+            
+            try {
+                // 尝试获取锁，等待 3 秒，锁自动释放时间 30 秒
+                boolean acquired = lock.tryLock(3, 30, TimeUnit.SECONDS);
+                if (!acquired) {
+                    throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "该宠物正在被审核，请稍后重试");
+                }
+                
+                // 获取锁后再次检查宠物状态（双重检查）
+                Pet pet = petService.getById(application.getPetId());
+                if (pet == null || !"available".equalsIgnoreCase(pet.getAdoptionStatus())) {
+                    throw new BizException(ResultCodeEnum.PET_ALREADY_ADOPTED);
+                }
+                
+                // 再次检查申请状态（可能已被其他管理员处理）
+                AdoptionApplication freshApplication = this.getById(id);
+                if (!ApplicationStatusEnum.PENDING.getCode().equals(freshApplication.getStatus())) {
+                    throw new BizException(ResultCodeEnum.ADOPTION_STATUS_ERROR.getCode(), "该申请已被处理");
+                }
+                
+                // 执行审核通过逻辑
+                doApproveApplication(freshApplication, reviewerId, reviewDTO.getReviewComment());
+                
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "获取锁被中断");
+            } finally {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
+            }
+        } else {
+            // 拒绝操作不需要加锁
+            doRejectApplication(application, reviewerId, targetStatus, reviewDTO.getReviewComment());
         }
 
-        log.info("领养申请审核完成, 结果: {}", success);
+        log.info("领养申请审核完成, ID: {}", id);
+    }
+
+    /**
+     * 执行批准申请（在锁内调用）
+     */
+    private void doApproveApplication(AdoptionApplication application, Long reviewerId, String reviewComment) {
+        // 更新申请状态
+        application.setStatus(ApplicationStatusEnum.APPROVED.getCode());
+        application.setReviewComment(reviewComment);
+        application.setReviewerId(reviewerId);
+        application.setReviewTime(LocalDateTime.now());
+        this.updateById(application);
+
+        // 更新宠物状态为已领养
+        petService.updateAdoptionStatusAndAdoptedBy(application.getPetId(), AdoptionStatusEnum.ADOPTED.getCode(), application.getUserId());
+        
+        // 自动拒绝该宠物的其它待审核申请
+        LambdaQueryWrapper<AdoptionApplication> otherWrapper = new LambdaQueryWrapper<>();
+        otherWrapper.eq(AdoptionApplication::getPetId, application.getPetId())
+                .eq(AdoptionApplication::getStatus, ApplicationStatusEnum.PENDING.getCode())
+                .ne(AdoptionApplication::getId, application.getId());
+        this.list(otherWrapper).forEach(other -> {
+            other.setStatus(ApplicationStatusEnum.REJECTED.getCode());
+            other.setReviewComment("该宠物已被其他申请者领养");
+            other.setReviewerId(reviewerId);
+            other.setReviewTime(LocalDateTime.now());
+            this.updateById(other);
+        });
+    }
+
+    /**
+     * 执行拒绝申请
+     */
+    private void doRejectApplication(AdoptionApplication application, Long reviewerId, 
+                                     ApplicationStatusEnum targetStatus, String reviewComment) {
+        application.setStatus(targetStatus.getCode());
+        application.setReviewComment(reviewComment);
+        application.setReviewerId(reviewerId);
+        application.setReviewTime(LocalDateTime.now());
+        this.updateById(application);
     }
 
     @Override

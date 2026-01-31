@@ -128,6 +128,7 @@ public class DictServiceImpl implements DictService {
             log.debug("通用字典表未配置宠物类型, 回退到 t_pet 去重查询");
             List<String> categories = petMapper.selectDistinctCategories();
             for (String category : categories) {
+                // 数据库存储的是英文 key，使用 getCategoryLabel 转换为中文
                 result.put(category, getCategoryLabel(category));
             }
         }
@@ -199,6 +200,7 @@ public class DictServiceImpl implements DictService {
             log.debug("通用字典表未配置领养状态, 回退到 t_pet 去重查询");
             List<String> statuses = petMapper.selectDistinctAdoptionStatuses();
             for (String status : statuses) {
+                // 数据库存储的是英文 key，使用 getAdoptionStatusLabel 转换为中文
                 result.put(status, getAdoptionStatusLabel(status));
             }
         }
@@ -346,7 +348,8 @@ public class DictServiceImpl implements DictService {
     }
 
     /**
-     * 从通用字典表按照 dictType 读取字典项, 并转换为 Map<key, label>
+     * 从通用字典表按照 dictType 读取字典项，返回 Map<key, label>
+     * 统一格式：key 为英文编码，label 为中文标签
      */
     private Map<String, String> loadDictFromTable(String dictType) {
         Map<String, String> result = new LinkedHashMap<>();
@@ -360,6 +363,7 @@ public class DictServiceImpl implements DictService {
 
         List<DictItem> items = dictItemMapper.selectList(wrapper);
         for (DictItem item : items) {
+            // 统一返回 Map<key, label>，key 为英文编码，label 为中文标签
             result.put(item.getDictKey(), item.getDictLabel());
         }
         return result;
@@ -438,7 +442,30 @@ public class DictServiceImpl implements DictService {
     public Long createDictItem(DictItemDTO dto) {
         DictItem item = new DictItem();
         item.setDictType(dto.getDictType());
-        item.setDictKey(dto.getDictKey());
+        
+        // 如果编码为空，自动调用AI翻译生成英文编码
+        String dictKey = dto.getDictKey();
+        if (dictKey == null || dictKey.trim().isEmpty()) {
+            if (dto.getDictLabel() != null && !dto.getDictLabel().trim().isEmpty()) {
+                log.info("字典编码为空，调用AI翻译生成: label={}", dto.getDictLabel());
+                try {
+                    dictKey = translationService.translateToEnglishKey(dto.getDictLabel().trim());
+                    if (dictKey == null || dictKey.isBlank()) {
+                        throw new BizException(ResultCodeEnum.AI_REQUEST_FAILED, "AI翻译返回空结果，无法生成字典编码");
+                    }
+                    log.info("AI翻译成功: label={}, key={}", dto.getDictLabel(), dictKey);
+                } catch (BizException e) {
+                    throw e;
+                } catch (Exception e) {
+                    log.error("AI翻译失败", e);
+                    throw new BizException(ResultCodeEnum.AI_REQUEST_FAILED, "AI翻译失败，无法生成字典编码");
+                }
+            } else {
+                throw new BizException(ResultCodeEnum.PARAM_ERROR, "字典编码和标签不能同时为空");
+            }
+        }
+        
+        item.setDictKey(dictKey);
         item.setDictLabel(dto.getDictLabel());
         item.setSortOrder(dto.getSortOrder() == null ? 0 : dto.getSortOrder());
         item.setStatus(dto.getStatus() == null ? 1 : dto.getStatus());

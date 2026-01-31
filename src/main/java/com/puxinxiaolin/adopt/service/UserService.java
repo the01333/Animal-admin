@@ -3,9 +3,9 @@ package com.puxinxiaolin.adopt.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.puxinxiaolin.adopt.entity.dto.AdminUpdateUserDTO;
 import com.puxinxiaolin.adopt.entity.dto.LoginDTO;
-import com.puxinxiaolin.adopt.entity.dto.RegisterDTO;
 import com.puxinxiaolin.adopt.entity.dto.EmailCodeLoginDTO;
 import com.puxinxiaolin.adopt.entity.dto.PhoneCodeLoginDTO;
+import com.puxinxiaolin.adopt.entity.dto.CodeRegisterDTO;
 import com.puxinxiaolin.adopt.entity.dto.ChangePasswordDTO;
 import com.puxinxiaolin.adopt.entity.dto.UpdateUserStatusDTO;
 import com.puxinxiaolin.adopt.entity.entity.User;
@@ -28,14 +28,6 @@ public interface UserService extends IService<User> {
      * @return 登录结果（包含token和用户信息）
      */
     LoginVO login(LoginDTO loginDTO);
-
-    /**
-     * 用户注册
-     *
-     * @param registerDTO 注册信息
-     * @return 用户ID
-     */
-    Long register(RegisterDTO registerDTO);
 
     /**
      * 用户登出
@@ -73,14 +65,19 @@ public interface UserService extends IService<User> {
     boolean changePassword(ChangePasswordDTO changePasswordDTO);
 
     /**
-     * 邮箱验证码登录（不存在则自动注册）
+     * 邮箱验证码登录
      */
     LoginVO loginByEmailCode(EmailCodeLoginDTO dto);
 
     /**
-     * 手机验证码登录（不存在则自动注册）
+     * 手机验证码登录
      */
     LoginVO loginByPhoneCode(PhoneCodeLoginDTO dto);
+
+    /**
+     * 验证码注册（手机或邮箱）
+     */
+    LoginVO registerByCode(CodeRegisterDTO dto);
 
     /**
      * 上传用户头像
@@ -125,4 +122,10 @@ public interface UserService extends IService<User> {
      * 管理员编辑用户信息/角色/状态
      */
     void adminUpdateUser(Long id, AdminUpdateUserDTO dto);
+
+    /**
+     * 删除用户（管理员）
+     * 删除前强制用户下线
+     */
+    void deleteUser(Long id);
 }

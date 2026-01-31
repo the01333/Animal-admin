@@ -43,27 +43,6 @@ public class EmailSendUtil {
         cacheCode(targetMail, specifiedCode, ttlSeconds);
         doSend(targetMail, specifiedCode);
     }
-
-    public void sendVerificationEmail(String targetMail, String specifiedCode) {
-        doSend(targetMail, specifiedCode);
-    }
-
-    /**
-     * 生成验证码
-     *
-     * @return
-     */
-    private String generateRandomCode() {
-        StringBuilder emailCode = new StringBuilder();
-
-        String str = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        String[] newStr = str.split("");
-        for (int i = 0; i < 6; i++) {
-            emailCode.append(newStr[(int) (Math.random() * 62)]);
-        }
-        return emailCode.toString();
-    }
-
     private void cacheCode(String targetMail, String code, long ttlSeconds) {
         redisUtil.set(RedisConstant.buildEmailCodeKey(targetMail), code, ttlSeconds);
     }
@@ -80,4 +59,25 @@ public class EmailSendUtil {
             throw new BizException(e);
         }
     }
+    
+    /**
+     * 生成验证码
+     *
+     * @return
+     */
+    private String generateRandomCode() {
+        StringBuilder emailCode = new StringBuilder();
+
+        String str = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        String[] newStr = str.split("");
+        for (int i = 0; i < 6; i++) {
+            emailCode.append(newStr[(int) (Math.random() * 62)]);
+        }
+        return emailCode.toString();
+    }
+    
+    public void sendVerificationEmail(String targetMail, String specifiedCode) {
+        doSend(targetMail, specifiedCode);
+    }
+    
 }

@@ -8,7 +8,6 @@ import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.entity.dto.FavoritePageQueryDTO;
 import com.puxinxiaolin.adopt.entity.entity.Favorite;
 import com.puxinxiaolin.adopt.entity.entity.Pet;
-import com.puxinxiaolin.adopt.entity.vo.FavoriteVO;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
 import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.exception.BizException;
@@ -97,30 +96,6 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         wrapper.eq(Favorite::getUserId, userId)
                 .eq(Favorite::getPetId, petId);
         return this.count(wrapper) > 0;
-    }
-    
-    @Override
-    public Page<FavoriteVO> queryUserFavorites(FavoritePageQueryDTO queryDTO) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        
-        LambdaQueryWrapper<Favorite> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Favorite::getUserId, userId)
-                .orderByDesc(Favorite::getCreateTime);
-
-        Page<Favorite> favoritePage = this.page(new Page<>(queryDTO.getCurrent(), queryDTO.getSize()), wrapper);
-        
-        Page<FavoriteVO> voPage = new Page<>(favoritePage.getCurrent(), favoritePage.getSize(), favoritePage.getTotal());
-        voPage.setRecords(favoritePage.getRecords().stream()
-                .map(f -> {
-                    FavoriteVO vo = new FavoriteVO();
-                    vo.setId(f.getId());
-                    vo.setUserId(f.getUserId());
-                    vo.setPetId(f.getPetId());
-                    vo.setCreateTime(f.getCreateTime());
-                    return vo;
-                })
-                .collect(Collectors.toList()));
-        return voPage;
     }
     
     @Override
