@@ -70,7 +70,7 @@ public class SmsSenderUtil {
     }
 
     /**
-     * 保存短信验证码, 默认 1 分钟
+     * 保存短信验证码, 与验证码有效期一致（5分钟）
      *
      * @param phoneNumbers
      * @param purpose
@@ -82,6 +82,7 @@ public class SmsSenderUtil {
         }
         
         String redisKey = RedisConstant.buildPhoneCodeKey(phoneNumbers, StrUtil.blankToDefault(purpose, "default"));
-        redisUtil.set(redisKey, code, 60);
+        // 缓存5分钟，与验证码有效期一致
+        redisUtil.set(redisKey, code, RedisConstant.VERIFICATION_CODE_EXPIRE);
     }
 }

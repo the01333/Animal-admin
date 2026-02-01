@@ -401,7 +401,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
 
             User reviewer = userMap.get(application.getReviewerId());
             if (reviewer != null) {
-                vo.setReviewerName(StrUtil.blankToDefault(reviewer.getNickname(), reviewer.getUsername()));
+                vo.setReviewerName(reviewer.getUsername());
             }
 
             Pet pet = petMap.get(application.getPetId());

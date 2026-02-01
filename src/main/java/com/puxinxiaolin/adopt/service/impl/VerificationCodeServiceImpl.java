@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,7 +52,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             String code = RandomUtil.randomNumbers(6);
             log.info("邮箱验证码: {}", code);
 
-            // 保存验证码到数据库
+            // 1. 保存新验证码到数据库
             VerificationCode verificationCode = new VerificationCode();
             verificationCode.setCodeType("email");
             verificationCode.setTarget(email);
@@ -61,10 +62,17 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             verificationCode.setIsUsed(false);
             verificationCodeMapper.insert(verificationCode);
 
-            // 发送邮件并缓存验证码
+            // 2. 作废旧验证码（排除刚插入的新验证码）
+            invalidateOldCodes("email", email, purpose, verificationCode.getId());
+
+            // 3. 删除旧的 Redis 缓存并写入新的
+            String redisKey = RedisConstant.buildEmailCodeKey(email);
+            redisUtil.delete(redisKey);
+
+            // 4. 发送邮件并缓存新验证码
             emailSendUtil.sendVerificationEmail(email, code, EXPIRE_MINUTES * 60L);
 
-            // 设置发送频率限制
+            // 5. 设置发送频率限制
             setSendLimit("email", email);
 
             log.info("邮箱验证码发送成功: {}", email);
@@ -87,7 +95,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             String code = RandomUtil.randomNumbers(6);
             log.info("手机验证码: {}", code);
 
-            // 保存验证码到数据库
+            // 1. 保存新验证码到数据库
             VerificationCode verificationCode = new VerificationCode();
             verificationCode.setCodeType("phone");
             verificationCode.setTarget(phone);
@@ -97,12 +105,20 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             verificationCode.setIsUsed(false);
             verificationCodeMapper.insert(verificationCode);
 
+            // 2. 作废旧验证码（排除刚插入的新验证码）
+            invalidateOldCodes("phone", phone, purpose, verificationCode.getId());
+
+            // 3. 删除旧的 Redis 缓存并写入新的
+            String redisKey = RedisConstant.buildPhoneCodeKey(phone, purpose);
+            redisUtil.delete(redisKey);
+
+            // 4. 发送短信并缓存新验证码
             Map<String, String> templateParam = new HashMap<>();
             templateParam.put("code", code);
             boolean sent = smsSenderUtil.sendSmsCode(phone, purpose, templateParam);
 
             if (sent) {
-                // 设置发送频率限制
+                // 5. 设置发送频率限制
                 setSendLimit("phone", phone);
             }
 
@@ -138,29 +154,51 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
 
     @Override
     public boolean verifyEmailCode(String email, String code, String purpose) {
+        log.info("验证邮箱验证码: email={}, code={}, purpose={}", email, code, purpose);
+        
         String redisKey = RedisConstant.buildEmailCodeKey(email);
         String cached = redisUtil.get(redisKey);
+        
+        log.info("Redis缓存验证码: cached={}", cached);
+        
         if (cached != null && code.equalsIgnoreCase(cached)) {
+            log.info("Redis验证成功");
             redisUtil.delete(redisKey);
             markLatestCodeUsed("email", email, code, purpose);
             return true;
         }
-        return verifyCode("email", email, code, purpose);
+        
+        log.info("Redis验证失败，尝试数据库验证");
+        boolean result = verifyCode("email", email, code, purpose);
+        log.info("数据库验证结果: {}", result);
+        return result;
     }
 
     @Override
     public boolean verifyPhoneCode(String phone, String code, String purpose) {
+        log.info("验证手机验证码: phone={}, code={}, purpose={}", phone, code, purpose);
+        
         String redisKey = RedisConstant.buildPhoneCodeKey(phone, purpose);
         String cached = redisUtil.get(redisKey);
+        
+        log.info("Redis缓存验证码: cached={}", cached);
+        
         if (cached != null && code.equals(cached)) {
+            log.info("Redis验证成功");
             redisUtil.delete(redisKey);
             markLatestCodeUsed("phone", phone, code, purpose);
             return true;
         }
-        return verifyCode("phone", phone, code, purpose);
+        
+        log.info("Redis验证失败，尝试数据库验证");
+        boolean result = verifyCode("phone", phone, code, purpose);
+        log.info("数据库验证结果: {}", result);
+        return result;
     }
 
     private boolean verifyCode(String codeType, String target, String code, String purpose) {
+        log.info("数据库验证: codeType={}, target={}, code={}, purpose={}", codeType, target, code, purpose);
+        
         LambdaQueryWrapper<VerificationCode> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(VerificationCode::getCodeType, codeType)
                 .eq(VerificationCode::getTarget, target)
@@ -172,6 +210,13 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
                 .last("LIMIT 1");
 
         VerificationCode verificationCode = verificationCodeMapper.selectOne(wrapper);
+        
+        log.info("数据库查询结果: {}", verificationCode != null ? "找到验证码" : "未找到验证码");
+        if (verificationCode != null) {
+            log.info("验证码详情: id={}, code={}, isUsed={}, expireTime={}", 
+                    verificationCode.getId(), verificationCode.getCode(), 
+                    verificationCode.getIsUsed(), verificationCode.getExpireTime());
+        }
 
         if (verificationCode != null) {
             verificationCode.setIsUsed(true);
@@ -183,9 +228,11 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
                     : RedisConstant.buildPhoneCodeKey(target, purpose);
             redisUtil.delete(redisKey);
             
+            log.info("验证码验证成功");
             return true;
         }
 
+        log.warn("验证码验证失败: 未找到匹配的验证码或验证码已使用/过期");
         return false;
     }
 
@@ -202,6 +249,37 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
         if (record != null) {
             record.setIsUsed(true);
             verificationCodeMapper.updateById(record);
+        }
+    }
+
+    /**
+     * 作废旧的验证码
+     * 当用户重新获取验证码时，将之前未使用的验证码标记为已使用
+     * 注意：此方法在插入新验证码之后调用，排除新验证码
+     *
+     * @param codeType 验证码类型（email/phone）
+     * @param target 目标（邮箱/手机号）
+     * @param purpose 用途
+     * @param excludeId 要排除的验证码ID（新插入的验证码）
+     */
+    private void invalidateOldCodes(String codeType, String target, String purpose, Long excludeId) {
+        // 查询该用户之前未使用且未过期的验证码，排除刚插入的新验证码
+        LambdaQueryWrapper<VerificationCode> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(VerificationCode::getCodeType, codeType)
+                .eq(VerificationCode::getTarget, target)
+                .eq(VerificationCode::getPurpose, purpose)
+                .eq(VerificationCode::getIsUsed, false)
+                .gt(VerificationCode::getExpireTime, LocalDateTime.now())
+                .ne(VerificationCode::getId, excludeId); // 排除新验证码
+
+        List<VerificationCode> oldCodes = verificationCodeMapper.selectList(wrapper);
+        if (oldCodes != null && !oldCodes.isEmpty()) {
+            for (VerificationCode oldCode : oldCodes) {
+                oldCode.setIsUsed(true);
+                verificationCodeMapper.updateById(oldCode);
+            }
+            log.info("作废旧验证码: type={}, target={}, purpose={}, count={}", 
+                    codeType, target, purpose, oldCodes.size());
         }
     }
 }
