@@ -121,7 +121,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
             if (likeVal != null) {
                 p.setLikeCount(likeVal);
             } else {
-                redisUtil.set(likeKey, p.getLikeCount());
+                redisUtil.set(likeKey, p.getLikeCount(), RedisConstant.PET_STAT_CACHE_EXPIRE);
             }
 
             String favKey = RedisConstant.buildPetFavoriteCountKey(pid);
@@ -129,7 +129,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
             if (favVal != null) {
                 p.setFavoriteCount(favVal);
             } else {
-                redisUtil.set(favKey, p.getFavoriteCount());
+                redisUtil.set(favKey, p.getFavoriteCount(), RedisConstant.PET_STAT_CACHE_EXPIRE);
             }
 
             ossUrlService.normalizePetVO(p);
@@ -174,7 +174,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         if (likeVal != null) {
             vo.setLikeCount(likeVal);
         } else {
-            redisUtil.set(likeKey, pet.getLikeCount());
+            redisUtil.set(likeKey, pet.getLikeCount(), RedisConstant.PET_STAT_CACHE_EXPIRE);
             vo.setLikeCount(pet.getLikeCount());
         }
         String favKey = RedisConstant.buildPetFavoriteCountKey(id);
@@ -182,7 +182,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         if (favVal != null) {
             vo.setFavoriteCount(favVal);
         } else {
-            redisUtil.set(favKey, pet.getFavoriteCount());
+            redisUtil.set(favKey, pet.getFavoriteCount(), RedisConstant.PET_STAT_CACHE_EXPIRE);
             vo.setFavoriteCount(pet.getFavoriteCount());
         }
         ossUrlService.normalizePetVO(vo);
@@ -268,17 +268,54 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
             limit = 6;
         }
 
-        PetQueryDTO dto = buildRecommendedQuery(limit);
-        Page<PetVO> page = this.queryPetPage(dto);
-        return page.getRecords();
-    }
+        // 使用随机排序查询可领养的宠物
+        LambdaQueryWrapper<Pet> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Pet::getAdoptionStatus, "available")
+                .eq(Pet::getShelfStatus, 1)
+                .last("ORDER BY RAND() LIMIT " + limit);
 
-    private PetQueryDTO buildRecommendedQuery(Integer limit) {
-        PetQueryDTO queryDTO = new PetQueryDTO();
-        queryDTO.setSize(Long.valueOf(limit));
-        queryDTO.setAdoptionStatus("available");
-        queryDTO.setShelfStatus(1);
-        return queryDTO;
+        List<Pet> pets = this.list(wrapper);
+
+        // 转换为VO
+        List<PetVO> vos = BeanUtil.copyToList(pets, PetVO.class);
+        
+        // 填充分类和状态文本，以及点赞/收藏数
+        for (PetVO vo : vos) {
+            Long pid = vo.getId();
+
+            // 填充分类文本
+            PetCategoryEnum categoryEnum = PetCategoryEnum.getByCode(vo.getCategory());
+            vo.setCategoryText(categoryEnum != null ? categoryEnum.getDesc() : vo.getCategory());
+            
+            // 填充领养状态文本
+            AdoptionStatusEnum adoptionStatusEnum = AdoptionStatusEnum.getByCode(vo.getAdoptionStatus());
+            vo.setAdoptionStatusText(adoptionStatusEnum != null ? adoptionStatusEnum.getDesc() : vo.getAdoptionStatus());
+
+            // 读取点赞数（从缓存或数据库字段）
+            String likeKey = RedisConstant.buildPetLikeCountKey(pid);
+            Integer likeVal = redisUtil.get(likeKey, Integer.class);
+            if (likeVal != null) {
+                vo.setLikeCount(likeVal);
+            } else {
+                vo.setLikeCount(vo.getLikeCount() != null ? vo.getLikeCount() : 0);
+                redisUtil.set(likeKey, vo.getLikeCount(), RedisConstant.PET_STAT_CACHE_EXPIRE);
+            }
+
+            // 读取收藏数（从缓存或数据库字段）
+            String favKey = RedisConstant.buildPetFavoriteCountKey(pid);
+            Integer favVal = redisUtil.get(favKey, Integer.class);
+            if (favVal != null) {
+                vo.setFavoriteCount(favVal);
+            } else {
+                vo.setFavoriteCount(vo.getFavoriteCount() != null ? vo.getFavoriteCount() : 0);
+                redisUtil.set(favKey, vo.getFavoriteCount(), RedisConstant.PET_STAT_CACHE_EXPIRE);
+            }
+
+            // 规范化 OSS URL
+            ossUrlService.normalizePetVO(vo);
+        }
+
+        return vos;
     }
 
     /**
@@ -382,6 +419,45 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         }
         return normalized;
     }
-}
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String uploadCoverImage(Long id, org.springframework.web.multipart.MultipartFile file) {
+        log.info("上传宠物封面图片, petId: {}", id);
+        
+        // 验证宠物是否存在
+        Pet pet = this.getById(id);
+        if (pet == null) {
+            throw new BizException(ResultCodeEnum.NOT_FOUND, "宠物不存在");
+        }
+        
+        // 上传图片
+        String imageUrl = fileUploadService.uploadFile(file, "pet-covers");
+        
+        // 更新宠物封面
+        pet.setCoverImage(imageUrl);
+        this.updateById(pet);
+        
+        log.info("宠物封面图片上传成功, petId: {}, imageUrl: {}", id, imageUrl);
+        return imageUrl;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String uploadDetailImage(Long id, org.springframework.web.multipart.MultipartFile file) {
+        log.info("上传宠物详情图片, petId: {}", id);
+        
+        // 验证宠物是否存在
+        Pet pet = this.getById(id);
+        if (pet == null) {
+            throw new BizException(ResultCodeEnum.NOT_FOUND, "宠物不存在");
+        }
+        
+        // 上传图片
+        String imageUrl = fileUploadService.uploadFile(file, "pet-images");
+        
+        log.info("宠物详情图片上传成功, petId: {}, imageUrl: {}", id, imageUrl);
+        return imageUrl;
+    }
+}
 

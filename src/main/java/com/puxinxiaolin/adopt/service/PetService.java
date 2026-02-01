@@ -84,6 +84,23 @@ public interface PetService extends IService<Pet> {
      * 获取随机宠物图片
      */
     List<String> getRandomPetImages(Integer limit);
-}
 
+    /**
+     * 上传宠物封面图片
+     *
+     * @param id   宠物ID
+     * @param file 图片文件
+     * @return 图片URL
+     */
+    String uploadCoverImage(Long id, MultipartFile file);
+
+    /**
+     * 上传宠物详情图片
+     *
+     * @param id   宠物ID
+     * @param file 图片文件
+     * @return 图片URL
+     */
+    String uploadDetailImage(Long id, MultipartFile file);
+}
 

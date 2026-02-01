@@ -71,6 +71,32 @@ public class RedisConstant {
      */
     public static final String PET_FAVORITE_COUNT_PREFIX = "pet:favorite:count:";
 
+    // =========================== 缓存过期时间（秒） ================================
+    
+    /**
+     * 宠物点赞/收藏数缓存过期时间: 1小时
+     * 理由: 点赞/收藏数变化频繁，1小时足够保证数据新鲜度
+     */
+    public static final long PET_STAT_CACHE_EXPIRE = 3600L;
+    
+    /**
+     * 字典数据缓存过期时间: 7天
+     * 理由: 字典数据变化不频繁，长期缓存可以减少数据库查询
+     */
+    public static final long DICT_CACHE_EXPIRE = 7 * 24 * 3600L;
+    
+    /**
+     * 验证码过期时间: 5分钟
+     * 理由: 与数据库中验证码有效期保持一致
+     */
+    public static final long VERIFICATION_CODE_EXPIRE = 300L;
+    
+    /**
+     * 浏览限制过期时间: 5分钟
+     * 理由: 防止同一用户短时间内重复计数
+     */
+    public static final long VIEW_LIMIT_EXPIRE = 300L;
+
     // =========================== 内容（指南/故事）相关 ================================
     /**
      * 内容互动统计 Hash key

@@ -235,7 +235,7 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
      * @param userMap
      * @return
      */
-    private UserCertificationAdminVO assembleAdminVO(UserCertification certification, java.util.Map<Long, User> userMap) {
+    private UserCertificationAdminVO assembleAdminVO(UserCertification certification, Map<Long, User> userMap) {
         UserCertificationAdminVO vo = new UserCertificationAdminVO();
 
         vo.setId(certification.getId());
@@ -273,7 +273,7 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
         if (certification.getReviewerId() != null) {
             User reviewer = userMap.get(certification.getReviewerId());
             if (reviewer != null) {
-                vo.setReviewerName(StrUtil.blankToDefault(reviewer.getNickname(), reviewer.getUsername()));
+                vo.setReviewerName(reviewer.getUsername());
             }
         }
         return vo;

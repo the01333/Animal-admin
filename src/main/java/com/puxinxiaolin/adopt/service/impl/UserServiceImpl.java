@@ -226,8 +226,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         
         // 创建新用户
         User user = new User();
-        user.setUsername(identifier);
-        user.setNickname("用户" + UUID.randomUUID().toString().substring(0, 8));
+        user.setUsername("用户" + UUID.randomUUID().toString().substring(0, 8));
+        user.setNickname("普通用户");
         user.setPhone(dto.getPhone());
         user.setEmail(dto.getEmail());
         user.setRole("user");
@@ -623,6 +623,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
             // 3) 其余情况（普通用户与管理员之间互相调整）允许修改
             user.setRole(roleEnum.getCode());
+            
+            // 4) 根据角色自动更新 nickname
+            // 注意：只处理 admin 和 user 角色，super_admin 不会通过此接口修改
+            if (roleEnum == UserRoleEnum.ADMIN) {
+                user.setNickname("管理员");
+            } else if (roleEnum == UserRoleEnum.USER) {
+                user.setNickname("普通用户");
+            }
         }
 
         this.updateById(user);

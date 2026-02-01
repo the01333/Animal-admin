@@ -111,4 +111,26 @@ public class PetController {
     public Result<List<String>> getRandomPetImages(@RequestParam(defaultValue = "6") Integer limit) {
         return Result.success(petService.getRandomPetImages(limit));
     }
+
+    /**
+     * 上传宠物封面图片
+     */
+    @PostMapping("/{id}/upload-cover")
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    public Result<String> uploadCoverImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        log.info("上传宠物封面图片, petId: {}", id);
+        String imageUrl = petService.uploadCoverImage(id, file);
+        return Result.success(imageUrl);
+    }
+
+    /**
+     * 上传宠物详情图片
+     */
+    @PostMapping("/{id}/upload-image")
+    @SaCheckRole(value = {"admin", "super_admin"}, mode = SaMode.OR)
+    public Result<String> uploadDetailImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        log.info("上传宠物详情图片, petId: {}", id);
+        String imageUrl = petService.uploadDetailImage(id, file);
+        return Result.success(imageUrl);
+    }
 }

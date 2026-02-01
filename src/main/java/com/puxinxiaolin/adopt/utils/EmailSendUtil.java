@@ -25,7 +25,7 @@ public class EmailSendUtil {
 
     public void sendVerificationEmail(String targetMail) {
         String emailCode = generateRandomCode();
-        cacheCode(targetMail, emailCode, 60);
+        cacheCode(targetMail, emailCode, RedisConstant.VERIFICATION_CODE_EXPIRE);
         doSend(targetMail, emailCode);
     }
 
@@ -36,7 +36,7 @@ public class EmailSendUtil {
      *
      * @param targetMail
      * @param specifiedCode
-     * @param ttlSeconds
+     * @param ttlSeconds 缓存时间（秒），建议使用 RedisConstant.VERIFICATION_CODE_EXPIRE
      */
     @Async("bizExecutor")
     public void sendVerificationEmail(String targetMail, String specifiedCode, long ttlSeconds) {
