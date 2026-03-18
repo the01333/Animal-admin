@@ -17,12 +17,12 @@ import com.puxinxiaolin.adopt.entity.entity.User;
 import com.puxinxiaolin.adopt.entity.vo.AdoptionApplicationVO;
 import com.puxinxiaolin.adopt.enums.AdoptionStatusEnum;
 import com.puxinxiaolin.adopt.enums.ApplicationStatusEnum;
-import com.puxinxiaolin.adopt.enums.PetCategoryEnum;
 import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.AdoptionApplicationMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.service.AdoptionApplicationService;
+import com.puxinxiaolin.adopt.service.DictService;
 import com.puxinxiaolin.adopt.service.PetService;
 import com.puxinxiaolin.adopt.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +56,9 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
 
     @Autowired
     private RedissonClient redissonClient;
+
+    @Autowired
+    private DictService dictService;
 
     /**
      * 宠物审核锁前缀
@@ -337,8 +340,9 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
     }
 
     /**
-     * 组装申请 VO
-     *
+     * 组装领养申请 VO
+     * <br />
+     * 后续有优化再用 map struct 进行转换
      * @param applications
      * @return
      */
@@ -372,6 +376,9 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
                 : petService.listByIds(petIds).stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(Pet::getId, Function.identity()));
+
+        // 获取宠物类型字典映射
+        Map<String, String> petCategoryMap = dictService.getPetCategories();
 
         return applications.stream().map(application -> {
             AdoptionApplicationVO vo = new AdoptionApplicationVO();
@@ -409,8 +416,8 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
                 vo.setPetName(pet.getName());
                 vo.setPetCoverImage(pet.getCoverImage());
                 vo.setPetCategory(pet.getCategory());
-                PetCategoryEnum categoryEnum = PetCategoryEnum.getByCode(pet.getCategory());
-                vo.setPetCategoryText(categoryEnum != null ? categoryEnum.getDesc() : pet.getCategory());
+                // 使用字典表中的中文标签
+                vo.setPetCategoryText(petCategoryMap.getOrDefault(pet.getCategory(), pet.getCategory()));
                 vo.setPetGender(pet.getGender());
                 vo.setPetAdoptionStatus(pet.getAdoptionStatus());
                 AdoptionStatusEnum adoptionStatusEnum = AdoptionStatusEnum.getByCode(pet.getAdoptionStatus());

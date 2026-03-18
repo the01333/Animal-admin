@@ -8,12 +8,18 @@ import lombok.Data;
 @Data
 public class CsWsChatMessageDTO {
 
-    /** 会话ID (t_cs_session.id) */
+    /**
+     * 会话ID (t_cs_session.id)
+     */
     private Long sessionId;
 
-    /** 消息类型: text / image 等 */
+    /**
+     * 消息类型: text / image 等
+     */
     private String messageType;
 
-    /** 消息内容 */
+    /**
+     * 消息内容
+     */
     private String content;
 }

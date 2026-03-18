@@ -8,9 +8,13 @@ import lombok.Data;
 @Data
 public class CsWsReadAckDTO {
 
-    /** 会话ID (t_cs_session.id) */
+    /**
+     * 会话ID (t_cs_session.id)
+     */
     private Long sessionId;
 
-    /** 已读方: USER / AGENT */
+    /**
+     * 已读方: USER / AGENT
+     */
     private String readSide;
 }

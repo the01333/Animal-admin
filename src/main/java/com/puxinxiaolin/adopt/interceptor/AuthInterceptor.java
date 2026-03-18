@@ -26,11 +26,10 @@ public class AuthInterceptor implements HandlerInterceptor {
         
         // OPTIONS 请求直接放行（CORS 预检请求）
         if ("OPTIONS".equalsIgnoreCase(method)) {
-            log.debug("OPTIONS 预检请求, 直接放行");
+//            log.debug("OPTIONS 预检请求, 直接放行");
             return true;
         }
         
-        // 尝试获取用户ID
         Long userId = null;
         try {
             // Sa-Token 会自动从 Authorization header 中读取 token
@@ -39,7 +38,6 @@ public class AuthInterceptor implements HandlerInterceptor {
         } catch (Exception e) {
             log.warn("用户认证失败: {}", e.getMessage());
             
-            // 打印 Authorization header 用于调试
             String authHeader = request.getHeader("Authorization");
             log.warn("Authorization header: {}", authHeader);
         }
