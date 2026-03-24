@@ -1,5 +1,6 @@
 package com.puxinxiaolin.adopt.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -94,11 +96,12 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
         Map<String, ConversationMessageVO> messageMap = new LinkedHashMap<>();
         
         cassandraHistories.stream()
+                // 先按时间戳排序，再按消息 ID 排序
                 .sorted(Comparator.comparing((ConversationHistoryCassandra h) -> h.getKey().getTimestamp())
                         .thenComparing(h -> h.getKey().getMessageId()))
                 .forEach(h -> {
                     Instant instant = h.getKey().getTimestamp();
-                    LocalDateTime ldt = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault());
+                    LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
                     
                     ConversationMessageVO msg = ConversationMessageVO.builder()
                             .id(h.getKey().getMessageId() != null ? h.getKey().getMessageId().getMostSignificantBits() : 0L)
@@ -110,7 +113,8 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
                             .toolResult(h.getToolResult())
                             .timestamp(ldt.format(formatter))
                             .createTime(h.getCreatedAt() != null ? 
-                                    LocalDateTime.ofInstant(h.getCreatedAt(), java.time.ZoneId.systemDefault()).format(formatter) : null)
+                                    LocalDateTime.ofInstant(h.getCreatedAt(), ZoneId.systemDefault()).format(formatter) : 
+                                    null)
                             .build();
                     
                     // 使用 "role + timestamp + content" 作为去重键, 避免完全相同的消息重复
@@ -142,7 +146,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
             return;
         }
         
-        // 入库到 DB
+        // 1. 入库到 DB
         ConversationHistory history = new ConversationHistory();
         history.setSessionId(sessionId);
         history.setUserId(userId);
@@ -152,10 +156,10 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
         history.setToolParams(toolParams);
         history.setToolResult(toolResult);
         history.setTimestamp(LocalDateTime.now());
-        
         conversationHistoryMapper.insert(history);
         
-        // 同时保存消息到 Cassandra（异步, 不阻塞主流程）
+        // TODO [YCcLin 2026/1/8]: 后期改造 - 使用本地事务表+定时任务补偿或者引入 MQ 实现（不能直接用 @Async，@Transactional 会导致多线程环境下的数据一致性问题） 
+        // 2. 同时保存消息到 Cassandra（后期改为异步, 不阻塞主流程）
         try {
             saveMessageToCassandra(sessionId, userId, role, content, toolName, toolParams, toolResult);
         } catch (Exception e) {
@@ -163,7 +167,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
             // 不影响主流程, 仅记录警告
         }
         
-        // 更新会话的消息计数和最后消息
+        // 3. 更新会话的消息计数和最后消息
         session.setMessageCount(session.getMessageCount() + 1);
         session.setLastMessage(content);
         session.setLastMessageTime(LocalDateTime.now());
@@ -218,7 +222,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
         String cacheKey = RedisConstant.buildConversationKey(sessionId);
         @SuppressWarnings("unchecked")
         List<Message> cachedMessages = (List<Message>) redisTemplate.opsForValue().get(cacheKey);
-        if (cachedMessages != null && !cachedMessages.isEmpty()) {
+        if (CollUtil.isNotEmpty(cachedMessages)) {
             log.info("从缓存获取对话历史, 会话ID: {}", sessionId);
             return cachedMessages;
         }
@@ -235,8 +239,8 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
                 })
                 .collect(Collectors.toList());
         
-        // 缓存到Redis
-        if (!messages.isEmpty()) {
+        // 缓存到 redis
+        if (CollUtil.isNotEmpty(messages)) {
             redisTemplate.opsForValue().set(cacheKey, messages, 
                     java.time.Duration.ofHours(CACHE_EXPIRE_HOURS));
         }
@@ -340,7 +344,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
     }
     
     /**
-     * 将会话转换为VO
+     * 将会话转换为 VO
      */
     private ConversationSessionVO convertSessionToVO(ConversationSession session) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -363,7 +367,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
     }
     
     /**
-     * 将历史记录转换为VO
+     * 将历史记录转换为 VO
      */
     private ConversationMessageVO convertHistoryToVO(ConversationHistory history) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");

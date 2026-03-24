@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -197,7 +198,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         log.info("创建宠物, 用户ID: {}", userId);
         Pet pet = BeanUtil.copyProperties(petDTO, Pet.class);
         pet.setCreateBy(userId);
-        pet.setCreateTime(java.time.LocalDateTime.now());
+        pet.setCreateTime(LocalDateTime.now());
         this.save(pet);
         // 新增宠物后刷新字典缓存, 确保新类别可用
         dictService.refreshCache();

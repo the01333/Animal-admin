@@ -17,6 +17,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * @Description: ws 连接或断开自动调用
+ * @Author: YCcLin
+ * @Date: 2026/3/20 0:29
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor

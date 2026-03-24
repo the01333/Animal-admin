@@ -48,7 +48,7 @@ public class IntelligentCustomerServiceController {
     }
 
     /**
-     * 保存AI回复内容到数据库
+     * 保存 AI 回复内容到数据库
      * <p>
      * 认证由拦截器处理, 这里直接从上下文获取用户 ID
      * <p>

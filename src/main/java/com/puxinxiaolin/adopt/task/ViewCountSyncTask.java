@@ -18,6 +18,9 @@ import java.util.Set;
 /**
  * @Description: 浏览次数同步定时任务 <br />
  * 每5分钟将 redis 中的浏览次数增量同步到 MySQL 数据库
+ * <br />
+ *
+ * <strong>todo: 后期可以引入 xxl-job 来管理<strong/>
  * @Author: YCcLin
  * @Date: 2025/11/16 13:50
  */
@@ -25,7 +28,7 @@ import java.util.Set;
 @Slf4j
 @RequiredArgsConstructor
 public class ViewCountSyncTask {
-    
+
     private final RedisUtil redisUtil;
     private final PetMapper petMapper;
     private final GuideMapper guideMapper;

@@ -30,6 +30,12 @@ public class CustomerServiceLongPollingServiceImpl implements CustomerServiceLon
     private final Map<Long, List<DeferredResult<Result<List<CustomerServiceMessageVO>>>>> waiters =
             new ConcurrentHashMap<>();
 
+    /**
+     * 注册会话的长轮询请求（接收到消息后唤醒该挂起的请求并返回）
+     *
+     * @param sessionId
+     * @return
+     */
     @Override
     public DeferredResult<Result<List<CustomerServiceMessageVO>>> registerSessionWaiter(Long sessionId) {
         DeferredResult<Result<List<CustomerServiceMessageVO>>> deferred =
@@ -59,7 +65,7 @@ public class CustomerServiceLongPollingServiceImpl implements CustomerServiceLon
         if (list == null || list.isEmpty()) {
             return;
         }
-        
+
         for (DeferredResult<Result<List<CustomerServiceMessageVO>>> deferred : list) {
             try {
                 if (!deferred.isSetOrExpired()) {

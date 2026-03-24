@@ -28,16 +28,29 @@ import java.util.Map;
 
 /**
  * WebSocket STOMP 配置
+ * <br />
+ * stomp 模式使用消息代理，类似于消息队列模式
  */
 @Slf4j
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    /**
+     * <p>用于用户连接 ws 时的端点注册<p/>
+     * <br />
+     * 1. 定义 ws 端点路径 <br />
+     * 2. 身份验证 <br />
+     * 3. 降级方案 <br />
+     *
+     * @param registry
+     */
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
+                // 允许跨域
                 .setAllowedOriginPatterns("*")
+                // 自定义握手处理器（这里做身份验证）
                 .setHandshakeHandler(new DefaultHandshakeHandler() {
                     @Override
                     protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler, Map<String, Object> attributes) {
@@ -92,14 +105,24 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
                         if (userId != null) {
                             final String name = String.valueOf(userId);
+                            // ws 连接，绑定用户ID，返回 ws 连接的用户身份标识（封装为 Principal 对象）
                             return () -> name;
                         }
                         return super.determineUser(request, wsHandler, attributes);
                     }
                 })
+                // 允许 SockJS 降级方案（浏览器不支持 ws 时使用）
                 .withSockJS();
     }
 
+    /**
+     * <p>客户端向服务器发送消息时的拦截器<p/>
+     * <br />
+     * 1. 获取 token 并解析用户ID <br />
+     * 2. 设置用户身份标识
+     *
+     * @param registration
+     */
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(new ChannelInterceptor() {
@@ -144,6 +167,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
                     if (userId != null) {
                         final String name = String.valueOf(userId);
+                        // ws 连接，绑定用户ID
                         accessor.setUser(() -> name);
                     }
 
@@ -155,16 +179,29 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         });
     }
 
+    /**
+     * <p>配置消息代理<p/>
+     * <br />
+     * 执行逻辑：先判断是否为用户专属消息，再去匹配订阅前缀
+     *
+     * @param registry
+     */
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // 客户端订阅前缀
+        // 客户端订阅前缀，让 ws 代理包含以下前缀的所有路径，具体的消息模式取决于调用的方法（服务器 => 客户端）
         registry.enableSimpleBroker("/topic", "/queue", "/user/queue");
-        // 服务器接收应用消息前缀
+        // 服务器接收应用消息前缀（客户端 => 服务器）
         registry.setApplicationDestinationPrefixes("/app");
-        // 点对点前缀
+        // 如果匹配，为用户专属消息，会自动在路径中插入 sessionId，如 /user/queue/messages => /user/{sessionId}/queue/messages
         registry.setUserDestinationPrefix("/user");
     }
 
+    /**
+     * 去除 Sa-Token Bearer 前缀
+     *
+     * @param token
+     * @return
+     */
     private static String trimBearerPrefix(String token) {
         if (token == null) {
             return null;
@@ -176,6 +213,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         return t;
     }
 
+    /**
+     * 从 URI 中获取查询参数
+     *
+     * @param uri
+     * @param key
+     * @return
+     */
     private static String getQueryParamFromUri(URI uri, String key) {
         if (uri == null || key == null) {
             return null;
@@ -184,7 +228,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         if (query == null || query.isBlank()) {
             return null;
         }
-        
+
         try {
             String[] pairs = query.split("&");
             for (String pair : pairs) {

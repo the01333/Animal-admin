@@ -43,6 +43,7 @@ public class EmailSendUtil {
         cacheCode(targetMail, specifiedCode, ttlSeconds);
         doSend(targetMail, specifiedCode);
     }
+    
     private void cacheCode(String targetMail, String code, long ttlSeconds) {
         redisUtil.set(RedisConstant.buildEmailCodeKey(targetMail), code, ttlSeconds);
     }
@@ -74,10 +75,6 @@ public class EmailSendUtil {
             emailCode.append(newStr[(int) (Math.random() * 62)]);
         }
         return emailCode.toString();
-    }
-    
-    public void sendVerificationEmail(String targetMail, String specifiedCode) {
-        doSend(targetMail, specifiedCode);
     }
     
 }

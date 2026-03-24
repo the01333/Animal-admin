@@ -29,6 +29,9 @@ import java.util.Objects;
 
 /**
  * 人工客服 WebSocket 相关业务实现
+ * <br />
+ * <p>
+ * 负责走 WebSocket 的消息业务，前端如果用 STOMP 发消息则走这个实现
  */
 @Slf4j
 @Service
@@ -200,7 +203,7 @@ public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
                         unreadDTO
                 );
             }
-        } else if ("AGENT".equals(side)) {
+        } else {
             List<Long> onlineAdminIds = resolveOnlineSuperAdminIds();
             for (Long adminId : onlineAdminIds) {
                 messagingTemplate.convertAndSendToUser(

@@ -60,9 +60,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
     @Autowired
     private DictService dictService;
 
-    /**
-     * 宠物审核锁前缀
-     */
+    // 宠物审核锁前缀
     private static final String PET_REVIEW_LOCK_PREFIX = "lock:pet:review:";
 
     @Override
@@ -78,7 +76,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         }
 
         // 检查宠物是否可领养
-        if (!"available".equals(pet.getAdoptionStatus())) {
+        if (!AdoptionStatusEnum.AVAILABLE.getCode().equals(pet.getAdoptionStatus())) {
             throw new BizException(ResultCodeEnum.PET_ALREADY_ADOPTED);
         }
 
@@ -221,7 +219,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
                 
                 // 获取锁后再次检查宠物状态（双重检查）
                 Pet pet = petService.getById(application.getPetId());
-                if (pet == null || !"available".equalsIgnoreCase(pet.getAdoptionStatus())) {
+                if (pet == null || !AdoptionStatusEnum.AVAILABLE.getCode().equalsIgnoreCase(pet.getAdoptionStatus())) {
                     throw new BizException(ResultCodeEnum.PET_ALREADY_ADOPTED);
                 }
                 

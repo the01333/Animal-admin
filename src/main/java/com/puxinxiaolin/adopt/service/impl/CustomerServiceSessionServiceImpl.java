@@ -23,13 +23,15 @@ import java.util.stream.Collectors;
 
 /**
  * 人工客服会话服务实现
+ * <br />
+ * 负责用户第一次点击人工会话（创建会话）、后台分页看会话列表、计算红点未读总数（用户端/管理员端）
  */
 @Slf4j
 @Service
 public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServiceSessionMapper, CustomerServiceSession> implements CustomerServiceSessionService {
 
     @Autowired
-    private CustomerServiceSessionMapper baseMapper;
+    private CustomerServiceSessionMapper customerServiceSessionMapper;
     
     @Autowired
     private UserService userService;
@@ -210,7 +212,7 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
             return 0;
         }
         
-        Integer sum = baseMapper.sumUnreadForAgent(agentId);
+        Integer sum = customerServiceSessionMapper.sumUnreadForAgent(agentId);
         return sum == null ? 0 : sum;
     }
 
@@ -219,13 +221,13 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
         if (userId == null) {
             return 0;
         }
-        Integer sum = baseMapper.sumUnreadForUser(userId);
+        Integer sum = customerServiceSessionMapper.sumUnreadForUser(userId);
         return sum == null ? 0 : sum;
     }
 
     @Override
     public Integer sumUnreadForAllAgents() {
-        Integer sum = baseMapper.sumUnreadForAllAgents();
+        Integer sum = customerServiceSessionMapper.sumUnreadForAllAgents();
         return sum == null ? 0 : sum;
     }
 }
