@@ -6,6 +6,7 @@ import com.puxinxiaolin.adopt.entity.dto.ContentQueryDTO;
 import com.puxinxiaolin.adopt.entity.dto.PetQueryDTO;
 import com.puxinxiaolin.adopt.entity.vo.ContentVO;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
+import com.puxinxiaolin.adopt.enums.AdoptionStatusEnum;
 import com.puxinxiaolin.adopt.enums.ContentCategoryEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.annotation.Tool;
@@ -40,7 +41,8 @@ public class AiToolService {
     );
 
     /**
-     * 根据条件查询宠物（用于AI工具调用）
+     * <p>根据条件查询宠物（用于AI工具调用）<p/>
+     * <br />
      * 注意：该工具返回的是系统数据库中当前【真实存在且可被领养】的宠物数据，
      *      模型在回答 "有哪些宠物适合我" 这类问题时，应优先调用本工具，
      *      再在返回结果基础上做二次筛选和解释，而不是凭空虚构宠物。
@@ -86,7 +88,7 @@ public class AiToolService {
         String category = null;
         if (lower.contains("cat") || lower.contains("mao") || lower.contains("kitten")) category = "cat";
         else if (lower.contains("dog") || lower.contains("gou") || lower.contains("puppy")) category = "dog";
-        return searchPets(category, null, "available", limit == null ? 10 : limit);
+        return searchPets(category, null, AdoptionStatusEnum.AVAILABLE.getCode(), limit == null ? 10 : limit);
     }
 
     @Tool(description = "返回与领养须知相关的文章摘要，用于回答领养流程/条件等问题")
@@ -105,7 +107,7 @@ public class AiToolService {
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         // 性格映射到宠物性格
         String petPersonality = mapUserPersonalityToPetPersonality(userPersonality);
-        return searchPets(null, petPersonality, "available", limit == null ? 8 : limit);
+        return searchPets(null, petPersonality, AdoptionStatusEnum.AVAILABLE.getCode(), limit == null ? 8 : limit);
     }
 
     /**
@@ -117,7 +119,7 @@ public class AiToolService {
             @ToolParam(description = "生活方式描述, 如: 公寓、有院子、经常出差、有小孩等", required = true) String lifestyle,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         String personality = mapLifestyleToPetPersonality(lifestyle);
-        return searchPets(null, personality, "available", limit == null ? 8 : limit);
+        return searchPets(null, personality, AdoptionStatusEnum.AVAILABLE.getCode(), limit == null ? 8 : limit);
     }
 
     /**
@@ -171,7 +173,7 @@ public class AiToolService {
     @Tool(description = "获取当前最受欢迎的可领养宠物列表（基于系统真实数据）")
     public List<PetVO> getPopularPets(
             @ToolParam(description = "返回条数", required = false) Integer limit) {
-        return searchPets(null, null, "available", limit == null ? 10 : limit);
+        return searchPets(null, null, AdoptionStatusEnum.AVAILABLE.getCode(), limit == null ? 10 : limit);
     }
 
     /**
@@ -183,7 +185,7 @@ public class AiToolService {
      */
     @Tool(description = "根据用户自然语言描述推荐当前系统中可领养的宠物，内部会自动拆解类别和性格偏好")
     public List<PetVO> smartRecommendPets(
-            @ToolParam(description = "用户的原始问题或描述，例如：我比较喜欢热情的宠物，有什么推荐？", required = true) String question,
+            @ToolParam(description = "用户的原始问题或描述，例如：我比较喜欢热情的宠物，有什么推荐？") String question,
             @ToolParam(description = "返回条数", required = false) Integer limit) {
 
         String normalized = question == null ? "" : question;
@@ -214,21 +216,21 @@ public class AiToolService {
         long size = limit == null ? 8L : Math.max(limit, 1);
 
         // 3. 优先使用类别 + 性格同时过滤
-        List<PetVO> pets = searchPets(category, personality, "available", (int) size);
+        List<PetVO> pets = searchPets(category, personality, AdoptionStatusEnum.AVAILABLE.getCode(), (int) size);
 
         // 4. 如果没有结果，尝试只按性格过滤
         if ((pets == null || pets.isEmpty()) && personality != null) {
-            pets = searchPets(null, personality, "available", (int) size);
+            pets = searchPets(null, personality, AdoptionStatusEnum.AVAILABLE.getCode(), (int) size);
         }
 
         // 5. 再尝试只按类别过滤
         if ((pets == null || pets.isEmpty()) && category != null) {
-            pets = searchPets(category, null, "available", (int) size);
+            pets = searchPets(category, null, AdoptionStatusEnum.AVAILABLE.getCode(), (int) size);
         }
 
         // 6. 仍然没有结果时，退化为热门可领养宠物
         if (pets == null || pets.isEmpty()) {
-            pets = searchPets(null, null, "available", (int) size);
+            pets = searchPets(null, null, AdoptionStatusEnum.AVAILABLE.getCode(), (int) size);
         }
 
         return pets;

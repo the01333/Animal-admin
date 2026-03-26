@@ -6,13 +6,13 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.entity.dto.CertificationPageQueryDTO;
 import com.puxinxiaolin.adopt.entity.entity.User;
 import com.puxinxiaolin.adopt.entity.entity.UserCertification;
 import com.puxinxiaolin.adopt.entity.vo.CertificationInfoVO;
 import com.puxinxiaolin.adopt.entity.vo.UserCertificationAdminVO;
 import com.puxinxiaolin.adopt.enums.CertificationStatusEnum;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.UserCertificationMapper;
 import com.puxinxiaolin.adopt.service.FileUploadService;
@@ -24,7 +24,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -162,7 +164,7 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
         Map<Long, User> userMap = userIds.isEmpty()
                 ? Collections.emptyMap()
                 : userService.listByIds(userIds).stream()
-                .collect(Collectors.toMap(User::getId, java.util.function.Function.identity()));
+                .collect(Collectors.toMap(User::getId, Function.identity()));
 
         Page<UserCertificationAdminVO> voPage = new Page<>(certPage.getCurrent(), certPage.getSize(), certPage.getTotal());
         voPage.setRecords(certPage.getRecords().stream()
@@ -177,7 +179,7 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
         if (certification == null) {
             throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "认证记录不存在");
         }
-        java.util.Map<Long, User> userMap = new java.util.HashMap<>();
+        Map<Long, User> userMap = new HashMap<>();
         User applicant = userService.getById(certification.getUserId());
         if (applicant != null) {
             userMap.put(applicant.getId(), applicant);
@@ -217,7 +219,7 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
         certification.setStatus(targetStatus.getCode());
         certification.setRejectReason(targetStatus == CertificationStatusEnum.REJECTED ? rejectReason : null);
         certification.setReviewerId(reviewerId);
-        certification.setReviewTime(java.time.LocalDateTime.now());
+        certification.setReviewTime(LocalDateTime.now());
         this.updateById(certification);
 
         // 同步用户认证状态
@@ -229,7 +231,7 @@ public class UserCertificationServiceImpl extends ServiceImpl<UserCertificationM
     }
 
     /**
-     * 组装管理端用户认证视图 VO
+     * 手动组装管理端用户认证视图 VO
      *
      * @param certification
      * @param userMap

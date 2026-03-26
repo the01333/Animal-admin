@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 宠物控制器
@@ -56,7 +55,7 @@ public class PetController {
     }
 
     /**
-     * 根据ID查询宠物详情
+     * 根据 ID 查询宠物详情
      */
     @GetMapping("/{id}")
     public Result<PetVO> getPetDetail(@PathVariable Long id) {

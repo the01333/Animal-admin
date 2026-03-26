@@ -75,16 +75,15 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
             return List.of();
         }
 
-        // 权限校验: 普通用户只能查看自己的会话; 仅 super_admin 可以查看任何会话
+        // 权限校验: 
+        // 1. 会话所有者（用户）可以查看自己的会话
+        // 2. 超级管理员可以查看任何会话
+        // 3. 其他情况不允许
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
-        boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
-        if (!isAdmin && !currentUserId.equals(session.getUserId())) {
-            // 非管理员且不是会话所属用户, 返回空列表以避免信息泄露
-            return List.of();
-        }
-        if (isAdmin && !isSuperAdmin && !currentUserId.equals(session.getUserId())) {
-            // admin 角色不允许查看客服会话
-            log.warn("非超级管理员尝试查看客服会话消息, sessionId={}, userId={}", sessionId, currentUserId);
+        boolean isSessionOwner = currentUserId.equals(session.getUserId());
+        
+        if (!isSessionOwner && !isSuperAdmin) {
+            // 既不是会话所有者，也不是超级管理员，返回空列表
             return List.of();
         }
 
@@ -129,14 +128,14 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
             return deferred;
         }
 
+        // 权限校验: 
+        // 1. 会话所有者（用户）可以长轮询自己的会话
+        // 2. 超级管理员可以长轮询任何会话
+        // 3. 其他情况不允许
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
-        boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
-        if (!isAdmin && !currentUserId.equals(session.getUserId())) {
-            DeferredResult<Result<List<CustomerServiceMessageVO>>> deferred = new DeferredResult<>();
-            deferred.setResult(Result.success(List.of()));
-            return deferred;
-        }
-        if (isAdmin && !isSuperAdmin && !currentUserId.equals(session.getUserId())) {
+        boolean isSessionOwner = currentUserId.equals(session.getUserId());
+        
+        if (!isSessionOwner && !isSuperAdmin) {
             DeferredResult<Result<List<CustomerServiceMessageVO>>> deferred = new DeferredResult<>();
             deferred.setResult(Result.success(List.of()));
             return deferred;
@@ -184,11 +183,15 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
 
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
         boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
-        if (!isAdmin && !currentUserId.equals(session.getUserId())) {
-            throw new BizException(ResultCodeEnum.FORBIDDEN, "无权发送该会话消息");
-        }
-        if (isAdmin && !isSuperAdmin) {
-            // 普通 admin 不允许作为客服发送消息
+        
+        // 判断是否是用户在发送消息（基于会话所有权，而不是角色）
+        boolean userSending = session.getUserId() != null && currentUserId.equals(session.getUserId());
+        
+        // 权限检查：
+        // 1. 如果是用户发送（会话所有者），允许
+        // 2. 如果是超级管理员作为客服发送，允许
+        // 3. 其他情况拒绝
+        if (!userSending && !isSuperAdmin) {
             throw new BizException(ResultCodeEnum.FORBIDDEN, "仅超级管理员可作为客服对话");
         }
 
@@ -202,7 +205,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         msg.setSenderId(currentUserId);
 
         Long receiverId;
-        boolean userSending = session.getUserId() != null && currentUserId.equals(session.getUserId());
+        // boolean userSending = session.getUserId() != null && currentUserId.equals(session.getUserId()); // 注释掉重复定义
         if (userSending) {
             receiverId = session.getAgentId();
             if (receiverId == null || simpUserRegistry.getUser(String.valueOf(receiverId)) == null) {
@@ -327,22 +330,35 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         }
 
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
-        boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
-        if (!isAdmin && !currentUserId.equals(session.getUserId())) {
+        boolean isSessionOwner = currentUserId.equals(session.getUserId());
+        
+        // 权限检查：
+        // 1. 会话所有者（用户）可以标记自己的消息为已读
+        // 2. 超级管理员可以标记任何会话的消息为已读
+        // 3. 其他情况不允许
+        if (!isSessionOwner && !isSuperAdmin) {
             throw new BizException(ResultCodeEnum.FORBIDDEN, "无权更新该会话未读状态");
-        }
-        if (isAdmin && !isSuperAdmin && !currentUserId.equals(session.getUserId())) {
-            throw new BizException(ResultCodeEnum.FORBIDDEN, "仅超级管理员可更新客服会话未读状态");
         }
 
         String side = readSide == null ? "" : readSide.toUpperCase();
         // 根据标记的“已读方”清空未读数
         switch (side) {
-            case "USER" -> session.setUnreadForUser(0);
+            case "USER" -> {
+                // 只有会话所有者可以标记用户侧已读
+                if (!isSessionOwner) {
+                    throw new BizException(ResultCodeEnum.FORBIDDEN, "只有用户本人可以标记用户侧消息为已读");
+                }
+                session.setUnreadForUser(0);
+            }
             case "AGENT" -> {
+                // 只有超级管理员可以标记客服侧已读
                 if (!isSuperAdmin) {
                     throw new BizException(ResultCodeEnum.FORBIDDEN, "仅超级管理员可更新客服侧未读状态");
                 }
+                // 注释掉：允许所有管理员更新客服侧未读状态
+                // if (!isSuperAdmin) {
+                //     throw new BizException(ResultCodeEnum.FORBIDDEN, "仅超级管理员可更新客服侧未读状态");
+                // }
                 session.setAgentId(currentUserId);
                 session.setUnreadForAgent(0);
             }

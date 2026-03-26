@@ -338,7 +338,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
     }
 
     /**
-     * 组装领养申请 VO
+     * 手动组装领养申请 VO
      * <br />
      * 后续有优化再用 map struct 进行转换
      * @param applications

@@ -128,7 +128,7 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
     }
 
     /**
-     * 对 AI 答复进行处理
+     * 对大模型响应进行处理
      *
      * @param str
      * @return

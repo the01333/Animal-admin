@@ -138,12 +138,13 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
         boolean online = false;
         if (session.getUserId() != null) {
             user = userService.getById(session.getUserId());
-            if (excludeAdminUser && user != null) {
-                String role = user.getRole();
-                if ("admin".equals(role) || "super_admin".equals(role)) {
-                    return null;
-                }
-            }
+            // 注释掉：不再过滤管理员用户的会话，因为管理员也可以作为普通用户在前台发起对话
+            // if (excludeAdminUser && user != null) {
+            //     String role = user.getRole();
+            //     if ("admin".equals(role) || "super_admin".equals(role)) {
+            //         return null;
+            //     }
+            // }
             try {
                 online = simpUserRegistry.getUser(String.valueOf(session.getUserId())) != null;
             } catch (Exception e) {

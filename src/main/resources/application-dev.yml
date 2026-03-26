@@ -11,7 +11,7 @@ spring:
       chat:
         options:
           model: qwen-plus
-          temperature: 0.8
+          temperature: 0.8  # 温度值，值越高越随机
   cassandra:
     contact-points: localhost
     port: 9042
@@ -70,6 +70,7 @@ minio:
   bucket-name: animal-adopt
   public-base-url: http://localhost:9000
 
+# TODO: 现在 aliyun 无法零成本创建新的 sdk 签名和模版，这里暂时用旧项目的配置
 aliyun:
   sms:
     access-key: ${ALI_ACCESS_KEY}
