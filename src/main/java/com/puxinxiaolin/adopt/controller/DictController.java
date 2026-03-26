@@ -1,6 +1,7 @@
 package com.puxinxiaolin.adopt.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.annotation.SaMode;
 import com.puxinxiaolin.adopt.entity.common.Result;
 import com.puxinxiaolin.adopt.entity.dto.DictItemDTO;
 import com.puxinxiaolin.adopt.entity.vo.DictItemVO;
@@ -156,7 +157,7 @@ public class DictController {
      * 前端只需要传入中文 label, 后端通过 AI 翻译生成英文编码并写入 pet_category
      */
     @PostMapping("/items/pet-category/auto")
-    @SaCheckRole("super_admin")
+    @SaCheckRole(value = {"super_admin", "admin"}, mode = SaMode.OR)
     public Result<Long> createPetCategoryAuto(@RequestBody Map<String, String> body) {
         String label = body.get("label");
         log.info("根据中文名称自动创建宠物类别, label={}", label);

@@ -1,12 +1,13 @@
 package com.puxinxiaolin.adopt.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.entity.dto.DictItemDTO;
 import com.puxinxiaolin.adopt.entity.entity.DictItem;
 import com.puxinxiaolin.adopt.entity.vo.DictItemVO;
 import com.puxinxiaolin.adopt.enums.ContentCategoryEnum;
+import com.puxinxiaolin.adopt.enums.UserRoleEnum;
+import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.DictItemMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
@@ -14,7 +15,7 @@ import com.puxinxiaolin.adopt.service.DictService;
 import com.puxinxiaolin.adopt.service.TranslationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.puxinxiaolin.adopt.enums.UserRoleEnum;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -23,11 +24,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * 字典服务实现类
+ * @Description: 字典服务实现类
  * 从数据库查询字典数据并使用Redis缓存
- *
- * @author Animal Adopt System
- * @date 2025-11-10
+ * @Author: YCcLin
+ * @Date: 2025/11/24 15:38
  */
 @Slf4j
 @Service
@@ -284,6 +284,9 @@ public class DictServiceImpl implements DictService {
         return result;
     }
 
+    /**
+     * 刷新所有字典缓存
+     */
     @Override
     public void refreshCache() {
         log.info("刷新所有字典缓存");
@@ -442,7 +445,7 @@ public class DictServiceImpl implements DictService {
     public Long createDictItem(DictItemDTO dto) {
         DictItem item = new DictItem();
         item.setDictType(dto.getDictType());
-        
+
         // 如果编码为空，自动调用AI翻译生成英文编码
         String dictKey = dto.getDictKey();
         if (dictKey == null || dictKey.trim().isEmpty()) {
@@ -464,7 +467,28 @@ public class DictServiceImpl implements DictService {
                 throw new BizException(ResultCodeEnum.PARAM_ERROR, "字典编码和标签不能同时为空");
             }
         }
-        
+
+        // 检查是否已存在相同的字典项（包括已删除的记录）
+        LambdaQueryWrapper<DictItem> wrapperAll = new LambdaQueryWrapper<>();
+        wrapperAll.eq(DictItem::getDictType, dto.getDictType())
+                .eq(DictItem::getDictKey, dictKey);
+        DictItem existing = dictItemMapper.selectOne(wrapperAll);
+        if (existing != null) {
+            if (existing.getDeleted() == 0) {
+                // 未删除的记录，提示已存在
+                log.info("字典项已存在, dictType={}, dictKey={}, existingLabel={}, newLabel={}",
+                        dto.getDictType(), dictKey, existing.getDictLabel(), dto.getDictLabel());
+                throw new BizException(ResultCodeEnum.PARAM_ERROR,
+                        String.format("该字典项已存在：%s（%s）", existing.getDictLabel(), dictKey));
+            } else {
+                // 已删除的记录，提示需要先恢复或联系管理员
+                log.info("字典项已被删除, dictType={}, dictKey={}, deletedLabel={}, newLabel={}",
+                        dto.getDictType(), dictKey, existing.getDictLabel(), dto.getDictLabel());
+                throw new BizException(ResultCodeEnum.PARAM_ERROR,
+                        String.format("该字典项（%s）已被删除，无法重新创建。请先恢复或联系管理员处理", dictKey));
+            }
+        }
+
         item.setDictKey(dictKey);
         item.setDictLabel(dto.getDictLabel());
         item.setSortOrder(dto.getSortOrder() == null ? 0 : dto.getSortOrder());
@@ -515,7 +539,7 @@ public class DictServiceImpl implements DictService {
         if (id == null) {
             return;
         }
-        
+
         dictItemMapper.deleteById(id);
         refreshCache();
     }
@@ -530,16 +554,33 @@ public class DictServiceImpl implements DictService {
         // 1. 根据中文名称生成稳定的英文编码（严格依赖 AI, 内部可能抛 BizException）
         String key = generateDictKey(trimmedLabel);
 
-        // 2. 检查是否已存在相同编码
+        // 2. 检查是否已存在相同编码（包括已删除的记录，因为数据库唯一索引不包含 deleted 字段）
+        LambdaQueryWrapper<DictItem> wrapperAll = new LambdaQueryWrapper<>();
+        wrapperAll.eq(DictItem::getDictType, "pet_category")
+                .eq(DictItem::getDictKey, key);
+        // 不过滤 deleted，查询所有记录
+        DictItem existing = dictItemMapper.selectOne(wrapperAll);
+        if (existing != null) {
+            if (existing.getDeleted() == 0) {
+                // 未删除的记录，提示已存在
+                log.info("宠物类别编码已存在, dictKey={}, existingLabel={}, newLabel={}",
+                        key, existing.getDictLabel(), trimmedLabel);
+                throw new BizException(ResultCodeEnum.PARAM_ERROR,
+                        String.format("该宠物类型已存在：%s（%s）", existing.getDictLabel(), key));
+            } else {
+                // 已删除的记录，提示需要先恢复或联系管理员
+                log.info("宠物类别编码已被删除, dictKey={}, deletedLabel={}, newLabel={}",
+                        key, existing.getDictLabel(), trimmedLabel);
+                throw new BizException(ResultCodeEnum.PARAM_ERROR,
+                        String.format("该宠物类型（%s）已被删除，无法重新创建。请联系管理员处理", key));
+            }
+        }
+
+        // 用于后续查询的 wrapper（只查未删除的）
         LambdaQueryWrapper<DictItem> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(DictItem::getDictType, "pet_category")
                 .eq(DictItem::getDictKey, key)
                 .eq(DictItem::getDeleted, 0);
-        DictItem existing = dictItemMapper.selectOne(wrapper);
-        if (existing != null) {
-            log.info("宠物类别编码已存在, dictKey={}, label={}", key, trimmedLabel);
-            return existing.getId();
-        }
 
         // 3. 计算排序号
         LambdaQueryWrapper<DictItem> sortWrapper = new LambdaQueryWrapper<>();
@@ -552,20 +593,31 @@ public class DictServiceImpl implements DictService {
                 .max(Integer::compareTo)
                 .orElse(0) + 1;
 
-        // 4. 写入字典表
-        DictItem item = new DictItem();
-        item.setDictType("pet_category");
-        item.setDictKey(key);
-        item.setDictLabel(trimmedLabel);
-        item.setSortOrder(sortOrder);
-        item.setStatus(1);
-        dictItemMapper.insert(item);
+        // 4. 写入字典表（捕获重复键异常）
+        try {
+            DictItem item = new DictItem();
+            item.setDictType("pet_category");
+            item.setDictKey(key);
+            item.setDictLabel(trimmedLabel);
+            item.setSortOrder(sortOrder);
+            item.setStatus(1);
+            dictItemMapper.insert(item);
 
-        // 5. 刷新缓存
-        refreshCache();
+            // 5. 刷新缓存
+            refreshCache();
 
-        log.info("自动创建宠物类别字典项, dictKey={}, label={}", key, trimmedLabel);
-        return item.getId();
+            log.info("自动创建宠物类别字典项, dictKey={}, label={}", key, trimmedLabel);
+            return item.getId();
+        } catch (DuplicateKeyException e) {
+            // 并发情况下可能已被其他线程插入，重新查询并提示
+            log.warn("宠物类别插入时发现重复键, dictKey={}, label={}", key, trimmedLabel);
+            DictItem existingItem = dictItemMapper.selectOne(wrapper);
+            if (existingItem != null) {
+                throw new BizException(ResultCodeEnum.PARAM_ERROR,
+                        String.format("该宠物类型已存在：%s（%s）", existingItem.getDictLabel(), key));
+            }
+            throw new BizException(ResultCodeEnum.PARAM_ERROR, "宠物类别创建失败，请重试");
+        }
     }
 
     /**

@@ -26,7 +26,8 @@ public class QwenTranslationService implements TranslationService {
     public QwenTranslationService(
             @Value("${spring.ai.openai.base-url}") String baseUrl,
             @Value("${spring.ai.openai.api-key}") String apiKey,
-            @Value("${spring.ai.openai.chat.options.model:qwen-plus}") String model) {
+            @Value("${spring.ai.openai.chat.options.model:qwen-plus}") String model
+    ) {
         this.model = model;
         this.restClient = RestClient.builder()
                 .baseUrl(baseUrl)

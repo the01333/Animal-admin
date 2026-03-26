@@ -331,9 +331,11 @@ public class ContentServiceImpl implements ContentService {
     @Override
     public void likeContent(String category, Long id) {
         Long userId = StpUtil.getLoginIdAsLong();
+        
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             requireGuide(id);
+            
             if (guideLikeMapper.checkUserLiked(userId, id) == 0) {
                 GuideLike like = new GuideLike();
                 like.setGuideId(id);
@@ -343,7 +345,8 @@ public class ContentServiceImpl implements ContentService {
                 viewCountService.incrementContentLike(ContentCategoryEnum.GUIDE, id, 1);
             }
         } else {
-            Story story = requireStory(id);
+            requireStory(id);
+            
             if (storyLikeMapper.checkUserLiked(userId, id) == 0) {
                 StoryLike like = new StoryLike();
                 like.setStoryId(id);

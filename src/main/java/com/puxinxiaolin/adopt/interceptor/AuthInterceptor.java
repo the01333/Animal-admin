@@ -18,19 +18,19 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        
+
+        // todo: 后期可以用自定义注解来做请求拦截打印
         String requestPath = request.getRequestURI();
         String method = request.getMethod();
-        
+
         log.debug("拦截器检查: {} {}", method, requestPath);
-        
+
         // OPTIONS 请求直接放行（CORS 预检请求）
         if ("OPTIONS".equalsIgnoreCase(method)) {
-            log.debug("OPTIONS 预检请求, 直接放行");
+//            log.debug("OPTIONS 预检请求, 直接放行");
             return true;
         }
-        
-        // 尝试获取用户ID
+
         Long userId = null;
         try {
             // Sa-Token 会自动从 Authorization header 中读取 token
@@ -38,12 +38,11 @@ public class AuthInterceptor implements HandlerInterceptor {
             log.debug("用户认证成功: userId={}", userId);
         } catch (Exception e) {
             log.warn("用户认证失败: {}", e.getMessage());
-            
-            // 打印 Authorization header 用于调试
+
             String authHeader = request.getHeader("Authorization");
             log.warn("Authorization header: {}", authHeader);
         }
-        
+
         // 如果用户未登录或登录过期
         if (userId == null) {
             log.warn("未授权的请求: {} {}", method, requestPath);
@@ -52,14 +51,23 @@ public class AuthInterceptor implements HandlerInterceptor {
             response.getWriter().write("{\"code\": 401, \"message\": \"登录信息已过期, 请重新登录\"}");
             return false;
         }
-        
+
         // 将用户信息存储到上下文, 供整个请求链路使用
         UserContext.setUser(userId, null);
         log.debug("用户信息已存储到上下文: userId={}", userId);
-        
+
         return true;
     }
 
+    /**
+     * 避免内存泄露
+     *
+     * @param request
+     * @param response
+     * @param handler
+     * @param ex
+     * @throws Exception
+     */
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
         // 请求完成后清除用户上下文

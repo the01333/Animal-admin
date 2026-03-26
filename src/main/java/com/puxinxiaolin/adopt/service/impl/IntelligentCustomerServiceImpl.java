@@ -69,9 +69,11 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
     @Override
     public Result<String> saveMessage(SaveMessageDTO request) {
         Long userId = UserContext.getUserId();
+        
         if (StringUtils.isBlank(request.getSessionId())) {
             return Result.error(ResultCodeEnum.BAD_REQUEST.getCode(), "会话 ID 不能为空");
         }
+        
         String role = StringUtils.defaultIfBlank(request.getRole(), "assistant");
         String content = StringUtils.isNotBlank(request.getContent()) ? request.getContent() : "";
         try {
@@ -126,7 +128,7 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
     }
 
     /**
-     * 对 AI 答复进行处理
+     * 对大模型响应进行处理
      *
      * @param str
      * @return

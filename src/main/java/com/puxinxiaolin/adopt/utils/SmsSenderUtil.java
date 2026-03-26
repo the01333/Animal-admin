@@ -14,9 +14,6 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-/**
- *
- */
 @Slf4j
 @Component
 public class SmsSenderUtil {

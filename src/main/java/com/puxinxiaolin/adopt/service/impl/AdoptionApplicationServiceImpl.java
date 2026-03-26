@@ -17,12 +17,12 @@ import com.puxinxiaolin.adopt.entity.entity.User;
 import com.puxinxiaolin.adopt.entity.vo.AdoptionApplicationVO;
 import com.puxinxiaolin.adopt.enums.AdoptionStatusEnum;
 import com.puxinxiaolin.adopt.enums.ApplicationStatusEnum;
-import com.puxinxiaolin.adopt.enums.PetCategoryEnum;
 import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.AdoptionApplicationMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.service.AdoptionApplicationService;
+import com.puxinxiaolin.adopt.service.DictService;
 import com.puxinxiaolin.adopt.service.PetService;
 import com.puxinxiaolin.adopt.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -57,9 +57,10 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
     @Autowired
     private RedissonClient redissonClient;
 
-    /**
-     * 宠物审核锁前缀
-     */
+    @Autowired
+    private DictService dictService;
+
+    // 宠物审核锁前缀
     private static final String PET_REVIEW_LOCK_PREFIX = "lock:pet:review:";
 
     @Override
@@ -75,7 +76,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         }
 
         // 检查宠物是否可领养
-        if (!"available".equals(pet.getAdoptionStatus())) {
+        if (!AdoptionStatusEnum.AVAILABLE.getCode().equals(pet.getAdoptionStatus())) {
             throw new BizException(ResultCodeEnum.PET_ALREADY_ADOPTED);
         }
 
@@ -218,7 +219,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
                 
                 // 获取锁后再次检查宠物状态（双重检查）
                 Pet pet = petService.getById(application.getPetId());
-                if (pet == null || !"available".equalsIgnoreCase(pet.getAdoptionStatus())) {
+                if (pet == null || !AdoptionStatusEnum.AVAILABLE.getCode().equalsIgnoreCase(pet.getAdoptionStatus())) {
                     throw new BizException(ResultCodeEnum.PET_ALREADY_ADOPTED);
                 }
                 
@@ -337,8 +338,9 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
     }
 
     /**
-     * 组装申请 VO
-     *
+     * 手动组装领养申请 VO
+     * <br />
+     * 后续有优化再用 map struct 进行转换
      * @param applications
      * @return
      */
@@ -372,6 +374,9 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
                 : petService.listByIds(petIds).stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(Pet::getId, Function.identity()));
+
+        // 获取宠物类型字典映射
+        Map<String, String> petCategoryMap = dictService.getPetCategories();
 
         return applications.stream().map(application -> {
             AdoptionApplicationVO vo = new AdoptionApplicationVO();
@@ -409,8 +414,8 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
                 vo.setPetName(pet.getName());
                 vo.setPetCoverImage(pet.getCoverImage());
                 vo.setPetCategory(pet.getCategory());
-                PetCategoryEnum categoryEnum = PetCategoryEnum.getByCode(pet.getCategory());
-                vo.setPetCategoryText(categoryEnum != null ? categoryEnum.getDesc() : pet.getCategory());
+                // 使用字典表中的中文标签
+                vo.setPetCategoryText(petCategoryMap.getOrDefault(pet.getCategory(), pet.getCategory()));
                 vo.setPetGender(pet.getGender());
                 vo.setPetAdoptionStatus(pet.getAdoptionStatus());
                 AdoptionStatusEnum adoptionStatusEnum = AdoptionStatusEnum.getByCode(pet.getAdoptionStatus());

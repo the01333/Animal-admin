@@ -37,7 +37,7 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
     @Transactional(rollbackFor = Exception.class)
     public boolean likePet(Long petId) {
         Long userId = StpUtil.getLoginIdAsLong();
-        
+
         // 检查是否已点赞
         if (isLiked(petId)) {
             log.warn("该宠物已点赞, 用户ID: {}, 宠物ID: {}", userId, petId);
@@ -48,7 +48,7 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
         PetLike petLike = new PetLike();
         petLike.setUserId(userId);
         petLike.setPetId(petId);
-        
+
         this.save(petLike);
         petMapper.incrementLikeCount(petId);
         deleteLikeCountCache(petId);
@@ -60,11 +60,11 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
     @Transactional(rollbackFor = Exception.class)
     public boolean unlikePet(Long petId) {
         Long userId = StpUtil.getLoginIdAsLong();
-        
+
         LambdaQueryWrapper<PetLike> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PetLike::getUserId, userId)
                 .eq(PetLike::getPetId, petId);
-        
+
         boolean removed = this.remove(wrapper);
         if (removed) {
             petMapper.decrementLikeCount(petId);
@@ -73,12 +73,17 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
         }
         return removed;
     }
-    
+
+    /**
+     * 删除点赞数缓存
+     *
+     * @param petId
+     */
     private void deleteLikeCountCache(Long petId) {
         String cacheKey = RedisConstant.buildPetLikeCountKey(petId);
         redisUtil.delete(cacheKey);
     }
-    
+
     @Override
     public boolean isLiked(Long petId) {
         Long userId = StpUtil.getLoginIdAsLong();
@@ -87,7 +92,7 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
                 .eq(PetLike::getPetId, petId);
         return this.count(wrapper) > 0;
     }
-    
+
     @Override
     public long getLikeCount(Long petId) {
         Pet pet = petMapper.selectById(petId);
@@ -97,19 +102,19 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
     @Override
     public Page<PetVO> queryUserLikedPets(PetLikePageQueryDTO queryDTO) {
         Long userId = StpUtil.getLoginIdAsLong();
-        
+
         LambdaQueryWrapper<PetLike> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(PetLike::getUserId, userId)
                 .orderByDesc(PetLike::getCreateTime);
 
         Page<PetLike> petLikePage = this.page(new Page<>(queryDTO.getCurrent(), queryDTO.getSize()), wrapper);
-        
+
         Page<PetVO> result = new Page<>();
         result.setCurrent(petLikePage.getCurrent());
         result.setSize(petLikePage.getSize());
         result.setTotal(petLikePage.getTotal());
         result.setPages(petLikePage.getPages());
-        
+
         List<PetVO> petVOList = petLikePage.getRecords().stream()
                 .map(petLike -> {
                     Pet pet = petMapper.selectById(petLike.getPetId());
@@ -131,7 +136,7 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        
+
         result.setRecords(petVOList);
         return result;
     }

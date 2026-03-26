@@ -27,7 +27,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -196,7 +198,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         log.info("创建宠物, 用户ID: {}", userId);
         Pet pet = BeanUtil.copyProperties(petDTO, Pet.class);
         pet.setCreateBy(userId);
-        pet.setCreateTime(java.time.LocalDateTime.now());
+        pet.setCreateTime(LocalDateTime.now());
         this.save(pet);
         // 新增宠物后刷新字典缓存, 确保新类别可用
         dictService.refreshCache();
@@ -422,7 +424,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String uploadCoverImage(Long id, org.springframework.web.multipart.MultipartFile file) {
+    public String uploadCoverImage(Long id, MultipartFile file) {
         log.info("上传宠物封面图片, petId: {}", id);
         
         // 验证宠物是否存在
@@ -444,7 +446,7 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String uploadDetailImage(Long id, org.springframework.web.multipart.MultipartFile file) {
+    public String uploadDetailImage(Long id, MultipartFile file) {
         log.info("上传宠物详情图片, petId: {}", id);
         
         // 验证宠物是否存在

@@ -33,7 +33,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 人工客服消息相关业务实现
+ * <p>人工客服消息（HTTP）相关业务实现<p/>
+ * <br />
+ * 场景：用户发消息给管理员 <br />
+ * 1. 用户调用 sendMessage() <br />
+ * 2. 保存消息到 DB <br />
+ * 3. 更新会话未读数（管理员未读数 + 1） <br />
+ * 4. 通知长轮询等待者（如果有长轮询等待者，也就是管理员，立即收到新消息） <br />
+ * 5. ws 推送 - 给所有在线的管理员广播消息和未读数更新 <br />
+ * 6. 管理员看到 - 聊天窗口弹出新信息和未读消息红点提示
+ * <br />
+ * <p>
+ * 负责走 HTTP 的消息业务，即使无 ws，也能让前端通过 HTTP 完成聊天（长轮询兜底）
  */
 @Slf4j
 @Service
@@ -41,12 +52,19 @@ import java.util.stream.Collectors;
 public class CustomerServiceChatServiceImpl implements CustomerServiceChatService {
 
     private final CustomerServiceSessionService customerServiceSessionService;
-    private final ChatMessageMapper chatMessageMapper;
     private final CustomerServiceLongPollingService customerServiceLongPollingService;
+    private final ChatMessageMapper chatMessageMapper;
     private final SimpMessagingTemplate messagingTemplate;
+    // 在线用户注册中心 - 查询在线状态
     private final SimpUserRegistry simpUserRegistry;
     private final UserService userService;
 
+    /**
+     * 查询会话消息
+     *
+     * @param sessionId
+     * @return
+     */
     @Override
     public List<CustomerServiceMessageVO> getSessionMessages(Long sessionId) {
         Long currentUserId = StpUtil.getLoginIdAsLong();
@@ -57,16 +75,15 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
             return List.of();
         }
 
-        // 权限校验: 普通用户只能查看自己的会话; 仅 super_admin 可以查看任何会话
+        // 权限校验: 
+        // 1. 会话所有者（用户）可以查看自己的会话
+        // 2. 超级管理员可以查看任何会话
+        // 3. 其他情况不允许
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
-        boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
-        if (!isAdmin && !currentUserId.equals(session.getUserId())) {
-            // 非管理员且不是会话所属用户, 返回空列表以避免信息泄露
-            return List.of();
-        }
-        if (isAdmin && !isSuperAdmin && !currentUserId.equals(session.getUserId())) {
-            // admin 角色不允许查看客服会话
-            log.warn("非超级管理员尝试查看客服会话消息, sessionId={}, userId={}", sessionId, currentUserId);
+        boolean isSessionOwner = currentUserId.equals(session.getUserId());
+        
+        if (!isSessionOwner && !isSuperAdmin) {
+            // 既不是会话所有者，也不是超级管理员，返回空列表
             return List.of();
         }
 
@@ -80,6 +97,13 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
                 .toList();
     }
 
+    /**
+     * 长轮询获取新消息
+     *
+     * @param sessionId
+     * @param lastMessageId
+     * @return
+     */
     @Override
     public DeferredResult<Result<List<CustomerServiceMessageVO>>> longPollSessionMessages(Long sessionId, Long lastMessageId) {
         Long currentUserId = StpUtil.getLoginIdAsLong();
@@ -88,24 +112,36 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
 
         CustomerServiceSession session = customerServiceSessionService.getById(sessionId);
         if (session == null) {
+            /**
+             * DeferredResult - Spring 提供的异步结果容器
+             * <br />
+             * 作用：快速创建一个异步返回对象，并立即设置 “成功 + 空列表” 的结果返回给客户端，本质是返回一个 “无消息” 的成功响应；
+             * 原理：允许请求处理线程先返回，释放容器线程资源，后续在其他线程（比如 WebSocket 消息接收线程）中完成结果设置并响应客户端
+             * <br />
+             * 常见的触发场景：
+             * 1）客户刚进入对话页面，前端发起请求获取历史消息，但此时暂无任何消息（比如新对话）；
+             * 2）WebSocket 连接建立后，后端需要先返回一个 “兜底响应”，避免客户端长时间等待；
+             * 3）异步处理的兜底逻辑：如果没有查到任何消息，直接返回空列表的成功结果，而非阻塞或报错
+             */
             DeferredResult<Result<List<CustomerServiceMessageVO>>> deferred = new DeferredResult<>();
             deferred.setResult(Result.success(List.of()));
             return deferred;
         }
 
+        // 权限校验: 
+        // 1. 会话所有者（用户）可以长轮询自己的会话
+        // 2. 超级管理员可以长轮询任何会话
+        // 3. 其他情况不允许
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
-        boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
-        if (!isAdmin && !currentUserId.equals(session.getUserId())) {
-            DeferredResult<Result<List<CustomerServiceMessageVO>>> deferred = new DeferredResult<>();
-            deferred.setResult(Result.success(List.of()));
-            return deferred;
-        }
-        if (isAdmin && !isSuperAdmin && !currentUserId.equals(session.getUserId())) {
+        boolean isSessionOwner = currentUserId.equals(session.getUserId());
+        
+        if (!isSessionOwner && !isSuperAdmin) {
             DeferredResult<Result<List<CustomerServiceMessageVO>>> deferred = new DeferredResult<>();
             deferred.setResult(Result.success(List.of()));
             return deferred;
         }
 
+        // 查询“比最后一条消息ID新”的消息（也就是检测是否有新消息）
         LambdaQueryWrapper<ChatMessage> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ChatMessage::getSessionId, String.valueOf(session.getId()));
         if (lastMessageId != null && lastMessageId > 0) {
@@ -114,6 +150,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         wrapper.orderByAsc(ChatMessage::getCreateTime);
 
         List<ChatMessage> messages = chatMessageMapper.selectList(wrapper);
+        // 有新消息 → 立刻返回新消息
         if (CollUtil.isNotEmpty(messages)) {
             List<CustomerServiceMessageVO> voList = messages.stream()
                     .map(msg -> buildMessageVO(session, msg))
@@ -123,10 +160,17 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
             return deferred;
         }
 
-        // 没有新消息时, 注册长轮询等待者
+        // 没有新消息时, 注册长轮询等待者（先不返回结果，等有新消息了再返回并通知前端）
         return customerServiceLongPollingService.registerSessionWaiter(sessionId);
     }
 
+    /**
+     * 发送消息
+     *
+     * @param sessionId
+     * @param body
+     * @return
+     */
     @Override
     public CustomerServiceMessageVO sendMessage(Long sessionId, CsSendMessageDTO body) {
         Long currentUserId = StpUtil.getLoginIdAsLong();
@@ -139,11 +183,15 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
 
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
         boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
-        if (!isAdmin && !currentUserId.equals(session.getUserId())) {
-            throw new BizException(ResultCodeEnum.FORBIDDEN, "无权发送该会话消息");
-        }
-        if (isAdmin && !isSuperAdmin) {
-            // 普通 admin 不允许作为客服发送消息
+        
+        // 判断是否是用户在发送消息（基于会话所有权，而不是角色）
+        boolean userSending = session.getUserId() != null && currentUserId.equals(session.getUserId());
+        
+        // 权限检查：
+        // 1. 如果是用户发送（会话所有者），允许
+        // 2. 如果是超级管理员作为客服发送，允许
+        // 3. 其他情况拒绝
+        if (!userSending && !isSuperAdmin) {
             throw new BizException(ResultCodeEnum.FORBIDDEN, "仅超级管理员可作为客服对话");
         }
 
@@ -157,7 +205,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         msg.setSenderId(currentUserId);
 
         Long receiverId;
-        boolean userSending = session.getUserId() != null && currentUserId.equals(session.getUserId());
+        // boolean userSending = session.getUserId() != null && currentUserId.equals(session.getUserId()); // 注释掉重复定义
         if (userSending) {
             receiverId = session.getAgentId();
             if (receiverId == null || simpUserRegistry.getUser(String.valueOf(receiverId)) == null) {
@@ -182,6 +230,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         session.setLastMessage(body.getContent());
         session.setLastTime(LocalDateTime.now());
 
+        // 更新会话的未读数量
         if (session.getUserId() != null && currentUserId.equals(session.getUserId())) {
             // 用户发消息 -> 客服未读数 +1
             int unreadForAgent = session.getUnreadForAgent() == null ? 0 : session.getUnreadForAgent();
@@ -196,7 +245,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         // 构建返回 VO
         CustomerServiceMessageVO vo = buildMessageVO(session, msg);
 
-        // 通知所有长轮询等待者有新消息
+        // 通知所有长轮询等待者有新消息（唤醒长轮询）
         customerServiceLongPollingService.publishNewMessage(session.getId(), vo);
 
         // 通过 WebSocket 推送最新未读汇总给接收方 (用户或客服), 用于驱动前台/后台入口红点
@@ -226,6 +275,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
                             "/queue/cs/chat",
                             vo
                     );
+
                     // 推送未读数更新给管理员
                     messagingTemplate.convertAndSendToUser(
                             String.valueOf(adminId),
@@ -241,6 +291,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
                         "/queue/cs/chat",
                         vo
                 );
+
                 messagingTemplate.convertAndSendToUser(
                         String.valueOf(receiverId),
                         "/queue/cs/unread",
@@ -262,6 +313,12 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         return vo;
     }
 
+    /**
+     * 消息已读回执
+     *
+     * @param sessionId
+     * @param readSide
+     */
     @Override
     public void readAck(Long sessionId, String readSide) {
         Long currentUserId = StpUtil.getLoginIdAsLong();
@@ -273,21 +330,35 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         }
 
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
-        boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
-        if (!isAdmin && !currentUserId.equals(session.getUserId())) {
+        boolean isSessionOwner = currentUserId.equals(session.getUserId());
+        
+        // 权限检查：
+        // 1. 会话所有者（用户）可以标记自己的消息为已读
+        // 2. 超级管理员可以标记任何会话的消息为已读
+        // 3. 其他情况不允许
+        if (!isSessionOwner && !isSuperAdmin) {
             throw new BizException(ResultCodeEnum.FORBIDDEN, "无权更新该会话未读状态");
-        }
-        if (isAdmin && !isSuperAdmin && !currentUserId.equals(session.getUserId())) {
-            throw new BizException(ResultCodeEnum.FORBIDDEN, "仅超级管理员可更新客服会话未读状态");
         }
 
         String side = readSide == null ? "" : readSide.toUpperCase();
+        // 根据标记的“已读方”清空未读数
         switch (side) {
-            case "USER" -> session.setUnreadForUser(0);
+            case "USER" -> {
+                // 只有会话所有者可以标记用户侧已读
+                if (!isSessionOwner) {
+                    throw new BizException(ResultCodeEnum.FORBIDDEN, "只有用户本人可以标记用户侧消息为已读");
+                }
+                session.setUnreadForUser(0);
+            }
             case "AGENT" -> {
+                // 只有超级管理员可以标记客服侧已读
                 if (!isSuperAdmin) {
                     throw new BizException(ResultCodeEnum.FORBIDDEN, "仅超级管理员可更新客服侧未读状态");
                 }
+                // 注释掉：允许所有管理员更新客服侧未读状态
+                // if (!isSuperAdmin) {
+                //     throw new BizException(ResultCodeEnum.FORBIDDEN, "仅超级管理员可更新客服侧未读状态");
+                // }
                 session.setAgentId(currentUserId);
                 session.setUnreadForAgent(0);
             }

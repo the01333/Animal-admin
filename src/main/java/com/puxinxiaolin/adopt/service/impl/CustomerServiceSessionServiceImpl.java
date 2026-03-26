@@ -23,13 +23,15 @@ import java.util.stream.Collectors;
 
 /**
  * 人工客服会话服务实现
+ * <br />
+ * 负责用户第一次点击人工会话（创建会话）、后台分页看会话列表、计算红点未读总数（用户端/管理员端）
  */
 @Slf4j
 @Service
 public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServiceSessionMapper, CustomerServiceSession> implements CustomerServiceSessionService {
 
     @Autowired
-    private CustomerServiceSessionMapper baseMapper;
+    private CustomerServiceSessionMapper customerServiceSessionMapper;
     
     @Autowired
     private UserService userService;
@@ -136,12 +138,13 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
         boolean online = false;
         if (session.getUserId() != null) {
             user = userService.getById(session.getUserId());
-            if (excludeAdminUser && user != null) {
-                String role = user.getRole();
-                if ("admin".equals(role) || "super_admin".equals(role)) {
-                    return null;
-                }
-            }
+            // 注释掉：不再过滤管理员用户的会话，因为管理员也可以作为普通用户在前台发起对话
+            // if (excludeAdminUser && user != null) {
+            //     String role = user.getRole();
+            //     if ("admin".equals(role) || "super_admin".equals(role)) {
+            //         return null;
+            //     }
+            // }
             try {
                 online = simpUserRegistry.getUser(String.valueOf(session.getUserId())) != null;
             } catch (Exception e) {
@@ -210,7 +213,7 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
             return 0;
         }
         
-        Integer sum = baseMapper.sumUnreadForAgent(agentId);
+        Integer sum = customerServiceSessionMapper.sumUnreadForAgent(agentId);
         return sum == null ? 0 : sum;
     }
 
@@ -219,13 +222,13 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
         if (userId == null) {
             return 0;
         }
-        Integer sum = baseMapper.sumUnreadForUser(userId);
+        Integer sum = customerServiceSessionMapper.sumUnreadForUser(userId);
         return sum == null ? 0 : sum;
     }
 
     @Override
     public Integer sumUnreadForAllAgents() {
-        Integer sum = baseMapper.sumUnreadForAllAgents();
+        Integer sum = customerServiceSessionMapper.sumUnreadForAllAgents();
         return sum == null ? 0 : sum;
     }
 }
