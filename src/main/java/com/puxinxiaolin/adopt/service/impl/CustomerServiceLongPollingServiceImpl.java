@@ -20,7 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class CustomerServiceLongPollingServiceImpl implements CustomerServiceLongPollingService {
 
     /**
-     * 单次长轮询的超时时间（毫秒）- 2.5 秒一轮, 进一步降低空闲时的体感延迟
+     * 单次长轮询的超时时间（毫秒）- 2.5 秒一轮
      */
     private static final long TIMEOUT_MILLIS = 2_500L;
 
@@ -31,25 +31,26 @@ public class CustomerServiceLongPollingServiceImpl implements CustomerServiceLon
             new ConcurrentHashMap<>();
 
     /**
-     * 注册会话的长轮询请求（接收到消息后唤醒该挂起的请求并返回）
+     * 注册（挂起）长轮询
      *
      * @param sessionId
      * @return
      */
     @Override
     public DeferredResult<Result<List<CustomerServiceMessageVO>>> registerSessionWaiter(Long sessionId) {
-        DeferredResult<Result<List<CustomerServiceMessageVO>>> deferred =
-                new DeferredResult<>(TIMEOUT_MILLIS, Result.success(List.of()));
+        DeferredResult<Result<List<CustomerServiceMessageVO>>> deferred = new DeferredResult<>(TIMEOUT_MILLIS, Result.success(List.of()));
 
         List<DeferredResult<Result<List<CustomerServiceMessageVO>>>> sessionWaiters =
                 waiters.computeIfAbsent(sessionId, k -> new CopyOnWriteArrayList<>());
         sessionWaiters.add(deferred);
 
-        // 请求完成（超时或正常返回）后从队列中清理
+        // 异步挂起，唤醒后才执行回调
+        // 请求完成（超时或正常返回）后从队列中清理，避免内存泄露，再由前端发起下一轮请求形成"持续等待"
         deferred.onCompletion(() -> {
             List<DeferredResult<Result<List<CustomerServiceMessageVO>>>> list = waiters.get(sessionId);
             if (list != null) {
                 list.remove(deferred);
+
                 if (list.isEmpty()) {
                     waiters.remove(sessionId);
                 }
@@ -59,6 +60,12 @@ public class CustomerServiceLongPollingServiceImpl implements CustomerServiceLon
         return deferred;
     }
 
+    /**
+     * 唤醒（通知）长轮询
+     *
+     * @param sessionId
+     * @param message
+     */
     @Override
     public void publishNewMessage(Long sessionId, CustomerServiceMessageVO message) {
         List<DeferredResult<Result<List<CustomerServiceMessageVO>>>> list = waiters.get(sessionId);

@@ -119,5 +119,5 @@ public interface DictService {
      * @param dictType 字典类型
      * @param dictKeys 需要确保存在的字典键列表
      */
-    void ensureDictItems(String dictType, java.util.List<String> dictKeys);
+    void ensureDictItems(String dictType, List<String> dictKeys);
 }

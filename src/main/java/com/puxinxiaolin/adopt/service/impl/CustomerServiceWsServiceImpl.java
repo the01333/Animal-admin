@@ -37,7 +37,6 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
-
     private final CustomerServiceSessionService customerServiceSessionService;
     private final ChatMessageMapper chatMessageMapper;
     private final SimpMessagingTemplate messagingTemplate;
@@ -45,6 +44,12 @@ public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
     private final UserService userService;
     private final SimpUserRegistry simpUserRegistry;
 
+    /**
+     * WS 收到“发送消息”指令后的处理
+     *
+     * @param payload       前端发送的聊天消息 DTO
+     * @param currentUserId 当前登录用户 ID
+     */
     @Override
     public void handleChat(CsWsChatMessageDTO payload, Long currentUserId) {
         log.info("[WS] 收到聊天消息, sessionId={}, userId={}", payload.getSessionId(), currentUserId);
@@ -74,7 +79,7 @@ public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
         msg.setMessageType(messageType);
         msg.setContent(dto.getContent());
         msg.setSenderId(currentUserId);
-
+        
         Long receiverId;
         if (session.getUserId() != null && currentUserId.equals(session.getUserId())) {
             receiverId = session.getAgentId();
@@ -88,7 +93,7 @@ public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
 
         session.setLastMessage(dto.getContent());
         session.setLastTime(LocalDateTime.now());
-
+        // 设置未读数
         if (session.getUserId() != null && currentUserId.equals(session.getUserId())) {
             int unreadForAgent = session.getUnreadForAgent() == null ? 0 : session.getUnreadForAgent();
             session.setUnreadForAgent(unreadForAgent + 1);
@@ -107,7 +112,6 @@ public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
                 .content(msg.getContent())
                 .read(false)
                 .createTime(msg.getCreateTime());
-
         String senderRole = "USER";
         if (session.getUserId() != null && msg.getSenderId() != null) {
             if (!msg.getSenderId().equals(session.getUserId())) {
@@ -117,11 +121,9 @@ public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
         messageVO.senderRole(senderRole);
         CustomerServiceMessageVO vo = messageVO.build();
 
-        // 同步通知长轮询等待者
+        // 同步通知（唤醒）长轮询等待者
         customerServiceLongPollingService.publishNewMessage(session.getId(), vo);
-
-        boolean userSending = session.getUserId() != null && currentUserId.equals(session.getUserId());
-
+        
         Integer totalUnreadForUser = customerServiceSessionService.sumUnreadForUser(session.getUserId());
         Integer totalUnreadForAgent = customerServiceSessionService.sumUnreadForAllAgents();
         CsWsUnreadDTO unreadDTO = CsWsUnreadDTO.builder()
@@ -129,6 +131,8 @@ public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
                 .unreadForAgent(totalUnreadForAgent)
                 .build();
 
+        boolean userSending = session.getUserId() != null && currentUserId.equals(session.getUserId());
+        // ws 连接建立后，向指定路径（在 ws 配置文件中已定义）推送消息（消息和未读数）
         if (userSending) {
             List<Long> onlineAdminIds = resolveOnlineSuperAdminIds();
             for (Long adminId : onlineAdminIds) {
@@ -160,6 +164,12 @@ public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
         }
     }
 
+    /**
+     * WS 方式已读回执
+     *
+     * @param payload       前端发送的已读回执 DTO
+     * @param currentUserId 当前登录用户 ID
+     */
     @Override
     public void handleReadAck(CsWsReadAckDTO payload, Long currentUserId) {
         log.info("[WS] 收到已读回执, sessionId={}, readSide={}, userId={}",
@@ -194,6 +204,7 @@ public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
                 .unreadForAgent(totalUnreadForAgent)
                 .build();
 
+        // ws 连接建立后，向指定路径（在 ws 配置文件中已定义）推送未读数
         if ("USER".equals(side)) {
             Long pushUserId = session.getUserId();
             if (pushUserId != null) {
@@ -215,6 +226,11 @@ public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
         }
     }
 
+    /**
+     * 解析在线的超级管理员列表（其实系统设计只有一个超级管理员，这里预留方法在后续如果项目有其他扩展方便处理）
+     *
+     * @return
+     */
     private List<Long> resolveOnlineSuperAdminIds() {
         try {
             LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
@@ -238,6 +254,12 @@ public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
         return List.of();
     }
 
+    /**
+     * 判断用户是否为管理员 / 超级管理员
+     *
+     * @param userId
+     * @return
+     */
     private boolean isAdminUser(Long userId) {
         if (userId == null) {
             return false;

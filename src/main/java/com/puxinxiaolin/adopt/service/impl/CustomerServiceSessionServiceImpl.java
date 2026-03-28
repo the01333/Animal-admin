@@ -32,13 +32,18 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
 
     @Autowired
     private CustomerServiceSessionMapper customerServiceSessionMapper;
-    
+
     @Autowired
     private UserService userService;
 
     @Autowired
     private SimpUserRegistry simpUserRegistry;
 
+    /**
+     * 获取/创建当前用户的会话
+     *
+     * @return
+     */
     @Override
     public CustomerServiceSessionVO openOrGetCurrentUserSession() {
         Long userId = StpUtil.getLoginIdAsLong();
@@ -73,6 +78,17 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
         return buildSessionVO(session);
     }
 
+    /**
+     * <p>分页查询会话列表（后台端 - 超级管理员）<p/>
+     * <br />
+     * 用于加载左侧会话列表以及展示侧边栏红点未读总数
+     *
+     * @param current 当前页
+     * @param size    每页大小
+     * @param keyword 按用户昵称/手机号等关键字搜索（预留）
+     * @param status  会话状态（OPEN/CLOSED）, 为空则不过滤
+     * @return
+     */
     @Override
     public Page<CustomerServiceSessionVO> pageSessionsForAdmin(Long current, Long size, String keyword, String status) {
         log.info("分页查询人工客服会话列表, current={}, size={}, keyword={}, status={}", current, size, keyword, status);
@@ -119,6 +135,48 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
         return voPage;
     }
 
+    /**
+     * 获取客服未读消息总数
+     *
+     * @param agentId
+     * @return
+     */
+    @Override
+    public Integer sumUnreadForAgent(Long agentId) {
+        if (agentId == null) {
+            return 0;
+        }
+
+        Integer sum = customerServiceSessionMapper.sumUnreadForAgent(agentId);
+        return sum == null ? 0 : sum;
+    }
+
+    /**
+     * 获取用户未读消息总数
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public Integer sumUnreadForUser(Long userId) {
+        if (userId == null) {
+            return 0;
+        }
+        Integer sum = customerServiceSessionMapper.sumUnreadForUser(userId);
+        return sum == null ? 0 : sum;
+    }
+
+    /**
+     * 获取所有客服未读消息总数
+     *
+     * @return
+     */
+    @Override
+    public Integer sumUnreadForAllAgents() {
+        Integer sum = customerServiceSessionMapper.sumUnreadForAllAgents();
+        return sum == null ? 0 : sum;
+    }
+
     private CustomerServiceSessionVO buildSessionVO(CustomerServiceSession session) {
         // 默认不过滤管理员账号, 供前台 openOrGetCurrentUserSession 使用
         return buildSessionVO(session, false);
@@ -138,7 +196,7 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
         boolean online = false;
         if (session.getUserId() != null) {
             user = userService.getById(session.getUserId());
-            // 注释掉：不再过滤管理员用户的会话，因为管理员也可以作为普通用户在前台发起对话
+            // fixme: 不再过滤管理员用户的会话，因为管理员也可以作为普通用户在前台发起对话
             // if (excludeAdminUser && user != null) {
             //     String role = user.getRole();
             //     if ("admin".equals(role) || "super_admin".equals(role)) {
@@ -152,7 +210,7 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
             }
         }
 
-        CustomerServiceSessionVO.CustomerServiceSessionVOBuilder builder = CustomerServiceSessionVO.builder()
+        CustomerServiceSessionVO.CustomerServiceSessionVOBuilder voBuilder = CustomerServiceSessionVO.builder()
                 .id(session.getId())
                 .userId(session.getUserId())
                 .agentId(session.getAgentId())
@@ -163,15 +221,15 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
                 .unreadForAgent(session.getUnreadForAgent())
                 .online(online);
         if (user != null) {
-            builder.userUsername(user.getUsername());
-            builder.userNickname(user.getNickname());
-            builder.userAvatar(user.getAvatar());
+            voBuilder.userUsername(user.getUsername());
+            voBuilder.userNickname(user.getNickname());
+            voBuilder.userAvatar(user.getAvatar());
         }
-        return builder.build();
+        return voBuilder.build();
     }
 
     /**
-     * 获取默认客服
+     * 获取默认客服，默认是超级管理员（超级管理员只有一个，并且只有超级管理员才能在后台页面进行会话管理）
      *
      * @return
      */
@@ -206,29 +264,5 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
         }
         return null;
     }
-
-    @Override
-    public Integer sumUnreadForAgent(Long agentId) {
-        if (agentId == null) {
-            return 0;
-        }
-        
-        Integer sum = customerServiceSessionMapper.sumUnreadForAgent(agentId);
-        return sum == null ? 0 : sum;
-    }
-
-    @Override
-    public Integer sumUnreadForUser(Long userId) {
-        if (userId == null) {
-            return 0;
-        }
-        Integer sum = customerServiceSessionMapper.sumUnreadForUser(userId);
-        return sum == null ? 0 : sum;
-    }
-
-    @Override
-    public Integer sumUnreadForAllAgents() {
-        Integer sum = customerServiceSessionMapper.sumUnreadForAllAgents();
-        return sum == null ? 0 : sum;
-    }
+    
 }

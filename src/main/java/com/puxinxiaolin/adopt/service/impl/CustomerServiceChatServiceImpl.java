@@ -60,7 +60,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
     private final UserService userService;
 
     /**
-     * 查询会话消息
+     * 获取会话历史消息
      *
      * @param sessionId
      * @return
@@ -101,7 +101,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
      * 长轮询获取新消息
      *
      * @param sessionId
-     * @param lastMessageId
+     * @param lastMessageId 前端记录的最新的消息 ID
      * @return
      */
     @Override
@@ -134,7 +134,6 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         // 3. 其他情况不允许
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
         boolean isSessionOwner = currentUserId.equals(session.getUserId());
-        
         if (!isSessionOwner && !isSuperAdmin) {
             DeferredResult<Result<List<CustomerServiceMessageVO>>> deferred = new DeferredResult<>();
             deferred.setResult(Result.success(List.of()));
@@ -145,12 +144,13 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         LambdaQueryWrapper<ChatMessage> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ChatMessage::getSessionId, String.valueOf(session.getId()));
         if (lastMessageId != null && lastMessageId > 0) {
+            // 看是否存在比 lastMessageId 更大的消息ID，有则说明有新消息
             wrapper.gt(ChatMessage::getId, lastMessageId);
         }
         wrapper.orderByAsc(ChatMessage::getCreateTime);
 
         List<ChatMessage> messages = chatMessageMapper.selectList(wrapper);
-        // 有新消息 → 立刻返回新消息
+        // 有新消息 → 立刻返回新消息（通过 Spring 提供的异步容器传递）
         if (CollUtil.isNotEmpty(messages)) {
             List<CustomerServiceMessageVO> voList = messages.stream()
                     .map(msg -> buildMessageVO(session, msg))
@@ -205,7 +205,6 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         msg.setSenderId(currentUserId);
 
         Long receiverId;
-        // boolean userSending = session.getUserId() != null && currentUserId.equals(session.getUserId()); // 注释掉重复定义
         if (userSending) {
             receiverId = session.getAgentId();
             if (receiverId == null || simpUserRegistry.getUser(String.valueOf(receiverId)) == null) {
@@ -260,6 +259,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
                     .unreadForAgent(totalUnreadForAgent)
                     .build();
 
+            // ws 连接建立后，向指定路径（在 ws 配置文件中已定义）推送消息（消息和未读数）
             if (userSending) {
                 List<Long> onlineAdminIds = resolveOnlineSuperAdminIds();
                 log.info("[WS] userSending=true, sessionId={}, senderUserId={}, onlineAdminIds={}",
@@ -299,7 +299,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
                 );
             }
 
-            // 打印当前在线的 WebSocket 用户及其订阅, 便于排查 convertAndSendToUser 是否能命中
+            // 打印当前在线的 ws 用户及其订阅, 这里我用于排查 convertAndSendToUser 点对点是否能命中
             for (SimpUser user : simpUserRegistry.getUsers()) {
                 log.info("[WS] 在线用户: name={}, sessionCount={}", user.getName(), user.getSessions().size());
                 for (SimpSession simpSession : user.getSessions()) {
@@ -309,7 +309,6 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
                 }
             }
         }
-
         return vo;
     }
 
@@ -375,6 +374,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
                 .unreadForAgent(totalUnreadForAgent)
                 .build();
 
+        // ws 连接建立后，向指定路径（在 ws 配置文件中已定义）推送未读数
         if ("USER".equals(side)) {
             Long pushUserId = session.getUserId();
             if (pushUserId != null) {
