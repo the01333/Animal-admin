@@ -7,6 +7,7 @@ import com.puxinxiaolin.adopt.entity.dto.EmailCodeLoginDTO;
 import com.puxinxiaolin.adopt.entity.dto.PhoneCodeLoginDTO;
 import com.puxinxiaolin.adopt.entity.dto.CodeRegisterDTO;
 import com.puxinxiaolin.adopt.entity.dto.ChangePasswordDTO;
+import com.puxinxiaolin.adopt.entity.dto.ResetPasswordDTO;
 import com.puxinxiaolin.adopt.entity.dto.UpdateUserStatusDTO;
 import com.puxinxiaolin.adopt.entity.entity.User;
 import com.puxinxiaolin.adopt.entity.vo.LoginVO;
@@ -63,6 +64,20 @@ public interface UserService extends IService<User> {
      * @return 是否成功
      */
     boolean changePassword(ChangePasswordDTO changePasswordDTO);
+
+    /**
+     * 通过邮箱重置密码
+     *
+     * @param dto 重置密码信息
+     */
+    void resetPasswordByEmail(ResetPasswordDTO dto);
+
+    /**
+     * 通过手机号重置密码
+     *
+     * @param dto 重置密码信息
+     */
+    void resetPasswordByPhone(ResetPasswordDTO dto);
 
     /**
      * 邮箱验证码登录

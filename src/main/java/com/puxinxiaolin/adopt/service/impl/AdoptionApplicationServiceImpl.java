@@ -114,13 +114,12 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
         log.info("查询用户领养申请, 用户ID: {}, 状态: {}", userId, queryDTO.getStatus());
 
         Page<AdoptionApplication> page = new Page<>(queryDTO.getCurrent(), queryDTO.getSize());
+        
         LambdaQueryWrapper<AdoptionApplication> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AdoptionApplication::getUserId, userId);
-
         if (StrUtil.isNotBlank(queryDTO.getStatus())) {
             wrapper.eq(AdoptionApplication::getStatus, queryDTO.getStatus().toLowerCase(Locale.ROOT));
         }
-
         wrapper.orderByDesc(AdoptionApplication::getCreateTime);
 
         Page<AdoptionApplication> applicationPage = this.page(page, wrapper);
@@ -249,7 +248,7 @@ public class AdoptionApplicationServiceImpl extends ServiceImpl<AdoptionApplicat
     }
 
     /**
-     * 执行批准申请（在锁内调用）
+     * 执行批准申请（在锁内调用），把其他申请单的状态改为拒绝
      */
     private void doApproveApplication(AdoptionApplication application, Long reviewerId, String reviewComment) {
         // 更新申请状态

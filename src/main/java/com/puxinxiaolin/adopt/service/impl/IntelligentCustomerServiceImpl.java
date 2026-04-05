@@ -25,16 +25,16 @@ import reactor.core.publisher.Flux;
 @Slf4j
 @Service
 public class IntelligentCustomerServiceImpl implements IntelligentCustomerService {
-    
+
     @Autowired
     private AiChatService aiChatService;
-    
+
     @Autowired
     private ConversationService conversationService;
-    
+
     @Autowired
     private SessionMemoryService sessionMemoryService;
-    
+
     @Autowired
     private RedisUtil redisUtil;
 
@@ -46,6 +46,13 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
         return new ChatStreamResult(null, stream);
     }
 
+    /**
+     * 带会话的流式响应
+     *
+     * @param request
+     * @param clientIp
+     * @return
+     */
     @Override
     public ChatStreamResult chatWithMemoryStream(ChatStreamRequestDTO request, String clientIp) {
         rateLimit(clientIp);
@@ -55,12 +62,15 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
         }
 
         String content = request.getContent() == null ? "" : request.getContent();
+        
+        // 无会话则创建新会话
         String sessionId = StringUtils.isNotBlank(request.getSessionId()) ? request.getSessionId() : "";
         if (sessionId.isEmpty()) {
             ConversationSession session = conversationService.createSession(userId, "新对话");
             sessionId = session.getSessionId();
         }
         final String finalSessionId = sessionId;
+        // 调用 AI 服务
         Flux<String> stream = aiChatService.chatWithMemoryStream(finalSessionId, content, userId)
                 .map(this::escapeJsonString);
         return new ChatStreamResult(finalSessionId, stream);
@@ -69,11 +79,11 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
     @Override
     public Result<String> saveMessage(SaveMessageDTO request) {
         Long userId = UserContext.getUserId();
-        
+
         if (StringUtils.isBlank(request.getSessionId())) {
             return Result.error(ResultCodeEnum.BAD_REQUEST.getCode(), "会话 ID 不能为空");
         }
-        
+
         String role = StringUtils.defaultIfBlank(request.getRole(), "assistant");
         String content = StringUtils.isNotBlank(request.getContent()) ? request.getContent() : "";
         try {
@@ -123,7 +133,7 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
         if (redisUtil.hasKey(key)) {
             throw new RuntimeException("请求过于频繁, 请稍后再试");
         }
-        
+
         redisUtil.set(key, 1, 10);
     }
 

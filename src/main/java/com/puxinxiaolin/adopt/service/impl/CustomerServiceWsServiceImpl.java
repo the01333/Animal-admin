@@ -121,7 +121,7 @@ public class CustomerServiceWsServiceImpl implements CustomerServiceWsService {
         messageVO.senderRole(senderRole);
         CustomerServiceMessageVO vo = messageVO.build();
 
-        // 同步通知（唤醒）长轮询等待者
+        // 同步通知（唤醒）长轮询等待者 - 有可能接收者正在使用 HTTP 长轮询等待消息
         customerServiceLongPollingService.publishNewMessage(session.getId(), vo);
         
         Integer totalUnreadForUser = customerServiceSessionService.sumUnreadForUser(session.getUserId());
