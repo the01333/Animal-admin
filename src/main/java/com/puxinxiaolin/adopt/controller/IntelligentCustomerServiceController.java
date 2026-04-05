@@ -22,15 +22,6 @@ public class IntelligentCustomerServiceController {
     private final IntelligentCustomerService intelligentCustomerService;
 
     /**
-     * 流式单轮对话（不使用会话记忆）
-     */
-    @PostMapping(value = "/chat-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> chatStream(@RequestBody ChatStreamRequestDTO body, HttpServletRequest request) {
-        ChatStreamResult result = intelligentCustomerService.chatStream(body, request.getRemoteAddr());
-        return result.getStream();
-    }
-
-    /**
      * 流式多轮对话（使用会话记忆）
      * 认证由拦截器处理, 这里直接从上下文获取用户ID
      */

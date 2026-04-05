@@ -25,16 +25,6 @@ public class AiChatService {
     @Autowired
     private SessionMemoryService sessionMemoryService;
     
-    public Flux<String> chatStream(String content) {
-        String system = ModelSystemPrompt.SYSTEM_PROMPT;
-        Message user = new UserMessage(content == null ? "" : content);
-        Prompt prompt = new Prompt(List.of(new SystemMessage(system), user));
-
-        return chatClient.prompt(prompt)
-                .stream()
-                .content();
-    }
-
     /**
      * 流式多轮对话（使用会话记忆）
      * <p>
@@ -76,25 +66,5 @@ public class AiChatService {
                 .stream()
                 .content();
         // MY_KEY: 完整的AI回复内容由前端收集后通过 /save-message 接口保存
-    }
-
-    /**
-     * 按换行符分割字符串并返回 Flux
-     */
-    private Flux<String> splitByNewline(String text) {
-        if (text == null || text.isEmpty()) {
-            return Flux.empty();
-        }
-
-        String[] lines = text.split("\n");
-        List<String> result = new ArrayList<>();
-
-        for (String line : lines) {
-            if (!line.isEmpty()) {
-                result.add(line + "\n");
-            }
-        }
-
-        return Flux.fromIterable(result);
     }
 }

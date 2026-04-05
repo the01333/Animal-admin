@@ -10,8 +10,6 @@ import com.puxinxiaolin.adopt.entity.dto.SaveMessageDTO;
  */
 public interface IntelligentCustomerService {
 
-    ChatStreamResult chatStream(ChatStreamRequestDTO request, String clientIp);
-
     ChatStreamResult chatWithMemoryStream(ChatStreamRequestDTO request, String clientIp);
 
     Result<String> saveMessage(SaveMessageDTO request);

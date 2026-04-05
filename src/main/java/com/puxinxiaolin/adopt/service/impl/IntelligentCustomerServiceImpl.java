@@ -38,14 +38,6 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
     @Autowired
     private RedisUtil redisUtil;
 
-    @Override
-    public ChatStreamResult chatStream(ChatStreamRequestDTO request, String clientIp) {
-        rateLimit(clientIp);
-        String content = request.getContent() == null ? "" : request.getContent();
-        Flux<String> stream = aiChatService.chatStream(content).map(this::escapeJsonString);
-        return new ChatStreamResult(null, stream);
-    }
-
     /**
      * 带会话的流式响应
      *
