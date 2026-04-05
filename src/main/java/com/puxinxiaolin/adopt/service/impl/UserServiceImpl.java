@@ -674,6 +674,74 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
+     * 通过邮箱重置密码
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void resetPasswordByEmail(ResetPasswordDTO dto) {
+        log.info("通过邮箱重置密码: {}", dto.getEmail());
+        
+        // 1. 验证验证码
+        if (!verificationCodeService.verifyEmailCode(dto.getEmail(), dto.getCode(), "reset_password")) {
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "验证码错误或已过期");
+        }
+        
+        // 2. 查询用户
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getEmail, dto.getEmail());
+        User user = this.getOne(wrapper);
+        
+        if (user == null) {
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "该邮箱未注册");
+        }
+        
+        // 3. 检查用户状态
+        if (user.getStatus() != null && user.getStatus() == 0) {
+            throw new BizException(ResultCodeEnum.USER_DISABLED);
+        }
+        
+        // 4. 更新密码
+        user.setPassword(BCrypt.hashpw(dto.getNewPassword()));
+        this.updateById(user);
+        
+        log.info("邮箱重置密码成功, 用户ID: {}", user.getId());
+    }
+
+    /**
+     * 通过手机号重置密码
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void resetPasswordByPhone(ResetPasswordDTO dto) {
+        log.info("通过手机号重置密码: {}", dto.getPhone());
+        
+        // 1. 验证验证码
+        if (!verificationCodeService.verifyPhoneCode(dto.getPhone(), dto.getCode(), "reset_password")) {
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "验证码错误或已过期");
+        }
+        
+        // 2. 查询用户
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getPhone, dto.getPhone());
+        User user = this.getOne(wrapper);
+        
+        if (user == null) {
+            throw new BizException(ResultCodeEnum.BAD_REQUEST.getCode(), "该手机号未注册");
+        }
+        
+        // 3. 检查用户状态
+        if (user.getStatus() != null && user.getStatus() == 0) {
+            throw new BizException(ResultCodeEnum.USER_DISABLED);
+        }
+        
+        // 4. 更新密码
+        user.setPassword(BCrypt.hashpw(dto.getNewPassword()));
+        this.updateById(user);
+        
+        log.info("手机号重置密码成功, 用户ID: {}", user.getId());
+    }
+
+    /**
      * 构建用户详情 VO
      *
      * @param user

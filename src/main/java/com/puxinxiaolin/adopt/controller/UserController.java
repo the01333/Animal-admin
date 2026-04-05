@@ -139,6 +139,24 @@ public class UserController {
     }
 
     /**
+     * 通过邮箱重置密码
+     */
+    @PostMapping("/password/reset/email")
+    public Result<String> resetPasswordByEmail(@Valid @RequestBody ResetPasswordDTO dto) {
+        userService.resetPasswordByEmail(dto);
+        return Result.success("密码重置成功，请重新登录", null);
+    }
+
+    /**
+     * 通过手机号重置密码
+     */
+    @PostMapping("/password/reset/phone")
+    public Result<String> resetPasswordByPhone(@Valid @RequestBody ResetPasswordDTO dto) {
+        userService.resetPasswordByPhone(dto);
+        return Result.success("密码重置成功，请重新登录", null);
+    }
+
+    /**
      * 获取用户列表（管理员）
      */
     @GetMapping("/list")

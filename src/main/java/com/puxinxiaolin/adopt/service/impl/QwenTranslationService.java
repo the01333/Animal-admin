@@ -14,7 +14,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * 基于 Spring AI + Qwen 的翻译服务实现
+ * 基于 Qwen 的翻译服务实现
  */
 @Slf4j
 @Service
