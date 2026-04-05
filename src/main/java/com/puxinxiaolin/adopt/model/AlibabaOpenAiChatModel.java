@@ -47,7 +47,10 @@ import java.util.stream.Collectors;
 
 /**
  * @Description: 解决兼容问题
- * <p/>
+ * <p />
+ * （1）词条分割
+ * （2）音视频不兼容
+ * <p />
  * 由于不能继承或实现, 只能对 OpenAiChatModel 的 buildGeneration() 进行重写
  * @Author: YCcLin
  * @Date: 2025/11/6 22:13

@@ -23,13 +23,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * 会话记忆服务实现
- * <p>
- * 核心特性: 
- * 1. 用户隔离 - 每个用户的对话完全独立
- * 2. 持久化存储 - 使用 Cassandra 存储对话历史
- * 3. 缓存加速 - 使用 Redis 缓存热数据
- * 4. 权限验证 - 确保用户只能访问自己的对话
+ * @Description: AI 会话历史服务实现 - 和 cassandra 交互，存储对话消息（给 AI 看到，AI 上下文快速查询）
+ * @Author: YCcLin
+ * @Date: 2026/3/5 20:10
  */
 @Slf4j
 @Service
@@ -190,6 +186,13 @@ public class SessionMemoryServiceImpl implements SessionMemoryService {
         log.info("会话历史已清空 - 会话ID: {}", sessionId);
     }
 
+    /**
+     * 根据 sessionId 获取 session 来验证是否是用一用户
+     *
+     * @param userId    用户ID
+     * @param sessionId 会话ID
+     * @return
+     */
     @Override
     public boolean hasAccess(Long userId, String sessionId) {
         // 从数据库验证用户是否拥有该会话

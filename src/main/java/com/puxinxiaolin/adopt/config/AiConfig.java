@@ -39,22 +39,17 @@ public class AiConfig {
 
     @Bean
     public ChatClient chatClient(AlibabaOpenAiChatModel chatModel) {
-        log.info("=== 初始化 ChatClient ===");
-        
-        // ✅ 创建默认选项，启用工具执行
+
         OpenAiChatOptions defaultOptions = OpenAiChatOptions.builder()
-                .internalToolExecutionEnabled(true)  // ✅ 关键：启用内部工具执行
+                .internalToolExecutionEnabled(true)  // MY_KEY: 启用 Function Call，修复模型"幻觉" bug
                 .build();
-        
-        ChatClient client = ChatClient.builder(chatModel)
-                .defaultSystem(ModelSystemPrompt.SYSTEM_PROMPT)  // 使用统一的系统提示词
-                .defaultOptions(defaultOptions)  // ✅ 设置默认选项
-                .defaultTools(aiToolService)  // 注册所有工具
+
+        return ChatClient.builder(chatModel)
+                .defaultSystem(ModelSystemPrompt.SYSTEM_PROMPT)
+                .defaultOptions(defaultOptions)  // 注册选项配置 - 设置了启用 Function Call
+                .defaultTools(aiToolService)  // 注册所有 Function Callings
                 .defaultAdvisors(new SimpleLoggerAdvisor())
                 .build();
-        
-        log.info("✅ ChatClient 初始化完成，已启用工具执行");
-        return client;
     }
 
     /**

@@ -1,10 +1,12 @@
 package com.puxinxiaolin.adopt.model;
 
+/**
+ * @Description: 系统提示词模版
+ * @Author: YCcLin
+ * @Date: 2026/4/5 20:17
+ */
 public class ModelSystemPrompt {
 
-    /**
-     * system prompt
-     */
     public static final String SYSTEM_PROMPT = """
             你是i宠园的智能客服助手, 一个专业、友好且富有同情心的宠物领养顾问
             

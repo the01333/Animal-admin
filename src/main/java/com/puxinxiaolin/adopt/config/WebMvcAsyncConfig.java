@@ -21,10 +21,10 @@ public class WebMvcAsyncConfig implements WebMvcConfigurer {
     @Override
     public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
         // 设置异步请求超时时间为 300 秒（5分钟）
-        // 防止 AI 流式响应在长时间生成时被中断
+        // 防止前端 AI 流式响应在长时间生成时被中断
         configurer.setDefaultTimeout(300_000);
         
-        // 使用自定义线程池，避免使用 SimpleAsyncTaskExecutor
+        // 使用自定义线程池，避免使用 SimpleAsyncTaskExecutor 而导致异步请求资源不足
         configurer.setTaskExecutor(mvcAsyncExecutor);
     }
 }

@@ -7,7 +7,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
@@ -18,7 +17,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @Description: ws 连接或断开自动调用
+ * @Description: ws 在线状态监视器（ws 连接或断开自动调用），推送用户在线离线状态
  * @Author: YCcLin
  * @Date: 2026/3/20 0:29
  */
@@ -27,14 +26,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public class CsPresenceWsListener {
 
-    private final SimpUserRegistry simpUserRegistry;
     private final SimpMessagingTemplate messagingTemplate;
-
+    // 记录每个 session 对应的用户 ID
     private final ConcurrentMap<String, Long> sessionUserMap = new ConcurrentHashMap<>();
+    // 记录每个用户有多少个活跃会话（支持多标签页/多设备）
     private final ConcurrentMap<Long, AtomicInteger> userSessionCountMap = new ConcurrentHashMap<>();
 
+    /**
+     * 连接时，建立 sessionId 映射关系，并更新用户在线状态
+     *
+     * @param event
+     */
     @EventListener
     public void handleSessionConnected(SessionConnectedEvent event) {
+        
         String sessionId = null;
         Principal principal = event.getUser();
         try {
@@ -46,11 +51,18 @@ public class CsPresenceWsListener {
         } catch (Exception e) {
             log.debug("[WS] 解析 STOMP sessionId 失败", e);
         }
+        
         handlePresenceConnect(principal, sessionId);
     }
 
+    /**
+     * 断开连接时，移除 sessionId 映射关系，并更新用户在线状态
+     *
+     * @param event
+     */
     @EventListener
     public void handleSessionDisconnect(SessionDisconnectEvent event) {
+        
         Principal principal = event.getUser();
         String sessionId = event.getSessionId();
         if (principal == null) {
@@ -64,10 +76,18 @@ public class CsPresenceWsListener {
                 log.debug("[WS] 解析 STOMP sessionId 失败", e);
             }
         }
+        
         handlePresenceDisconnect(principal, sessionId);
     }
 
+    /**
+     * 连接时，建立 sessionId 映射关系，并更新用户在线状态
+     *
+     * @param principal
+     * @param sessionId
+     */
     private void handlePresenceConnect(Principal principal, String sessionId) {
+        
         Long userId = resolveUserId(principal);
         if (userId == null) {
             return;
@@ -97,7 +117,14 @@ public class CsPresenceWsListener {
         publishPresence(userId, true);
     }
 
+    /**
+     * 断开连接时，移除 sessionId 映射关系，并更新用户在线状态
+     *
+     * @param principal
+     * @param sessionId
+     */
     private void handlePresenceDisconnect(Principal principal, String sessionId) {
+        
         Long userId = null;
         if (sessionId != null && !sessionId.isBlank()) {
             userId = sessionUserMap.remove(sessionId);
@@ -123,10 +150,17 @@ public class CsPresenceWsListener {
         publishPresence(userId, online);
     }
 
+    /**
+     * 解析用户 ID
+     *
+     * @param principal
+     * @return
+     */
     private Long resolveUserId(Principal principal) {
         if (principal == null || principal.getName() == null) {
             return null;
         }
+        
         try {
             return Long.valueOf(principal.getName());
         } catch (NumberFormatException e) {
@@ -135,6 +169,12 @@ public class CsPresenceWsListener {
         }
     }
 
+    /**
+     * 推送在线状态
+     *
+     * @param userId
+     * @param online
+     */
     private void publishPresence(Long userId, boolean online) {
         CsWsPresenceDTO dto = CsWsPresenceDTO.builder()
                 .userId(userId)

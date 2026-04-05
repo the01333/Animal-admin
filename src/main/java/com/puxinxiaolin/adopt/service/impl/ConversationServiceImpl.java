@@ -31,7 +31,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * AI 客服对话服务实现类
+ * AI 客服对话服务实现类，最终的消息存储和获取由此类实现（用户看的，完整 AI 历史存储）
+ * <p />
+ * todo: 其实存在重复插入的问题，但是在获取消息的时候有去重处理（通过分区键和时间聚类区分）
  */
 @Slf4j
 @Service
@@ -134,6 +136,17 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
         return vo;
     }
 
+    /**
+     * 保存消息到 Cassandra，先入 DB 再入 cassandra
+     *
+     * @param sessionId
+     * @param userId
+     * @param role
+     * @param content
+     * @param toolName
+     * @param toolParams
+     * @param toolResult
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveMessage(String sessionId, Long userId, String role, String content,
