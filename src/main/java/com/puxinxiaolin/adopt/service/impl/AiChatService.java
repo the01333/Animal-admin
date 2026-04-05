@@ -77,24 +77,4 @@ public class AiChatService {
                 .content();
         // MY_KEY: 完整的AI回复内容由前端收集后通过 /save-message 接口保存
     }
-
-    /**
-     * 按换行符分割字符串并返回 Flux
-     */
-    private Flux<String> splitByNewline(String text) {
-        if (text == null || text.isEmpty()) {
-            return Flux.empty();
-        }
-
-        String[] lines = text.split("\n");
-        List<String> result = new ArrayList<>();
-
-        for (String line : lines) {
-            if (!line.isEmpty()) {
-                result.add(line + "\n");
-            }
-        }
-
-        return Flux.fromIterable(result);
-    }
 }
