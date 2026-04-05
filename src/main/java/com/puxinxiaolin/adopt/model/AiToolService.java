@@ -1,4 +1,4 @@
-package com.puxinxiaolin.adopt.service;
+package com.puxinxiaolin.adopt.model;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -8,6 +8,8 @@ import com.puxinxiaolin.adopt.entity.vo.ContentVO;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
 import com.puxinxiaolin.adopt.enums.AdoptionStatusEnum;
 import com.puxinxiaolin.adopt.enums.ContentCategoryEnum;
+import com.puxinxiaolin.adopt.service.ContentService;
+import com.puxinxiaolin.adopt.service.PetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
@@ -174,6 +176,33 @@ public class AiToolService {
     public List<PetVO> getPopularPets(
             @ToolParam(description = "返回条数", required = false) Integer limit) {
         return searchPets(null, null, AdoptionStatusEnum.AVAILABLE.getCode(), limit == null ? 10 : limit);
+    }
+
+    /**
+     * 获取宠物种类统计信息
+     * 用于处理"有多少种宠物？"等问题
+     */
+    @Tool(description = "获取系统中所有可领养宠物的种类统计信息，返回每种宠物的数量")
+    public Map<String, Object> getPetCategoryStatistics() {
+        // 查询所有可领养的宠物
+        List<PetVO> allPets = searchPets(null, null, AdoptionStatusEnum.AVAILABLE.getCode(), 1000);
+        
+        // 统计每种宠物的数量
+        Map<String, Long> categoryCount = new HashMap<>();
+        for (PetVO pet : allPets) {
+            String category = pet.getCategory();
+            if (category != null && !category.isEmpty()) {
+                categoryCount.put(category, categoryCount.getOrDefault(category, 0L) + 1);
+            }
+        }
+        
+        // 构建返回结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("totalCount", allPets.size());
+        result.put("categoryCount", categoryCount);
+        result.put("categories", new ArrayList<>(categoryCount.keySet()));
+        
+        return result;
     }
 
     /**

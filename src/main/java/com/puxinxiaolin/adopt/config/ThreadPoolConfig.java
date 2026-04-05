@@ -38,4 +38,26 @@ public class ThreadPoolConfig {
         
         return executor;
     }
+
+    /**
+     * Spring MVC 异步请求专用线程池
+     * 用于处理 SSE、长轮询等异步 HTTP 请求
+     */
+    @Bean("mvcAsyncExecutor")
+    public ThreadPoolTaskExecutor mvcAsyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        
+        int processors = Runtime.getRuntime().availableProcessors();
+        executor.setCorePoolSize(Math.max(4, processors));
+        executor.setMaxPoolSize(Math.max(8, processors * 2));
+        executor.setQueueCapacity(500);
+        executor.setKeepAliveSeconds(120);
+        executor.setThreadNamePrefix("mvc-async-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(60);
+        executor.initialize();
+        
+        return executor;
+    }
 }

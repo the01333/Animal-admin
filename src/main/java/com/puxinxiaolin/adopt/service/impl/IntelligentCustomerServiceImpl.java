@@ -9,6 +9,7 @@ import com.puxinxiaolin.adopt.entity.dto.ChatStreamResult;
 import com.puxinxiaolin.adopt.entity.dto.SaveMessageDTO;
 import com.puxinxiaolin.adopt.entity.entity.ConversationSession;
 import com.puxinxiaolin.adopt.entity.vo.ConversationSessionVO;
+import com.puxinxiaolin.adopt.model.AiChatService;
 import com.puxinxiaolin.adopt.service.ConversationService;
 import com.puxinxiaolin.adopt.service.IntelligentCustomerService;
 import com.puxinxiaolin.adopt.service.SessionMemoryService;

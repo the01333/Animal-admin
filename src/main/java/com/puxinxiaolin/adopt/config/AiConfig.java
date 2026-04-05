@@ -1,8 +1,10 @@
 package com.puxinxiaolin.adopt.config;
 
 import com.puxinxiaolin.adopt.model.AlibabaOpenAiChatModel;
-import com.puxinxiaolin.adopt.service.AiToolService;
+import com.puxinxiaolin.adopt.model.ModelSystemPrompt;
+import com.puxinxiaolin.adopt.model.AiToolService;
 import io.micrometer.observation.ObservationRegistry;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.autoconfigure.openai.OpenAiChatProperties;
 import org.springframework.ai.autoconfigure.openai.OpenAiConnectionProperties;
 import org.springframework.ai.chat.client.ChatClient;
@@ -10,6 +12,7 @@ import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.observation.ChatModelObservationConvention;
 import org.springframework.ai.model.SimpleApiKey;
 import org.springframework.ai.model.tool.ToolCallingManager;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,26 +30,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+@Slf4j
 @Configuration
 public class AiConfig {
 
     @Autowired
     private AiToolService aiToolService;
 
-    private static final String SYSTEM_PROMPT = """
-            你是宠物领养系统的客服, 只回答与本系统相关的问题, 不相关的问题直接拒绝
-            """;
-
     @Bean
     public ChatClient chatClient(AlibabaOpenAiChatModel chatModel) {
-        return ChatClient.builder(chatModel)
-                .defaultSystem(SYSTEM_PROMPT)
-                // Function Call
-                .defaultTools(aiToolService)
-                .defaultAdvisors(
-                        new SimpleLoggerAdvisor()
-                ).build();
-
+        log.info("=== 初始化 ChatClient ===");
+        
+        // ✅ 创建默认选项，启用工具执行
+        OpenAiChatOptions defaultOptions = OpenAiChatOptions.builder()
+                .internalToolExecutionEnabled(true)  // ✅ 关键：启用内部工具执行
+                .build();
+        
+        ChatClient client = ChatClient.builder(chatModel)
+                .defaultSystem(ModelSystemPrompt.SYSTEM_PROMPT)  // 使用统一的系统提示词
+                .defaultOptions(defaultOptions)  // ✅ 设置默认选项
+                .defaultTools(aiToolService)  // 注册所有工具
+                .defaultAdvisors(new SimpleLoggerAdvisor())
+                .build();
+        
+        log.info("✅ ChatClient 初始化完成，已启用工具执行");
+        return client;
     }
 
     /**
