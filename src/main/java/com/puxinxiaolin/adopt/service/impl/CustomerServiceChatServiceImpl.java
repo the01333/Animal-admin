@@ -182,7 +182,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         }
 
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
-        boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
+//        boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
         
         // 判断是否是用户在发送消息（基于会话所有权，而不是角色）
         boolean userSending = session.getUserId() != null && currentUserId.equals(session.getUserId());

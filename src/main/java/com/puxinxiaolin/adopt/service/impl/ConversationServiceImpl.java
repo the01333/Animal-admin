@@ -70,17 +70,6 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
     }
 
     @Override
-    public List<ConversationSessionVO> getUserSessions(Long userId) {
-        log.info("获取用户的所有会话, 用户ID: {}", userId);
-
-        List<ConversationSession> sessions = this.baseMapper.getUserSessions(userId);
-
-        return sessions.stream()
-                .map(this::convertSessionToVO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public ConversationSessionVO getSessionDetail(String sessionId, Long userId) {
         log.info("获取会话详情, 会话ID: {}, 用户ID: {}", sessionId, userId);
 
@@ -235,31 +224,6 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
     }
 
     @Override
-    public ConversationSession getActiveSession(Long userId) {
-        log.info("获取用户的活跃会话, 用户ID: {}", userId);
-        return this.baseMapper.getActiveSession(userId);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void closeSession(String sessionId, Long userId) {
-        log.info("关闭会话, 会话ID: {}, 用户ID: {}", sessionId, userId);
-
-        ConversationSession session = this.baseMapper.getBySessionId(sessionId);
-        if (session == null || !session.getUserId().equals(userId)) {
-            log.warn("会话不存在或用户无权限");
-            return;
-        }
-
-        session.setStatus("archived");
-        session.setClosedTime(LocalDateTime.now());
-        this.updateById(session);
-
-        clearSessionCache(sessionId);
-        log.info("会话已关闭");
-    }
-
-    @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteSession(String sessionId, Long userId) {
         log.info("删除会话, 会话ID: {}, 用户ID: {}", sessionId, userId);
@@ -285,48 +249,6 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
 
         clearSessionCache(sessionId);
         log.info("会话已删除");
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void clearSessionMessages(String sessionId, Long userId) {
-        log.info("清空会话消息, 会话ID: {}, 用户ID: {}", sessionId, userId);
-
-        ConversationSession session = this.baseMapper.getBySessionId(sessionId);
-        if (session == null || !session.getUserId().equals(userId)) {
-            log.warn("会话不存在或用户无权限");
-            return;
-        }
-
-        // 删除所有消息（MySQL）
-        conversationHistoryMapper.deleteBySessionId(sessionId);
-
-        // 删除所有消息（Cassandra）
-        try {
-            cassandraRepository.deleteBySessionId(sessionId);
-        } catch (Exception e) {
-            log.warn("从 Cassandra 删除消息失败: {}", e.getMessage());
-        }
-
-        // 重置会话
-        session.setMessageCount(0);
-        session.setLastMessage(null);
-        session.setLastMessageTime(null);
-        this.updateById(session);
-
-        clearSessionCache(sessionId);
-        log.info("会话消息已清空");
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void updateSessionLastMessage(String sessionId, String lastMessage) {
-        ConversationSession session = this.baseMapper.getBySessionId(sessionId);
-        if (session != null) {
-            session.setLastMessage(lastMessage);
-            session.setLastMessageTime(LocalDateTime.now());
-            this.updateById(session);
-        }
     }
 
     /**

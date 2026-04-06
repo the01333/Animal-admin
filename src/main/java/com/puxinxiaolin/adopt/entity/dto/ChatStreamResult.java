@@ -10,6 +10,8 @@ import reactor.core.publisher.Flux;
 @Data
 @AllArgsConstructor
 public class ChatStreamResult {
+    
     private String sessionId;
     private Flux<String> stream;
+    
 }

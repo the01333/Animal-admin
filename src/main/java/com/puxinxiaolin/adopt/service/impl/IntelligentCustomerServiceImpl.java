@@ -55,7 +55,7 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
         }
 
         String content = request.getContent() == null ? "" : request.getContent();
-        
+
         // 无会话则创建新会话
         String sessionId = StringUtils.isNotBlank(request.getSessionId()) ? request.getSessionId() : "";
         if (sessionId.isEmpty()) {
@@ -68,7 +68,7 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
                 .map(this::escapeJsonString);
         return new ChatStreamResult(finalSessionId, stream);
     }
-
+    
     @Override
     public Result<String> saveMessage(SaveMessageDTO request) {
         Long userId = UserContext.getUserId();

@@ -23,7 +23,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * @Description: AI 会话历史服务实现 - 和 cassandra 交互，存储对话消息（给 AI 看到，AI 上下文快速查询）
+ * @Description: AI 会话历史服务实现 - 和 cassandra 交互，存储对话消息（为 AI 提供上下文）
  * @Author: YCcLin
  * @Date: 2026/3/5 20:10
  */
