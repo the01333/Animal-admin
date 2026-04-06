@@ -81,7 +81,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         // 3. 其他情况不允许
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
         boolean isSessionOwner = currentUserId.equals(session.getUserId());
-        
+
         if (!isSessionOwner && !isSuperAdmin) {
             // 既不是会话所有者，也不是超级管理员，返回空列表
             return List.of();
@@ -183,10 +183,10 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
 
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
 //        boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
-        
+
         // 判断是否是用户在发送消息（基于会话所有权，而不是角色）
         boolean userSending = session.getUserId() != null && currentUserId.equals(session.getUserId());
-        
+
         // 权限检查：
         // 1. 如果是用户发送（会话所有者），允许
         // 2. 如果是超级管理员作为客服发送，允许
@@ -330,7 +330,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
 
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
         boolean isSessionOwner = currentUserId.equals(session.getUserId());
-        
+
         // 权限检查：
         // 1. 会话所有者（用户）可以标记自己的消息为已读
         // 2. 超级管理员可以标记任何会话的消息为已读
@@ -441,6 +441,11 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         return builder.build();
     }
 
+    /**
+     * 获取在线的第一个超级管理员 ID - 系统后面只支持一个超级管理员，直接获取也行，无需使用该方法
+     *
+     * @return
+     */
     private Long resolveFirstOnlineSuperAdminId() {
         try {
             LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();

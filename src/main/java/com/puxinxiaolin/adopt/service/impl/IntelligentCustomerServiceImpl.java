@@ -68,7 +68,13 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
                 .map(this::escapeJsonString);
         return new ChatStreamResult(finalSessionId, stream);
     }
-    
+
+    /**
+     * 保存消息
+     *
+     * @param request
+     * @return
+     */
     @Override
     public Result<String> saveMessage(SaveMessageDTO request) {
         Long userId = UserContext.getUserId();
@@ -94,6 +100,12 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
         }
     }
 
+    /**
+     * 获取会话详情
+     *
+     * @param sessionId
+     * @return
+     */
     @Override
     public Result<Object> getSessionMessages(String sessionId) {
         Long userId = UserContext.getUserId();
@@ -121,6 +133,11 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
         }
     }
 
+    /**
+     * 限流，防止恶意请求泛滥（一分钟内同一个 IP 只允许一次请求）
+     *
+     * @param ip
+     */
     private void rateLimit(String ip) {
         String key = "ai:limit:" + ip;
         if (redisUtil.hasKey(key)) {

@@ -38,6 +38,14 @@ public class SessionMemoryServiceImpl implements SessionMemoryService {
 
     private static final long CACHE_EXPIRE_HOURS = 24;
 
+    /**
+     * 查询指定数量的对话，供 AI 提供上下文
+     *
+     * @param userId    用户ID
+     * @param sessionId 会话ID
+     * @param limit     返回最近N条消息
+     * @return
+     */
     @Override
     public List<Message> getSessionHistory(Long userId, String sessionId, int limit) {
         log.info("获取会话历史 - 用户ID: {}, 会话ID: {}, 限制: {}", userId, sessionId, limit);

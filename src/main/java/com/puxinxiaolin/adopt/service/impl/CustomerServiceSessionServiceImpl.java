@@ -86,7 +86,7 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
      * @param current 当前页
      * @param size    每页大小
      * @param keyword 按用户昵称/手机号等关键字搜索（预留）
-     * @param status  会话状态（OPEN/CLOSED）, 为空则不过滤
+     * @param status
      * @return
      */
     @Override

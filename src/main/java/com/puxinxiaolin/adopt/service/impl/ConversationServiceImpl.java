@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 /**
  * AI 客服对话服务实现类，最终的消息存储和获取由此类实现（用户看的，完整 AI 历史存储）
- * <p />
+ * <p/>
  * todo: 其实存在重复插入的问题，但是在获取消息的时候有去重处理（通过分区键和时间聚类区分）
  */
 @Slf4j
@@ -69,6 +69,13 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
         return session;
     }
 
+    /**
+     * 获取会话详情（所有消息），给前端渲染
+     *
+     * @param sessionId
+     * @param userId
+     * @return
+     */
     @Override
     public ConversationSessionVO getSessionDetail(String sessionId, Long userId) {
         log.info("获取会话详情, 会话ID: {}, 用户ID: {}", sessionId, userId);
@@ -127,6 +134,8 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
 
     /**
      * 保存消息到 Cassandra，先入 DB 再入 cassandra
+     * <p/>
+     * todo: 这里有个 bug，会存两次同样的消息，后续看情况再修复
      *
      * @param sessionId
      * @param userId
@@ -170,7 +179,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
             // 不影响主流程, 仅记录警告
         }
 
-        // 3. 更新会话的消息计数和最后消息
+        // 3. 更新会话的消息计数和最后消息（MY_KEY: 暂时不需要提供渲染，计数跟人工客服对话隔离开）
         session.setMessageCount(session.getMessageCount() + 1);
         session.setLastMessage(content);
         session.setLastMessageTime(LocalDateTime.now());
