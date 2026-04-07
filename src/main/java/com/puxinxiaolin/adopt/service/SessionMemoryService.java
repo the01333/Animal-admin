@@ -41,24 +41,7 @@ public interface SessionMemoryService {
      * @param content AI 回复内容
      */
     void addAssistantMessage(Long userId, String sessionId, String content);
-
-    /**
-     * 获取会话的完整对话历史
-     * 
-     * @param userId 用户ID
-     * @param sessionId 会话ID
-     * @return 完整的对话消息列表
-     */
-    List<Message> getFullHistory(Long userId, String sessionId);
-
-    /**
-     * 清空会话的所有对话历史
-     * 
-     * @param userId 用户ID
-     * @param sessionId 会话ID
-     */
-    void clearHistory(Long userId, String sessionId);
-
+    
     /**
      * 验证用户是否有权访问该会话
      * 

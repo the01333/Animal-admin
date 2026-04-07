@@ -28,7 +28,8 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServiceSessionMapper, CustomerServiceSession> implements CustomerServiceSessionService {
+public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServiceSessionMapper, CustomerServiceSession> 
+        implements CustomerServiceSessionService {
 
     @Autowired
     private CustomerServiceSessionMapper customerServiceSessionMapper;
@@ -86,7 +87,7 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
      * @param current 当前页
      * @param size    每页大小
      * @param keyword 按用户昵称/手机号等关键字搜索（预留）
-     * @param status  会话状态（OPEN/CLOSED）, 为空则不过滤
+     * @param status
      * @return
      */
     @Override
@@ -134,23 +135,7 @@ public class CustomerServiceSessionServiceImpl extends ServiceImpl<CustomerServi
         voPage.setRecords(voList);
         return voPage;
     }
-
-    /**
-     * 获取客服未读消息总数
-     *
-     * @param agentId
-     * @return
-     */
-    @Override
-    public Integer sumUnreadForAgent(Long agentId) {
-        if (agentId == null) {
-            return 0;
-        }
-
-        Integer sum = customerServiceSessionMapper.sumUnreadForAgent(agentId);
-        return sum == null ? 0 : sum;
-    }
-
+    
     /**
      * 获取用户未读消息总数
      *

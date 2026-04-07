@@ -9,10 +9,12 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
- * 统一异步线程池配置
+ * @Description: 统一异步线程池配置
  * <p>
  * 用于承载业务异步任务，既可通过 @Async("bizExecutor") 使用，
  * 也可以在需要的地方直接注入 Executor 手动提交任务
+ * @Author: YCcLin
+ * @Date: 2026/4/5 19:51
  */
 @Configuration
 @EnableAsync
@@ -20,11 +22,13 @@ public class ThreadPoolConfig {
 
     /**
      * 业务通用线程池
+     *
+     * @return
      */
     @Bean("bizExecutor")
     public Executor bizExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        
+
         int processors = Runtime.getRuntime().availableProcessors();
         executor.setCorePoolSize(Math.max(2, processors));
         executor.setMaxPoolSize(Math.max(4, processors * 2));
@@ -35,7 +39,31 @@ public class ThreadPoolConfig {
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(30);
         executor.initialize();
-        
+
+        return executor;
+    }
+
+    /**
+     * 大模型专用线程池
+     * 用于处理 SSE、长轮询等异步 HTTP 请求，解决前端流式响应中断的情况
+     *
+     * @return
+     */
+    @Bean("mvcAsyncExecutor")
+    public ThreadPoolTaskExecutor mvcAsyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
+        int processors = Runtime.getRuntime().availableProcessors();
+        executor.setCorePoolSize(Math.max(4, processors));
+        executor.setMaxPoolSize(Math.max(8, processors * 2));
+        executor.setQueueCapacity(500);
+        executor.setKeepAliveSeconds(120);
+        executor.setThreadNamePrefix("mvc-async-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(60);
+        executor.initialize();
+
         return executor;
     }
 }

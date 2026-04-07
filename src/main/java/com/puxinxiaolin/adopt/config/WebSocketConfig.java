@@ -188,11 +188,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
      */
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // 客户端订阅前缀，让 ws 代理包含以下前缀的所有路径，具体的消息模式取决于调用的方法（服务器 => 客户端）
+        // 让 ws 代理包含以下前缀的所有路径（点对点、广播），具体的消息模式取决于调用的方法（服务器 => 客户端）
         registry.enableSimpleBroker("/topic", "/queue", "/user/queue");
         // 服务器接收应用消息前缀（客户端 => 服务器）
         registry.setApplicationDestinationPrefixes("/app");
-        // 如果匹配，为用户专属消息，会自动在路径中插入 sessionId，如 /user/queue/messages => /user/{sessionId}/queue/messages
+        // 客户端接收应用消息前缀（服务器 => 客户端），如果匹配，为用户专属消息，会自动在路径中插入 sessionId，如 /user/queue/messages => /user/{sessionId}/queue/messages
         registry.setUserDestinationPrefix("/user");
     }
 

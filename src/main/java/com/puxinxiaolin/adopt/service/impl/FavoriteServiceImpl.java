@@ -84,11 +84,6 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         return removed;
     }
     
-    private void deleteFavoriteCountCache(Long petId) {
-        String cacheKey = RedisConstant.buildPetFavoriteCountKey(petId);
-        redisUtil.delete(cacheKey);
-    }
-    
     @Override
     public boolean isFavorite(Long petId) {
         Long userId = StpUtil.getLoginIdAsLong();
@@ -144,5 +139,10 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     public long getFavoriteCount(Long petId) {
         Pet pet = petService.getById(petId);
         return pet != null ? pet.getFavoriteCount() : 0;
+    }
+
+    private void deleteFavoriteCountCache(Long petId) {
+        String cacheKey = RedisConstant.buildPetFavoriteCountKey(petId);
+        redisUtil.delete(cacheKey);
     }
 }

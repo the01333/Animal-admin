@@ -1,6 +1,5 @@
 package com.puxinxiaolin.adopt.service.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
@@ -14,24 +13,23 @@ import com.puxinxiaolin.adopt.mapper.ConversationSessionMapper;
 import com.puxinxiaolin.adopt.repository.ConversationHistoryCassandraRepository;
 import com.puxinxiaolin.adopt.service.ConversationService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
- * AI 客服对话服务实现类
+ * AI 客服对话服务实现类，最终的消息存储和获取由此类实现（用户看的，完整 AI 历史存储）
+ * <p/>
+ * todo: 其实存在重复插入的问题，但是在获取消息的时候有去重处理（通过分区键和时间聚类区分），参见如下方法
+ *
+ * @see IntelligentCustomerServiceImpl#saveMessage
  */
 @Slf4j
 @Service
@@ -49,6 +47,13 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
 
     private static final long CACHE_EXPIRE_HOURS = 24;
 
+    /**
+     * 创建 AI 会话
+     *
+     * @param userId
+     * @param title
+     * @return
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ConversationSession createSession(Long userId, String title) {
@@ -67,17 +72,13 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
         return session;
     }
 
-    @Override
-    public List<ConversationSessionVO> getUserSessions(Long userId) {
-        log.info("获取用户的所有会话, 用户ID: {}", userId);
-
-        List<ConversationSession> sessions = this.baseMapper.getUserSessions(userId);
-
-        return sessions.stream()
-                .map(this::convertSessionToVO)
-                .collect(Collectors.toList());
-    }
-
+    /**
+     * 获取 AI 会话详情（所有消息），给前端渲染
+     *
+     * @param sessionId
+     * @param userId
+     * @return
+     */
     @Override
     public ConversationSessionVO getSessionDetail(String sessionId, Long userId) {
         log.info("获取会话详情, 会话ID: {}, 用户ID: {}", sessionId, userId);
@@ -134,6 +135,19 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
         return vo;
     }
 
+    /**
+     * 保存消息，先入 DB 再入 cassandra
+     * <p/>
+     * todo: 这里有个 bug，会存两次同样的消息，后续看情况再修复
+     *
+     * @param sessionId
+     * @param userId
+     * @param role
+     * @param content
+     * @param toolName
+     * @param toolParams
+     * @param toolResult
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveMessage(String sessionId, Long userId, String role, String content,
@@ -159,7 +173,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
         history.setTimestamp(LocalDateTime.now());
         conversationHistoryMapper.insert(history);
 
-        // TODO [YCcLin 2026/1/8]: 后期改造 - 使用本地事务表+定时任务补偿或者引入 MQ 实现（不能直接用 @Async，@Transactional 会导致多线程环境下的数据一致性问题）
+        // TODO [YCcLin 2026/1/8]: 后期改造 - 使用本地事务表 + 定时任务补偿或者引入 MQ 实现（不能直接用 @Async，@Transactional 会导致多线程环境下的数据一致性问题）
         // 2. 同时保存消息到 Cassandra（后期改为异步, 不阻塞主流程）
         try {
             saveMessageToCassandra(sessionId, userId, role, content, toolName, toolParams, toolResult);
@@ -168,7 +182,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
             // 不影响主流程, 仅记录警告
         }
 
-        // 3. 更新会话的消息计数和最后消息
+        // 3. 更新会话的消息计数和最后消息（MY_KEY: 暂时不需要提供渲染，计数跟人工客服对话隔离开）
         session.setMessageCount(session.getMessageCount() + 1);
         session.setLastMessage(content);
         session.setLastMessageTime(LocalDateTime.now());
@@ -179,71 +193,6 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
         clearSessionCache(sessionId);
 
         log.info("对话消息保存成功");
-    }
-
-    /**
-     * 获取 AI 对话历史
-     *
-     * @param sessionId
-     * @return
-     */
-    @Override
-    public List<Message> getConversationHistory(String sessionId) {
-        log.info("获取会话的对话历史, 会话ID: {}", sessionId);
-
-        // 先从缓存获取
-        String cacheKey = RedisConstant.buildConversationKey(sessionId);
-        @SuppressWarnings("unchecked")
-        List<Message> cachedMessages = (List<Message>) redisTemplate.opsForValue().get(cacheKey);
-        if (CollUtil.isNotEmpty(cachedMessages)) {
-            log.info("从缓存获取对话历史, 会话ID: {}", sessionId);
-            return cachedMessages;
-        }
-
-        // 从数据库获取
-        List<ConversationHistory> histories = conversationHistoryMapper.getBySessionId(sessionId);
-        List<Message> messages = histories.stream()
-                .map(h -> {
-                    if ("user".equals(h.getRole())) {
-                        return new UserMessage(h.getContent());
-                    } else {
-                        return new AssistantMessage(h.getContent());
-                    }
-                })
-                .collect(Collectors.toList());
-
-        // 缓存到 redis
-        if (CollUtil.isNotEmpty(messages)) {
-            redisTemplate.opsForValue().set(cacheKey, messages,
-                    Duration.ofHours(CACHE_EXPIRE_HOURS));
-        }
-
-        return messages;
-    }
-
-    @Override
-    public ConversationSession getActiveSession(Long userId) {
-        log.info("获取用户的活跃会话, 用户ID: {}", userId);
-        return this.baseMapper.getActiveSession(userId);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void closeSession(String sessionId, Long userId) {
-        log.info("关闭会话, 会话ID: {}, 用户ID: {}", sessionId, userId);
-
-        ConversationSession session = this.baseMapper.getBySessionId(sessionId);
-        if (session == null || !session.getUserId().equals(userId)) {
-            log.warn("会话不存在或用户无权限");
-            return;
-        }
-
-        session.setStatus("archived");
-        session.setClosedTime(LocalDateTime.now());
-        this.updateById(session);
-
-        clearSessionCache(sessionId);
-        log.info("会话已关闭");
     }
 
     @Override
@@ -257,7 +206,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
             return;
         }
 
-        // 删除会话的所有消息（MySQL）
+        // 删除会话历史的所有消息（MySQL）
         conversationHistoryMapper.deleteBySessionId(sessionId);
 
         // 删除会话的所有消息（Cassandra）
@@ -272,48 +221,6 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
 
         clearSessionCache(sessionId);
         log.info("会话已删除");
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void clearSessionMessages(String sessionId, Long userId) {
-        log.info("清空会话消息, 会话ID: {}, 用户ID: {}", sessionId, userId);
-
-        ConversationSession session = this.baseMapper.getBySessionId(sessionId);
-        if (session == null || !session.getUserId().equals(userId)) {
-            log.warn("会话不存在或用户无权限");
-            return;
-        }
-
-        // 删除所有消息（MySQL）
-        conversationHistoryMapper.deleteBySessionId(sessionId);
-
-        // 删除所有消息（Cassandra）
-        try {
-            cassandraRepository.deleteBySessionId(sessionId);
-        } catch (Exception e) {
-            log.warn("从 Cassandra 删除消息失败: {}", e.getMessage());
-        }
-
-        // 重置会话
-        session.setMessageCount(0);
-        session.setLastMessage(null);
-        session.setLastMessageTime(null);
-        this.updateById(session);
-
-        clearSessionCache(sessionId);
-        log.info("会话消息已清空");
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void updateSessionLastMessage(String sessionId, String lastMessage) {
-        ConversationSession session = this.baseMapper.getBySessionId(sessionId);
-        if (session != null) {
-            session.setLastMessage(lastMessage);
-            session.setLastMessageTime(LocalDateTime.now());
-            this.updateById(session);
-        }
     }
 
     /**
@@ -370,27 +277,6 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
                         session.getCreateTime().format(formatter) : null)
                 .updateTime(session.getUpdateTime() != null ?
                         session.getUpdateTime().format(formatter) : null)
-                .build();
-    }
-
-    /**
-     * 将历史记录转换为 VO
-     */
-    private ConversationMessageVO convertHistoryToVO(ConversationHistory history) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-        return ConversationMessageVO.builder()
-                .id(history.getId())
-                .sessionId(history.getSessionId())
-                .role(history.getRole())
-                .content(history.getContent())
-                .toolName(history.getToolName())
-                .toolParams(history.getToolParams())
-                .toolResult(history.getToolResult())
-                .timestamp(history.getTimestamp() != null ?
-                        history.getTimestamp().format(formatter) : null)
-                .createTime(history.getCreateTime() != null ?
-                        history.getCreateTime().format(formatter) : null)
                 .build();
     }
 

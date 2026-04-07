@@ -9,6 +9,7 @@ import com.puxinxiaolin.adopt.entity.dto.ChatStreamResult;
 import com.puxinxiaolin.adopt.entity.dto.SaveMessageDTO;
 import com.puxinxiaolin.adopt.entity.entity.ConversationSession;
 import com.puxinxiaolin.adopt.entity.vo.ConversationSessionVO;
+import com.puxinxiaolin.adopt.model.AiChatService;
 import com.puxinxiaolin.adopt.service.ConversationService;
 import com.puxinxiaolin.adopt.service.IntelligentCustomerService;
 import com.puxinxiaolin.adopt.service.SessionMemoryService;
@@ -38,14 +39,6 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
     @Autowired
     private RedisUtil redisUtil;
 
-    @Override
-    public ChatStreamResult chatStream(ChatStreamRequestDTO request, String clientIp) {
-        rateLimit(clientIp);
-        String content = request.getContent() == null ? "" : request.getContent();
-        Flux<String> stream = aiChatService.chatStream(content).map(this::escapeJsonString);
-        return new ChatStreamResult(null, stream);
-    }
-
     /**
      * 带会话的流式响应
      *
@@ -62,7 +55,7 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
         }
 
         String content = request.getContent() == null ? "" : request.getContent();
-        
+
         // 无会话则创建新会话
         String sessionId = StringUtils.isNotBlank(request.getSessionId()) ? request.getSessionId() : "";
         if (sessionId.isEmpty()) {
@@ -76,6 +69,12 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
         return new ChatStreamResult(finalSessionId, stream);
     }
 
+    /**
+     * 保存消息
+     *
+     * @param request
+     * @return
+     */
     @Override
     public Result<String> saveMessage(SaveMessageDTO request) {
         Long userId = UserContext.getUserId();
@@ -101,6 +100,12 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
         }
     }
 
+    /**
+     * 获取会话详情
+     *
+     * @param sessionId
+     * @return
+     */
     @Override
     public Result<Object> getSessionMessages(String sessionId) {
         Long userId = UserContext.getUserId();
@@ -128,6 +133,11 @@ public class IntelligentCustomerServiceImpl implements IntelligentCustomerServic
         }
     }
 
+    /**
+     * 限流，防止恶意请求泛滥（一分钟内同一个 IP 只允许一次请求）
+     *
+     * @param ip
+     */
     private void rateLimit(String ip) {
         String key = "ai:limit:" + ip;
         if (redisUtil.hasKey(key)) {

@@ -11,6 +11,8 @@ import java.security.Principal;
 
 /**
  * @Description: WebSocket 监听器, 用于调试订阅和取消订阅事件
+ * <p />
+ * MY_KEY: 当时用于调试长轮询 bug
  * @Author: YCcLin
  * @Date: 2025/12/20 20:07
  */

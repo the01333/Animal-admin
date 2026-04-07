@@ -14,7 +14,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * 基于 Qwen 的翻译服务实现
+ * 基于 Qwen 的翻译服务实现，走 http 调用大模型
  */
 @Slf4j
 @Service

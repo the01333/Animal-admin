@@ -23,13 +23,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * 会话记忆服务实现
- * <p>
- * 核心特性: 
- * 1. 用户隔离 - 每个用户的对话完全独立
- * 2. 持久化存储 - 使用 Cassandra 存储对话历史
- * 3. 缓存加速 - 使用 Redis 缓存热数据
- * 4. 权限验证 - 确保用户只能访问自己的对话
+ * @Description: AI 会话历史服务实现 - 和 cassandra 交互，存储对话消息（为 AI 提供上下文）
+ * @Author: YCcLin
+ * @Date: 2026/3/5 20:10
  */
 @Slf4j
 @Service
@@ -42,6 +38,14 @@ public class SessionMemoryServiceImpl implements SessionMemoryService {
 
     private static final long CACHE_EXPIRE_HOURS = 24;
 
+    /**
+     * 查询指定数量的对话，供 AI 提供上下文
+     *
+     * @param userId    用户ID
+     * @param sessionId 会话ID
+     * @param limit     返回最近N条消息
+     * @return
+     */
     @Override
     public List<Message> getSessionHistory(Long userId, String sessionId, int limit) {
         log.info("获取会话历史 - 用户ID: {}, 会话ID: {}, 限制: {}", userId, sessionId, limit);
@@ -147,49 +151,14 @@ public class SessionMemoryServiceImpl implements SessionMemoryService {
 
         log.debug("AI 回复已保存 - 会话ID: {}", sessionId);
     }
-
-    @Override
-    public List<Message> getFullHistory(Long userId, String sessionId) {
-        log.info("获取完整对话历史 - 用户ID: {}, 会话ID: {}", userId, sessionId);
-
-        if (!hasAccess(userId, sessionId)) {
-            log.warn("用户无权访问该会话");
-            return new ArrayList<>();
-        }
-
-        // 从 Cassandra 获取所有消息
-        List<ConversationHistoryCassandra> histories = cassandraRepository.findBySessionId(sessionId);
-
-        return histories.stream()
-                .sorted(Comparator.comparing(h -> h.getKey().getTimestamp()))
-                .map(h -> {
-                    if ("user".equals(h.getRole())) {
-                        return new UserMessage(h.getContent());
-                    } else {
-                        return new AssistantMessage(h.getContent());
-                    }
-                })
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public void clearHistory(Long userId, String sessionId) {
-        log.info("清空会话历史 - 用户ID: {}, 会话ID: {}", userId, sessionId);
-
-        if (!hasAccess(userId, sessionId)) {
-            log.warn("用户无权访问该会话");
-            return;
-        }
-
-        // 从 Cassandra 删除
-        cassandraRepository.deleteBySessionId(sessionId);
-
-        // 清除缓存
-        clearCache(sessionId);
-
-        log.info("会话历史已清空 - 会话ID: {}", sessionId);
-    }
-
+    
+    /**
+     * 根据 sessionId 获取 session 来验证是否是用一用户
+     *
+     * @param userId    用户ID
+     * @param sessionId 会话ID
+     * @return
+     */
     @Override
     public boolean hasAccess(Long userId, String sessionId) {
         // 从数据库验证用户是否拥有该会话

@@ -55,7 +55,7 @@ public class SaTokenConfig implements WebMvcConfigurer {
              */
             @Override
             public List<String> getPermissionList(Object loginId, String loginType) {
-                // 本系统暂时不设置细粒度权限, 返回空列表
+                // todo: 本系统暂时不设置细粒度权限, 返回空列表
                 return new ArrayList<>();
             }
             

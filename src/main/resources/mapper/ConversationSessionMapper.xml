@@ -8,19 +8,4 @@
         WHERE session_id = #{sessionId} AND deleted = 0
     </select>
 
-    <!-- 获取用户的所有会话 -->
-    <select id="getUserSessions" resultType="com.puxinxiaolin.adopt.entity.entity.ConversationSession">
-        SELECT * FROM t_conversation_session 
-        WHERE user_id = #{userId} AND deleted = 0 
-        ORDER BY update_time DESC
-    </select>
-
-    <!-- 获取用户的活跃会话 -->
-    <select id="getActiveSession" resultType="com.puxinxiaolin.adopt.entity.entity.ConversationSession">
-        SELECT * FROM t_conversation_session 
-        WHERE user_id = #{userId} AND status = 'active' AND deleted = 0 
-        ORDER BY update_time DESC 
-        LIMIT 1
-    </select>
-
 </mapper>

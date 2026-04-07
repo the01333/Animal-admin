@@ -35,13 +35,14 @@ import java.util.stream.Collectors;
 /**
  * <p>人工客服消息（HTTP）相关业务实现<p/>
  * <br />
- * 场景：用户发消息给管理员 <br />
- * 1. 用户调用 sendMessage() <br />
- * 2. 保存消息到 DB <br />
- * 3. 更新会话未读数（管理员未读数 + 1） <br />
- * 4. 通知长轮询等待者（如果有长轮询等待者，也就是管理员，立即收到新消息） <br />
- * 5. ws 推送 - 给所有在线的管理员广播消息和未读数更新 <br />
- * 6. 管理员看到 - 聊天窗口弹出新信息和未读消息红点提示
+ * 场景：发送消息 <br />
+ * 1. 获取会话（不存在先创建） <br />
+ * 2. 获取用户身份并校验 <br />
+ * 3. 构建消息实体并根据用户身份获取消息接收者 <br />
+ * 4. 保存消息到 DB 的消息历史表中 <br />
+ * 5. 更新 DB 会话表的未读数（管理员未读数 + 1） <br />
+ * 6. 唤醒 http 长轮询（无论 http 还是 ws 发送消息都必须做，ws 做是为了兜底）<br />
+ * 7. ws 推送未读数和消息 - 给所有在线的管理员广播消息和未读数更新 <br />
  * <br />
  * <p>
  * 负责走 HTTP 的消息业务，即使无 ws，也能让前端通过 HTTP 完成聊天（长轮询兜底）
@@ -81,7 +82,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         // 3. 其他情况不允许
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
         boolean isSessionOwner = currentUserId.equals(session.getUserId());
-        
+
         if (!isSessionOwner && !isSuperAdmin) {
             // 既不是会话所有者，也不是超级管理员，返回空列表
             return List.of();
@@ -176,17 +177,18 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         Long currentUserId = StpUtil.getLoginIdAsLong();
         log.info("发送人工客服消息, sessionId={}, currentUserId={}", sessionId, currentUserId);
 
+        // 1. 获取会话
         CustomerServiceSession session = customerServiceSessionService.getById(sessionId);
         if (session == null) {
             throw new BizException(ResultCodeEnum.NOT_FOUND, "会话不存在");
         }
 
+        // 2. 获取用户的身份
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
-        boolean isAdmin = StpUtil.hasRole("admin") || isSuperAdmin;
-        
+
         // 判断是否是用户在发送消息（基于会话所有权，而不是角色）
         boolean userSending = session.getUserId() != null && currentUserId.equals(session.getUserId());
-        
+
         // 权限检查：
         // 1. 如果是用户发送（会话所有者），允许
         // 2. 如果是超级管理员作为客服发送，允许
@@ -197,13 +199,14 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
 
         String messageType = StringUtils.isBlank(body.getMessageType()) ? "text" : body.getMessageType();
 
-        // 构造消息实体
+        // 3.1 构造消息实体
         ChatMessage msg = new ChatMessage();
         msg.setSessionId(String.valueOf(session.getId()));
         msg.setMessageType(messageType);
         msg.setContent(body.getContent());
         msg.setSenderId(currentUserId);
 
+        // 3.2 设置消息接收者（根据用户的身份）
         Long receiverId;
         if (userSending) {
             receiverId = session.getAgentId();
@@ -223,13 +226,14 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         msg.setReceiverId(receiverId);
         msg.setIsRead(false);
 
+        // 4. 保存消息
         chatMessageMapper.insert(msg);
 
-        // 更新会话的最后消息 & 未读数
+        // 5.1 更新会话的最新信息
         session.setLastMessage(body.getContent());
         session.setLastTime(LocalDateTime.now());
 
-        // 更新会话的未读数量
+        // 5.2 更新会话的未读数量
         if (session.getUserId() != null && currentUserId.equals(session.getUserId())) {
             // 用户发消息 -> 客服未读数 +1
             int unreadForAgent = session.getUnreadForAgent() == null ? 0 : session.getUnreadForAgent();
@@ -244,10 +248,10 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         // 构建返回 VO
         CustomerServiceMessageVO vo = buildMessageVO(session, msg);
 
-        // 通知所有长轮询等待者有新消息（唤醒长轮询）
+        // 6. 通知所有长轮询等待者有新消息（唤醒长轮询）
         customerServiceLongPollingService.publishNewMessage(session.getId(), vo);
 
-        // 通过 WebSocket 推送最新未读汇总给接收方 (用户或客服), 用于驱动前台/后台入口红点
+        // 7. 通过 WebSocket 推送最新未读汇总给接收方 (用户或客服), 用于驱动前台/后台入口红点
         if (receiverId != null) {
             Integer totalUnreadForUser = customerServiceSessionService.sumUnreadForUser(session.getUserId());
             Integer totalUnreadForAgent = customerServiceSessionService.sumUnreadForAllAgents();
@@ -323,14 +327,16 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         Long currentUserId = StpUtil.getLoginIdAsLong();
         log.info("更新会话未读状态, sessionId={}, readSide={}, userId={}", sessionId, readSide, currentUserId);
 
+        // 1. 获取会话
         CustomerServiceSession session = customerServiceSessionService.getById(sessionId);
         if (session == null) {
             throw new BizException(ResultCodeEnum.NOT_FOUND, "会话不存在");
         }
 
+        // 2. 获取用户的身份
         boolean isSuperAdmin = StpUtil.hasRole("super_admin");
         boolean isSessionOwner = currentUserId.equals(session.getUserId());
-        
+
         // 权限检查：
         // 1. 会话所有者（用户）可以标记自己的消息为已读
         // 2. 超级管理员可以标记任何会话的消息为已读
@@ -339,6 +345,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
             throw new BizException(ResultCodeEnum.FORBIDDEN, "无权更新该会话未读状态");
         }
 
+        // 3. 根据不同的身份走不同处理，更新未读数
         String side = readSide == null ? "" : readSide.toUpperCase();
         // 根据标记的“已读方”清空未读数
         switch (side) {
@@ -374,6 +381,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
                 .unreadForAgent(totalUnreadForAgent)
                 .build();
 
+        // 4. 通过 ws 推送未读数
         // ws 连接建立后，向指定路径（在 ws 配置文件中已定义）推送未读数
         if ("USER".equals(side)) {
             Long pushUserId = session.getUserId();
@@ -384,7 +392,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
                         unreadDTO
                 );
             }
-        } else if ("AGENT".equals(side)) {
+        } else {
             List<Long> onlineAdminIds = resolveOnlineSuperAdminIds();
             for (Long adminId : onlineAdminIds) {
                 messagingTemplate.convertAndSendToUser(
@@ -441,6 +449,11 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
         return builder.build();
     }
 
+    /**
+     * 获取在线的第一个超级管理员 ID - 系统后面只支持一个超级管理员，直接获取也行，无需使用该方法
+     *
+     * @return
+     */
     private Long resolveFirstOnlineSuperAdminId() {
         try {
             LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();

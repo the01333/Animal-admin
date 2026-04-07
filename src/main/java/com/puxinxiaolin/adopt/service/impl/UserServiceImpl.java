@@ -346,7 +346,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
-     * 根据ID查询用户信息
+     * 根据 ID 查询用户信息
      *
      * @param userId 用户ID
      * @return

@@ -53,7 +53,7 @@ public class AdoptionApplicationController {
     }
 
     /**
-     * 根据ID查询申请详情
+     * 根据 ID 查询申请详情
      */
     @GetMapping("/{id}")
     public Result<AdoptionApplicationVO> getApplicationDetail(@PathVariable Long id) {
@@ -61,7 +61,7 @@ public class AdoptionApplicationController {
     }
 
     /**
-     * 审核领养申请
+     * 管理员 - 审核领养申请
      */
     @PutMapping("/{id}/review")
     @SaCheckRole(value = {"super_admin", "application_auditor"}, mode = SaMode.OR)
