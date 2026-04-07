@@ -1,17 +1,19 @@
 package com.puxinxiaolin.adopt.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.entity.dto.PetLikePageQueryDTO;
+import com.puxinxiaolin.adopt.entity.entity.Like;
 import com.puxinxiaolin.adopt.entity.entity.Pet;
 import com.puxinxiaolin.adopt.entity.entity.PetLike;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
+import com.puxinxiaolin.adopt.enums.TargetType;
 import com.puxinxiaolin.adopt.mapper.PetLikeMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.service.PetLikeService;
+import com.puxinxiaolin.adopt.service.UnifiedLikeService;
 import com.puxinxiaolin.adopt.utils.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 
 /**
  * 宠物点赞服务实现类
+ * 使用统一点赞服务，兼容新旧表结构
  */
 @Slf4j
 @Service
@@ -32,28 +35,23 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
 
     private final PetMapper petMapper;
     private final RedisUtil redisUtil;
+    private final UnifiedLikeService unifiedLikeService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean likePet(Long petId) {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        // 检查是否已点赞
-        if (isLiked(petId)) {
-            log.warn("该宠物已点赞, 用户ID: {}, 宠物ID: {}", userId, petId);
-            return true;
+        // 使用统一点赞服务
+        boolean success = unifiedLikeService.like(userId, petId, TargetType.PET);
+        
+        if (success) {
+            petMapper.incrementLikeCount(petId);
+            deleteLikeCountCache(petId);
+            log.info("用户 {} 点赞宠物 {}", userId, petId);
         }
-
-        // 新增点赞记录
-        PetLike petLike = new PetLike();
-        petLike.setUserId(userId);
-        petLike.setPetId(petId);
-
-        this.save(petLike);
-        petMapper.incrementLikeCount(petId);
-        deleteLikeCountCache(petId);
-        log.info("用户 {} 点赞宠物 {}", userId, petId);
-        return true;
+        
+        return success;
     }
 
     @Override
@@ -61,17 +59,16 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
     public boolean unlikePet(Long petId) {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        LambdaQueryWrapper<PetLike> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(PetLike::getUserId, userId)
-                .eq(PetLike::getPetId, petId);
-
-        boolean removed = this.remove(wrapper);
-        if (removed) {
+        // 使用统一点赞服务
+        boolean success = unifiedLikeService.unlike(userId, petId, TargetType.PET);
+        
+        if (success) {
             petMapper.decrementLikeCount(petId);
             deleteLikeCountCache(petId);
             log.info("用户 {} 取消点赞宠物 {}", userId, petId);
         }
-        return removed;
+        
+        return success;
     }
 
     /**
@@ -87,10 +84,8 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
     @Override
     public boolean isLiked(Long petId) {
         Long userId = StpUtil.getLoginIdAsLong();
-        LambdaQueryWrapper<PetLike> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(PetLike::getUserId, userId)
-                .eq(PetLike::getPetId, petId);
-        return this.count(wrapper) > 0;
+        // 使用统一点赞服务
+        return unifiedLikeService.isLiked(userId, petId, TargetType.PET);
     }
 
     @Override
@@ -103,21 +98,27 @@ public class PetLikeServiceImpl extends ServiceImpl<PetLikeMapper, PetLike> impl
     public Page<PetVO> queryUserLikedPets(PetLikePageQueryDTO queryDTO) {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        LambdaQueryWrapper<PetLike> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(PetLike::getUserId, userId)
-                .orderByDesc(PetLike::getCreateTime);
-
-        Page<PetLike> petLikePage = this.page(new Page<>(queryDTO.getCurrent(), queryDTO.getSize()), wrapper);
+        // 使用统一点赞服务获取点赞列表
+        List<Like> likes = unifiedLikeService.getUserLikes(userId, TargetType.PET);
+        
+        // 手动分页
+        Long current = queryDTO.getCurrent();
+        int size = Math.toIntExact(queryDTO.getSize());
+        int total = likes.size();
+        int start = (int) ((current - 1) * size);
+        int end = Math.min(start + size, total);
+        
+        List<Like> pagedLikes = start < total ? likes.subList(start, end) : List.of();
 
         Page<PetVO> result = new Page<>();
-        result.setCurrent(petLikePage.getCurrent());
-        result.setSize(petLikePage.getSize());
-        result.setTotal(petLikePage.getTotal());
-        result.setPages(petLikePage.getPages());
+        result.setCurrent(current);
+        result.setSize(size);
+        result.setTotal(total);
+        result.setPages((total + size - 1) / size);
 
-        List<PetVO> petVOList = petLikePage.getRecords().stream()
-                .map(petLike -> {
-                    Pet pet = petMapper.selectById(petLike.getPetId());
+        List<PetVO> petVOList = pagedLikes.stream()
+                .map(like -> {
+                    Pet pet = petMapper.selectById(like.getTargetId());
                     if (pet == null) {
                         return null;
                     }

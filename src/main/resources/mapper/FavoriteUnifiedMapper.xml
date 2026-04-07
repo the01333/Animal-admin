@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.puxinxiaolin.adopt.mapper.FavoriteUnifiedMapper">
+
+    <!-- 检查用户是否收藏过 -->
+    <select id="isFavorited" resultType="int">
+        SELECT COUNT(*) FROM t_favorite 
+        WHERE user_id = #{userId} 
+          AND target_id = #{targetId} 
+          AND target_type = #{targetType}
+    </select>
+
+    <!-- 获取收藏总数 -->
+    <select id="getFavoriteCount" resultType="int">
+        SELECT COUNT(*) FROM t_favorite 
+        WHERE target_id = #{targetId} 
+          AND target_type = #{targetType}
+    </select>
+
+    <!-- 获取用户的收藏列表 -->
+    <select id="getUserFavorites" resultType="com.puxinxiaolin.adopt.entity.entity.FavoriteUnified">
+        SELECT id, user_id, target_id, target_type, create_time
+        FROM t_favorite 
+        WHERE user_id = #{userId} 
+          AND target_type = #{targetType}
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>

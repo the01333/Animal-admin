@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.puxinxiaolin.adopt.mapper.LikeMapper">
+
+    <!-- 检查用户是否点赞过 -->
+    <select id="isLiked" resultType="int">
+        SELECT COUNT(*) FROM t_like 
+        WHERE user_id = #{userId} 
+          AND target_id = #{targetId} 
+          AND target_type = #{targetType}
+    </select>
+
+    <!-- 获取点赞总数 -->
+    <select id="getLikeCount" resultType="int">
+        SELECT COUNT(*) FROM t_like 
+        WHERE target_id = #{targetId} 
+          AND target_type = #{targetType}
+    </select>
+
+    <!-- 获取用户的点赞列表 -->
+    <select id="getUserLikes" resultType="com.puxinxiaolin.adopt.entity.entity.Like">
+        SELECT id, user_id, target_id, target_type, create_time
+        FROM t_like 
+        WHERE user_id = #{userId} 
+          AND target_type = #{targetType}
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>

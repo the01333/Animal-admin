@@ -15,10 +15,13 @@ import com.puxinxiaolin.adopt.entity.entity.*;
 import com.puxinxiaolin.adopt.entity.vo.ContentCategoryVO;
 import com.puxinxiaolin.adopt.entity.vo.ContentVO;
 import com.puxinxiaolin.adopt.enums.ContentCategoryEnum;
+import com.puxinxiaolin.adopt.enums.TargetType;
 import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.*;
 import com.puxinxiaolin.adopt.service.ContentService;
 import com.puxinxiaolin.adopt.service.DictService;
+import com.puxinxiaolin.adopt.service.UnifiedLikeService;
+import com.puxinxiaolin.adopt.service.UnifiedFavoriteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.function.Function;
 
 @Slf4j
 @Service
@@ -40,10 +42,8 @@ import java.util.function.Function;
 public class ContentServiceImpl implements ContentService {
     private final GuideMapper guideMapper;
     private final StoryMapper storyMapper;
-    private final GuideLikeMapper guideLikeMapper;
-    private final GuideFavoriteMapper guideFavoriteMapper;
-    private final StoryLikeMapper storyLikeMapper;
-    private final StoryFavoriteMapper storyFavoriteMapper;
+    private final UnifiedLikeService unifiedLikeService;
+    private final UnifiedFavoriteService unifiedFavoriteService;
     private final OssUrlService ossUrlService;
     private final ViewCountService viewCountService;
     private final DictService dictService;
@@ -275,8 +275,8 @@ public class ContentServiceImpl implements ContentService {
         vo.setLikeCount(calculateLikeCount(ContentCategoryEnum.GUIDE, guide.getId(), guide.getLikeCount()));
         vo.setFavoriteCount(calculateFavoriteCount(ContentCategoryEnum.GUIDE, guide.getId(), guide.getFavoriteCount()));
         if (userId != null) {
-            vo.setLiked(guideLikeMapper.checkUserLiked(userId, guide.getId()) > 0);
-            vo.setFavorited(guideFavoriteMapper.checkUserFavorited(userId, guide.getId()) > 0);
+            vo.setLiked(unifiedLikeService.isLiked(userId, guide.getId(), TargetType.GUIDE));
+            vo.setFavorited(unifiedFavoriteService.isFavorited(userId, guide.getId(), TargetType.GUIDE));
         } else {
             vo.setLiked(false);
             vo.setFavorited(false);
@@ -314,8 +314,8 @@ public class ContentServiceImpl implements ContentService {
         vo.setLikeCount(calculateLikeCount(ContentCategoryEnum.STORY, story.getId(), story.getLikes()));
         vo.setFavoriteCount(calculateFavoriteCount(ContentCategoryEnum.STORY, story.getId(), story.getFavoriteCount()));
         if (userId != null) {
-            vo.setLiked(storyLikeMapper.checkUserLiked(userId, story.getId()) > 0);
-            vo.setFavorited(storyFavoriteMapper.checkUserFavorited(userId, story.getId()) > 0);
+            vo.setLiked(unifiedLikeService.isLiked(userId, story.getId(), TargetType.STORY));
+            vo.setFavorited(unifiedFavoriteService.isFavorited(userId, story.getId(), TargetType.STORY));
         } else {
             vo.setLiked(false);
             vo.setFavorited(false);
@@ -333,28 +333,19 @@ public class ContentServiceImpl implements ContentService {
         Long userId = StpUtil.getLoginIdAsLong();
         
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
+        TargetType targetType = contentCategoryEnum == ContentCategoryEnum.GUIDE ? TargetType.GUIDE : TargetType.STORY;
+        
+        // 验证内容存在
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             requireGuide(id);
-            
-            if (guideLikeMapper.checkUserLiked(userId, id) == 0) {
-                GuideLike like = new GuideLike();
-                like.setGuideId(id);
-                like.setUserId(userId);
-                like.setCreatedAt(LocalDateTime.now());
-                guideLikeMapper.insert(like);
-                viewCountService.incrementContentLike(ContentCategoryEnum.GUIDE, id, 1);
-            }
         } else {
             requireStory(id);
-            
-            if (storyLikeMapper.checkUserLiked(userId, id) == 0) {
-                StoryLike like = new StoryLike();
-                like.setStoryId(id);
-                like.setUserId(userId);
-                like.setCreatedAt(LocalDateTime.now());
-                storyLikeMapper.insert(like);
-                viewCountService.incrementContentLike(ContentCategoryEnum.STORY, id, 1);
-            }
+        }
+        
+        // 使用统一点赞服务
+        boolean success = unifiedLikeService.like(userId, id, targetType);
+        if (success) {
+            viewCountService.incrementContentLike(contentCategoryEnum, id, 1);
         }
     }
 
@@ -362,20 +353,12 @@ public class ContentServiceImpl implements ContentService {
     public void unlikeContent(String category, Long id) {
         Long userId = StpUtil.getLoginIdAsLong();
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
-        if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
-            LambdaQueryWrapper<GuideLike> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(GuideLike::getGuideId, id).eq(GuideLike::getUserId, userId);
-            int deleted = guideLikeMapper.delete(wrapper);
-            if (deleted > 0) {
-                viewCountService.incrementContentLike(ContentCategoryEnum.GUIDE, id, -1);
-            }
-        } else {
-            LambdaQueryWrapper<StoryLike> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(StoryLike::getStoryId, id).eq(StoryLike::getUserId, userId);
-            int deleted = storyLikeMapper.delete(wrapper);
-            if (deleted > 0) {
-                viewCountService.incrementContentLike(ContentCategoryEnum.STORY, id, -1);
-            }
+        TargetType targetType = contentCategoryEnum == ContentCategoryEnum.GUIDE ? TargetType.GUIDE : TargetType.STORY;
+        
+        // 使用统一点赞服务
+        boolean success = unifiedLikeService.unlike(userId, id, targetType);
+        if (success) {
+            viewCountService.incrementContentLike(contentCategoryEnum, id, -1);
         }
     }
 
@@ -383,26 +366,19 @@ public class ContentServiceImpl implements ContentService {
     public void favoriteContent(String category, Long id) {
         Long userId = StpUtil.getLoginIdAsLong();
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
+        TargetType targetType = contentCategoryEnum == ContentCategoryEnum.GUIDE ? TargetType.GUIDE : TargetType.STORY;
+        
+        // 验证内容存在
         if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
             requireGuide(id);
-            if (guideFavoriteMapper.checkUserFavorited(userId, id) == 0) {
-                GuideFavorite favorite = new GuideFavorite();
-                favorite.setGuideId(id);
-                favorite.setUserId(userId);
-                favorite.setCreatedAt(LocalDateTime.now());
-                guideFavoriteMapper.insert(favorite);
-                viewCountService.incrementContentFavorite(ContentCategoryEnum.GUIDE, id, 1);
-            }
         } else {
             requireStory(id);
-            if (storyFavoriteMapper.checkUserFavorited(userId, id) == 0) {
-                StoryFavorite favorite = new StoryFavorite();
-                favorite.setStoryId(id);
-                favorite.setUserId(userId);
-                favorite.setCreatedAt(LocalDateTime.now());
-                storyFavoriteMapper.insert(favorite);
-                viewCountService.incrementContentFavorite(ContentCategoryEnum.STORY, id, 1);
-            }
+        }
+        
+        // 使用统一收藏服务
+        boolean success = unifiedFavoriteService.favorite(userId, id, targetType);
+        if (success) {
+            viewCountService.incrementContentFavorite(contentCategoryEnum, id, 1);
         }
     }
 
@@ -410,20 +386,12 @@ public class ContentServiceImpl implements ContentService {
     public void unfavoriteContent(String category, Long id) {
         Long userId = StpUtil.getLoginIdAsLong();
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
-        if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
-            LambdaQueryWrapper<GuideFavorite> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(GuideFavorite::getGuideId, id).eq(GuideFavorite::getUserId, userId);
-            int deleted = guideFavoriteMapper.delete(wrapper);
-            if (deleted > 0) {
-                viewCountService.incrementContentFavorite(ContentCategoryEnum.GUIDE, id, -1);
-            }
-        } else {
-            LambdaQueryWrapper<StoryFavorite> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(StoryFavorite::getStoryId, id).eq(StoryFavorite::getUserId, userId);
-            int deleted = storyFavoriteMapper.delete(wrapper);
-            if (deleted > 0) {
-                viewCountService.incrementContentFavorite(ContentCategoryEnum.STORY, id, -1);
-            }
+        TargetType targetType = contentCategoryEnum == ContentCategoryEnum.GUIDE ? TargetType.GUIDE : TargetType.STORY;
+        
+        // 使用统一收藏服务
+        boolean success = unifiedFavoriteService.unfavorite(userId, id, targetType);
+        if (success) {
+            viewCountService.incrementContentFavorite(contentCategoryEnum, id, -1);
         }
     }
 
@@ -431,20 +399,18 @@ public class ContentServiceImpl implements ContentService {
     public boolean isContentLiked(String category, Long id) {
         Long userId = StpUtil.getLoginIdAsLong();
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
-        if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
-            return guideLikeMapper.checkUserLiked(userId, id) > 0;
-        }
-        return storyLikeMapper.checkUserLiked(userId, id) > 0;
+        TargetType targetType = contentCategoryEnum == ContentCategoryEnum.GUIDE ? TargetType.GUIDE : TargetType.STORY;
+        
+        return unifiedLikeService.isLiked(userId, id, targetType);
     }
 
     @Override
     public boolean isContentFavorited(String category, Long id) {
         Long userId = StpUtil.getLoginIdAsLong();
         ContentCategoryEnum contentCategoryEnum = ContentCategoryEnum.getByCode(category);
-        if (contentCategoryEnum == ContentCategoryEnum.GUIDE) {
-            return guideFavoriteMapper.checkUserFavorited(userId, id) > 0;
-        }
-        return storyFavoriteMapper.checkUserFavorited(userId, id) > 0;
+        TargetType targetType = contentCategoryEnum == ContentCategoryEnum.GUIDE ? TargetType.GUIDE : TargetType.STORY;
+        
+        return unifiedFavoriteService.isFavorited(userId, id, targetType);
     }
 
     @Override
@@ -529,14 +495,13 @@ public class ContentServiceImpl implements ContentService {
     }
 
     private List<ContentVO> loadUserGuideLikes(Long userId) {
-        LambdaQueryWrapper<GuideLike> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(GuideLike::getUserId, userId).orderByDesc(GuideLike::getCreatedAt);
-        List<GuideLike> likes = guideLikeMapper.selectList(wrapper);
+        // 使用统一点赞服务获取点赞列表
+        List<Like> likes = unifiedLikeService.getUserLikes(userId, TargetType.GUIDE);
         if (likes.isEmpty()) {
             return Collections.emptyList();
         }
 
-        Set<Long> guideIds = extractIds(likes, GuideLike::getGuideId);
+        Set<Long> guideIds = likes.stream().map(Like::getTargetId).collect(Collectors.toSet());
         if (guideIds.isEmpty()) {
             return Collections.emptyList();
         }
@@ -545,28 +510,27 @@ public class ContentServiceImpl implements ContentService {
                 .collect(Collectors.toMap(Guide::getId, guide -> guide));
 
         List<ContentVO> result = new ArrayList<>();
-        for (GuideLike like : likes) {
-            Guide guide = guideMap.get(like.getGuideId());
+        for (Like like : likes) {
+            Guide guide = guideMap.get(like.getTargetId());
             if (guide == null) {
                 continue;
             }
             ContentVO vo = toContentVO(guide, null);
             vo.setLiked(Boolean.TRUE);
-            vo.setRelationTime(like.getCreatedAt());
+            vo.setRelationTime(like.getCreateTime());
             result.add(vo);
         }
         return result;
     }
 
     private List<ContentVO> loadUserStoryLikes(Long userId) {
-        LambdaQueryWrapper<StoryLike> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StoryLike::getUserId, userId).orderByDesc(StoryLike::getCreatedAt);
-        List<StoryLike> likes = storyLikeMapper.selectList(wrapper);
+        // 使用统一点赞服务获取点赞列表
+        List<Like> likes = unifiedLikeService.getUserLikes(userId, TargetType.STORY);
         if (likes.isEmpty()) {
             return Collections.emptyList();
         }
 
-        Set<Long> storyIds = extractIds(likes, StoryLike::getStoryId);
+        Set<Long> storyIds = likes.stream().map(Like::getTargetId).collect(Collectors.toSet());
         if (storyIds.isEmpty()) {
             return Collections.emptyList();
         }
@@ -574,28 +538,27 @@ public class ContentServiceImpl implements ContentService {
                 .collect(Collectors.toMap(Story::getId, story -> story));
 
         List<ContentVO> result = new ArrayList<>();
-        for (StoryLike like : likes) {
-            Story story = storyMap.get(like.getStoryId());
+        for (Like like : likes) {
+            Story story = storyMap.get(like.getTargetId());
             if (story == null) {
                 continue;
             }
             ContentVO vo = toContentVO(story, null);
             vo.setLiked(Boolean.TRUE);
-            vo.setRelationTime(like.getCreatedAt());
+            vo.setRelationTime(like.getCreateTime());
             result.add(vo);
         }
         return result;
     }
 
     private List<ContentVO> loadUserGuideFavorites(Long userId) {
-        LambdaQueryWrapper<GuideFavorite> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(GuideFavorite::getUserId, userId).orderByDesc(GuideFavorite::getCreatedAt);
-        List<GuideFavorite> favorites = guideFavoriteMapper.selectList(wrapper);
+        // 使用统一收藏服务获取收藏列表
+        List<FavoriteUnified> favorites = unifiedFavoriteService.getUserFavorites(userId, TargetType.GUIDE);
         if (favorites.isEmpty()) {
             return Collections.emptyList();
         }
 
-        Set<Long> guideIds = extractIds(favorites, GuideFavorite::getGuideId);
+        Set<Long> guideIds = favorites.stream().map(FavoriteUnified::getTargetId).collect(Collectors.toSet());
         if (guideIds.isEmpty()) {
             return Collections.emptyList();
         }
@@ -603,28 +566,27 @@ public class ContentServiceImpl implements ContentService {
                 .collect(Collectors.toMap(Guide::getId, guide -> guide));
 
         List<ContentVO> result = new ArrayList<>();
-        for (GuideFavorite favorite : favorites) {
-            Guide guide = guideMap.get(favorite.getGuideId());
+        for (FavoriteUnified favorite : favorites) {
+            Guide guide = guideMap.get(favorite.getTargetId());
             if (guide == null) {
                 continue;
             }
             ContentVO vo = toContentVO(guide, null);
             vo.setFavorited(Boolean.TRUE);
-            vo.setRelationTime(favorite.getCreatedAt());
+            vo.setRelationTime(favorite.getCreateTime());
             result.add(vo);
         }
         return result;
     }
 
     private List<ContentVO> loadUserStoryFavorites(Long userId) {
-        LambdaQueryWrapper<StoryFavorite> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StoryFavorite::getUserId, userId).orderByDesc(StoryFavorite::getCreatedAt);
-        List<StoryFavorite> favorites = storyFavoriteMapper.selectList(wrapper);
+        // 使用统一收藏服务获取收藏列表
+        List<FavoriteUnified> favorites = unifiedFavoriteService.getUserFavorites(userId, TargetType.STORY);
         if (favorites.isEmpty()) {
             return Collections.emptyList();
         }
 
-        Set<Long> storyIds = extractIds(favorites, StoryFavorite::getStoryId);
+        Set<Long> storyIds = favorites.stream().map(FavoriteUnified::getTargetId).collect(Collectors.toSet());
         if (storyIds.isEmpty()) {
             return Collections.emptyList();
         }
@@ -632,23 +594,17 @@ public class ContentServiceImpl implements ContentService {
                 .collect(Collectors.toMap(Story::getId, story -> story));
 
         List<ContentVO> result = new ArrayList<>();
-        for (StoryFavorite favorite : favorites) {
-            Story story = storyMap.get(favorite.getStoryId());
+        for (FavoriteUnified favorite : favorites) {
+            Story story = storyMap.get(favorite.getTargetId());
             if (story == null) {
                 continue;
             }
             ContentVO vo = toContentVO(story, null);
             vo.setFavorited(Boolean.TRUE);
-            vo.setRelationTime(favorite.getCreatedAt());
+            vo.setRelationTime(favorite.getCreateTime());
             result.add(vo);
         }
         return result;
-    }
-
-    private <T> Set<Long> extractIds(List<T> relations, Function<T, Long> idGetter) {
-        return relations.stream()
-                .map(idGetter)
-                .collect(Collectors.toSet());
     }
 
     private Guide requireGuide(Long id) {

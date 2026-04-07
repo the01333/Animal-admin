@@ -1,20 +1,22 @@
 package com.puxinxiaolin.adopt.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
 import com.puxinxiaolin.adopt.entity.dto.FavoritePageQueryDTO;
 import com.puxinxiaolin.adopt.entity.entity.Favorite;
+import com.puxinxiaolin.adopt.entity.entity.FavoriteUnified;
 import com.puxinxiaolin.adopt.entity.entity.Pet;
 import com.puxinxiaolin.adopt.entity.vo.PetVO;
+import com.puxinxiaolin.adopt.enums.TargetType;
 import com.puxinxiaolin.adopt.enums.common.ResultCodeEnum;
 import com.puxinxiaolin.adopt.exception.BizException;
 import com.puxinxiaolin.adopt.mapper.FavoriteMapper;
 import com.puxinxiaolin.adopt.mapper.PetMapper;
 import com.puxinxiaolin.adopt.service.FavoriteService;
 import com.puxinxiaolin.adopt.service.PetService;
+import com.puxinxiaolin.adopt.service.UnifiedFavoriteService;
 import com.puxinxiaolin.adopt.utils.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 
 /**
  * 收藏服务实现类
+ * 使用统一收藏服务，兼容新旧表结构
  */
 @Slf4j
 @Service
@@ -36,6 +39,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     private final PetService petService;
     private final PetMapper petMapper;
     private final RedisUtil redisUtil;
+    private final UnifiedFavoriteService unifiedFavoriteService;
     
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -48,22 +52,16 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
             throw new BizException(ResultCodeEnum.PET_NOT_FOUND);
         }
         
-        // 检查是否已收藏
-        if (isFavorite(petId)) {
-            log.warn("该宠物已收藏, 用户ID: {}, 宠物ID: {}", userId, petId);
-            return true;
+        // 使用统一收藏服务
+        boolean success = unifiedFavoriteService.favorite(userId, petId, TargetType.PET);
+        
+        if (success) {
+            petMapper.incrementFavoriteCount(petId);
+            deleteFavoriteCountCache(petId);
+            log.info("用户 {} 收藏宠物 {}", userId, petId);
         }
         
-        // 新增收藏记录
-        Favorite favorite = new Favorite();
-        favorite.setUserId(userId);
-        favorite.setPetId(petId);
-        
-        this.save(favorite);
-        petMapper.incrementFavoriteCount(petId);
-        deleteFavoriteCountCache(petId);
-        log.info("用户 {} 收藏宠物 {}", userId, petId);
-        return true;
+        return success;
     }
     
     @Override
@@ -71,47 +69,50 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     public boolean removeFavorite(Long petId) {
         Long userId = StpUtil.getLoginIdAsLong();
         
-        LambdaQueryWrapper<Favorite> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Favorite::getUserId, userId)
-                .eq(Favorite::getPetId, petId);
+        // 使用统一收藏服务
+        boolean success = unifiedFavoriteService.unfavorite(userId, petId, TargetType.PET);
         
-        boolean removed = this.remove(wrapper);
-        if (removed) {
+        if (success) {
             petMapper.decrementFavoriteCount(petId);
             deleteFavoriteCountCache(petId);
             log.info("用户 {} 取消收藏宠物 {}", userId, petId);
         }
-        return removed;
+        
+        return success;
     }
     
     @Override
     public boolean isFavorite(Long petId) {
         Long userId = StpUtil.getLoginIdAsLong();
-        LambdaQueryWrapper<Favorite> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Favorite::getUserId, userId)
-                .eq(Favorite::getPetId, petId);
-        return this.count(wrapper) > 0;
+        // 使用统一收藏服务
+        return unifiedFavoriteService.isFavorited(userId, petId, TargetType.PET);
     }
     
     @Override
     public Page<PetVO> queryUserFavoritePets(FavoritePageQueryDTO queryDTO) {
         Long userId = StpUtil.getLoginIdAsLong();
         
-        LambdaQueryWrapper<Favorite> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Favorite::getUserId, userId)
-                .orderByDesc(Favorite::getCreateTime);
+        // 使用统一收藏服务获取收藏列表
+        List<FavoriteUnified> favorites = unifiedFavoriteService.getUserFavorites(userId, TargetType.PET);
         
-        Page<Favorite> favoritePage = this.page(new Page<>(queryDTO.getCurrent(), queryDTO.getSize()), wrapper);
+        // 手动分页
+        Long current = queryDTO.getCurrent();
+        int size = Math.toIntExact(queryDTO.getSize());
+        int total = favorites.size();
+        int start = (int) ((current - 1) * size);
+        int end = Math.min(start + size, total);
+        
+        List<FavoriteUnified> pagedFavorites = start < total ? favorites.subList(start, end) : List.of();
         
         Page<PetVO> result = new Page<>();
-        result.setCurrent(favoritePage.getCurrent());
-        result.setSize(favoritePage.getSize());
-        result.setTotal(favoritePage.getTotal());
-        result.setPages(favoritePage.getPages());
+        result.setCurrent(current);
+        result.setSize(size);
+        result.setTotal(total);
+        result.setPages((total + size - 1) / size);
         
-        List<PetVO> petVOList = favoritePage.getRecords().stream()
+        List<PetVO> petVOList = pagedFavorites.stream()
                 .map(favorite -> {
-                    Pet pet = petMapper.selectById(favorite.getPetId());
+                    Pet pet = petMapper.selectById(favorite.getTargetId());
                     if (pet == null) {
                         return null;
                     }
