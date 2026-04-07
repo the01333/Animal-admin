@@ -28,6 +28,7 @@ import java.util.*;
  * AI 客服对话服务实现类，最终的消息存储和获取由此类实现（用户看的，完整 AI 历史存储）
  * <p/>
  * todo: 其实存在重复插入的问题，但是在获取消息的时候有去重处理（通过分区键和时间聚类区分），参见如下方法
+ *
  * @see IntelligentCustomerServiceImpl#saveMessage
  */
 @Slf4j
@@ -46,6 +47,13 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
 
     private static final long CACHE_EXPIRE_HOURS = 24;
 
+    /**
+     * 创建 AI 会话
+     *
+     * @param userId
+     * @param title
+     * @return
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ConversationSession createSession(Long userId, String title) {
@@ -65,7 +73,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
     }
 
     /**
-     * 获取会话详情（所有消息），给前端渲染
+     * 获取 AI 会话详情（所有消息），给前端渲染
      *
      * @param sessionId
      * @param userId
@@ -128,7 +136,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
     }
 
     /**
-     * 保存消息到 Cassandra，先入 DB 再入 cassandra
+     * 保存消息，先入 DB 再入 cassandra
      * <p/>
      * todo: 这里有个 bug，会存两次同样的消息，后续看情况再修复
      *
@@ -186,7 +194,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
 
         log.info("对话消息保存成功");
     }
-    
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteSession(String sessionId, Long userId) {
@@ -198,7 +206,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
             return;
         }
 
-        // 删除会话的所有消息（MySQL）
+        // 删除会话历史的所有消息（MySQL）
         conversationHistoryMapper.deleteBySessionId(sessionId);
 
         // 删除会话的所有消息（Cassandra）
@@ -271,7 +279,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
                         session.getUpdateTime().format(formatter) : null)
                 .build();
     }
-    
+
     /**
      * 清除会话缓存
      */

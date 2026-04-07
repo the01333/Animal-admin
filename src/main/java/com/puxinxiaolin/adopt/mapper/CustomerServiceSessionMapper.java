@@ -10,12 +10,7 @@ import org.apache.ibatis.annotations.Param;
  */
 @Mapper
 public interface CustomerServiceSessionMapper extends BaseMapper<CustomerServiceSession> {
-
-    /**
-     * 统计客服未读消息数
-     */
-    Integer sumUnreadForAgent(@Param("agentId") Long agentId);
-
+    
     /**
      * 统计所有客服未读消息数
      */
