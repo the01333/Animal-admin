@@ -25,8 +25,6 @@ public interface CustomerServiceSessionService extends IService<CustomerServiceS
      */
     Page<CustomerServiceSessionVO> pageSessionsForAdmin(Long current, Long size, String keyword, String status);
 
-    Integer sumUnreadForAgent(Long agentId);
-
     Integer sumUnreadForAllAgents();
 
     Integer sumUnreadForUser(Long userId);

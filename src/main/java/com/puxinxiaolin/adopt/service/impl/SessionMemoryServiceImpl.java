@@ -151,49 +151,7 @@ public class SessionMemoryServiceImpl implements SessionMemoryService {
 
         log.debug("AI 回复已保存 - 会话ID: {}", sessionId);
     }
-
-    @Override
-    public List<Message> getFullHistory(Long userId, String sessionId) {
-        log.info("获取完整对话历史 - 用户ID: {}, 会话ID: {}", userId, sessionId);
-
-        if (!hasAccess(userId, sessionId)) {
-            log.warn("用户无权访问该会话");
-            return new ArrayList<>();
-        }
-
-        // 从 Cassandra 获取所有消息
-        List<ConversationHistoryCassandra> histories = cassandraRepository.findBySessionId(sessionId);
-
-        return histories.stream()
-                .sorted(Comparator.comparing(h -> h.getKey().getTimestamp()))
-                .map(h -> {
-                    if ("user".equals(h.getRole())) {
-                        return new UserMessage(h.getContent());
-                    } else {
-                        return new AssistantMessage(h.getContent());
-                    }
-                })
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public void clearHistory(Long userId, String sessionId) {
-        log.info("清空会话历史 - 用户ID: {}, 会话ID: {}", userId, sessionId);
-
-        if (!hasAccess(userId, sessionId)) {
-            log.warn("用户无权访问该会话");
-            return;
-        }
-
-        // 从 Cassandra 删除
-        cassandraRepository.deleteBySessionId(sessionId);
-
-        // 清除缓存
-        clearCache(sessionId);
-
-        log.info("会话历史已清空 - 会话ID: {}", sessionId);
-    }
-
+    
     /**
      * 根据 sessionId 获取 session 来验证是否是用一用户
      *

@@ -1,6 +1,5 @@
 package com.puxinxiaolin.adopt.service.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.puxinxiaolin.adopt.constants.RedisConstant;
@@ -14,26 +13,22 @@ import com.puxinxiaolin.adopt.mapper.ConversationSessionMapper;
 import com.puxinxiaolin.adopt.repository.ConversationHistoryCassandraRepository;
 import com.puxinxiaolin.adopt.service.ConversationService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * AI 客服对话服务实现类，最终的消息存储和获取由此类实现（用户看的，完整 AI 历史存储）
  * <p/>
- * todo: 其实存在重复插入的问题，但是在获取消息的时候有去重处理（通过分区键和时间聚类区分）
+ * todo: 其实存在重复插入的问题，但是在获取消息的时候有去重处理（通过分区键和时间聚类区分），参见如下方法
+ * @see IntelligentCustomerServiceImpl#saveMessage
  */
 @Slf4j
 @Service
@@ -170,7 +165,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
         history.setTimestamp(LocalDateTime.now());
         conversationHistoryMapper.insert(history);
 
-        // TODO [YCcLin 2026/1/8]: 后期改造 - 使用本地事务表+定时任务补偿或者引入 MQ 实现（不能直接用 @Async，@Transactional 会导致多线程环境下的数据一致性问题）
+        // TODO [YCcLin 2026/1/8]: 后期改造 - 使用本地事务表 + 定时任务补偿或者引入 MQ 实现（不能直接用 @Async，@Transactional 会导致多线程环境下的数据一致性问题）
         // 2. 同时保存消息到 Cassandra（后期改为异步, 不阻塞主流程）
         try {
             saveMessageToCassandra(sessionId, userId, role, content, toolName, toolParams, toolResult);
@@ -191,47 +186,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
 
         log.info("对话消息保存成功");
     }
-
-    /**
-     * 获取 AI 对话历史
-     *
-     * @param sessionId
-     * @return
-     */
-    @Override
-    public List<Message> getConversationHistory(String sessionId) {
-        log.info("获取会话的对话历史, 会话ID: {}", sessionId);
-
-        // 先从缓存获取
-        String cacheKey = RedisConstant.buildConversationKey(sessionId);
-        @SuppressWarnings("unchecked")
-        List<Message> cachedMessages = (List<Message>) redisTemplate.opsForValue().get(cacheKey);
-        if (CollUtil.isNotEmpty(cachedMessages)) {
-            log.info("从缓存获取对话历史, 会话ID: {}", sessionId);
-            return cachedMessages;
-        }
-
-        // 从数据库获取
-        List<ConversationHistory> histories = conversationHistoryMapper.getBySessionId(sessionId);
-        List<Message> messages = histories.stream()
-                .map(h -> {
-                    if ("user".equals(h.getRole())) {
-                        return new UserMessage(h.getContent());
-                    } else {
-                        return new AssistantMessage(h.getContent());
-                    }
-                })
-                .collect(Collectors.toList());
-
-        // 缓存到 redis
-        if (CollUtil.isNotEmpty(messages)) {
-            redisTemplate.opsForValue().set(cacheKey, messages,
-                    Duration.ofHours(CACHE_EXPIRE_HOURS));
-        }
-
-        return messages;
-    }
-
+    
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteSession(String sessionId, Long userId) {
@@ -316,28 +271,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationSessionMapp
                         session.getUpdateTime().format(formatter) : null)
                 .build();
     }
-
-    /**
-     * 将历史记录转换为 VO
-     */
-    private ConversationMessageVO convertHistoryToVO(ConversationHistory history) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-        return ConversationMessageVO.builder()
-                .id(history.getId())
-                .sessionId(history.getSessionId())
-                .role(history.getRole())
-                .content(history.getContent())
-                .toolName(history.getToolName())
-                .toolParams(history.getToolParams())
-                .toolResult(history.getToolResult())
-                .timestamp(history.getTimestamp() != null ?
-                        history.getTimestamp().format(formatter) : null)
-                .createTime(history.getCreateTime() != null ?
-                        history.getCreateTime().format(formatter) : null)
-                .build();
-    }
-
+    
     /**
      * 清除会话缓存
      */

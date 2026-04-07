@@ -385,7 +385,7 @@ public class CustomerServiceChatServiceImpl implements CustomerServiceChatServic
                         unreadDTO
                 );
             }
-        } else if ("AGENT".equals(side)) {
+        } else {
             List<Long> onlineAdminIds = resolveOnlineSuperAdminIds();
             for (Long adminId : onlineAdminIds) {
                 messagingTemplate.convertAndSendToUser(
